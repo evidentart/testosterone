@@ -2,12 +2,12 @@
 type: guide
 status: current
 created: 2026-06-25
-updated: 2026-10-08
+updated: 2026-10-19
 ---
 
 # Agent Context Guide
 
-Map for AI coding agents working on Testosterone (`testo-core`, CLI `testo`): which note to read before touching what, so you don't have to scan the whole codebase.
+Map for AI coding agents working on Testosterone (`testo-core`, CLI `testo`): which note to read before touching what, so you don't have to scan the whole codebase. Adopting Testosterone in another project instead? Use the [Setup Prompts](Setup%20Prompts.md).
 
 ## Where to look
 

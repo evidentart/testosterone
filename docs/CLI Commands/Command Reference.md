@@ -2,7 +2,7 @@
 type: reference
 status: current
 created: 2026-06-25
-updated: 2026-10-07
+updated: 2026-10-19
 ---
 
 # Command Reference
@@ -179,9 +179,6 @@ Note: this operates on `ReportArchive` UUIDs (`testo report list`), a separate i
 ---
 
 ## `testo doctor`
-
-> [!warning] Roadmap — not implemented yet
-> `doctor`, `clean`, `watch` and top-level `init` below are documented targets but are **not registered in `testo_core/cli/app.py`** as of 2026-07-04. The React UI's health indicator uses `GET /api/v1/health/ready` for the same diagnostics need.
 
 Health check: config load, framework CLIs on PATH, Node.js + Allure Report 3 CLI, optional Docker warnings, DB probe if `DATABASE_URL` or config URL is set.
 

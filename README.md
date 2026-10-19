@@ -56,6 +56,9 @@ testo run --cycle sample-pytests      # run a cycle from testosterone.yaml
 testo report --cycle sample-pytests   # build the Allure report for it
 ```
 
+Adding Testosterone to your own project with an AI coding assistant? Paste one of the
+[Setup Prompts](docs/Prompts%20&%20Snippets/Setup%20Prompts.md).
+
 Runs are stored in SQLite by default (`database.url` in `testosterone.yaml`, or
 `DATABASE_URL`). Postgres and MySQL work too; `docker compose up -d postgres` starts one.
 

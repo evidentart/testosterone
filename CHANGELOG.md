@@ -8,6 +8,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+- `docs/Prompts & Snippets/Setup Prompts.md`: copy-paste prompts for an AI coding assistant to install Testosterone in another project, write its `testosterone.yaml`, run it in GitHub Actions or GitLab CI, open the web UI and troubleshoot. They install from GitHub until `testo-core` is on PyPI. Command Reference no longer calls `doctor`, `clean`, `watch` and `init` unimplemented
+
 ### Fixed
 - Compare showed "n/a" / "Unknown" for "Test time (sum)" and "Avg per test" on every run because nothing stored them. Both persistence backends now write `metrics_duration_ms` (sum of per-test Allure durations) and `avg_case_ms` (that sum over the test count, `null` with no tests), plus `test_time_ms` per stage. Runs saved earlier still show "n/a". A new contract test fails when `history/views.py` reads a run metadata key that persistence never writes
 

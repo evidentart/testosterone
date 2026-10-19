@@ -2,7 +2,7 @@
 type: index
 status: current
 created: 2026-06-25
-updated: 2026-10-08
+updated: 2026-10-19
 ---
 
 # Testosterone docs
@@ -20,6 +20,7 @@ The notes are plain markdown and also open as an Obsidian vault. Dated plans, au
 
 ## Using the CLI
 
+- [Setup Prompts](Prompts%20&%20Snippets/Setup%20Prompts.md): copy-paste prompts for an AI assistant to install Testosterone in your project, write `testosterone.yaml`, add CI and open the UI
 - [Command Reference](CLI%20Commands/Command%20Reference.md): every `testo` command, flag and exit code, and the `testosterone.yaml` schema
 - [Troubleshooting and Error Codes](CLI%20Commands/Troubleshooting%20and%20Error%20Codes.md): exit codes, NDJSON errors, debugging playbook
 
