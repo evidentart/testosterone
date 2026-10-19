@@ -56,6 +56,7 @@ def test_passing_stage_result_and_artifact_layout(
     assert result.timed_out is False
     assert result.error is None
     assert result.stage_name == "echo-stage"
+    assert result.target_repo == Path.cwd().resolve()
     assert "hello-executor" in result.output_tail
     assert result.duration_s >= 0.0
 
@@ -174,6 +175,18 @@ def test_missing_binary_returns_127_with_error(
     assert result.timed_out is False
     assert result.error is not None and "executable not found" in result.error
     assert result.command == ("testo-missing-binary-9c2f4e",)
+    assert result.target_repo == Path.cwd().resolve()
+
+
+def test_adapter_failure_retains_resolved_target_repo(tmp_path: Path) -> None:
+    stage = Stage(name="invalid-command", framework="command", target_repo=tmp_path)
+
+    result = run_stage(stage, plan_name="demo", artifacts_root=tmp_path)
+
+    assert result.returncode == 4
+    assert result.internal_failure is True
+    assert "needs args" in (result.error or "")
+    assert result.target_repo == tmp_path.resolve()
 
 
 def test_stage_result_records_the_stage_tier(

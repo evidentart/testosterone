@@ -139,6 +139,8 @@ def run_plan(
             infra_error=None,
             internal_failure=any(s.internal_failure for s in stage_results),
         )
+        target_repos = {s.target_repo for s in stage_results if s.target_repo is not None}
+        target_repo = next(iter(target_repos)) if len(target_repos) == 1 else None
         plan_result = PlanResult(
             plan_name=plan.name,
             started_at=started_at,
@@ -147,6 +149,7 @@ def run_plan(
             stages=tuple(stage_results),
             aggregate_returncode=max(rcs, default=0),
             exit_code=exit_code,
+            target_repo=target_repo,
         )
 
         recorder.write(

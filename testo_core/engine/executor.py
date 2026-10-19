@@ -38,7 +38,9 @@ _DEFAULT_TAIL_LINES: int = 200
 logger = logging.getLogger(__name__)
 
 
-def _import_junit(stage: Stage, *, results_dir: Path, log_path: Path, started_at: float) -> None:
+def _import_junit(
+    stage: Stage, *, target_repo: Path, results_dir: Path, log_path: Path, started_at: float
+) -> None:
     """Post-stage hook: turn the stage's JUnit XML into Allure results.
 
     Best-effort by design (like the BehaveX report hook): the process exit
@@ -49,7 +51,7 @@ def _import_junit(stage: Stage, *, results_dir: Path, log_path: Path, started_at
 
     try:
         imported = import_junit_reports(
-            target_repo=stage.target_repo,
+            target_repo=target_repo,
             patterns=stage.junit_xml,
             results_dir=results_dir,
             tool=stage.name,
@@ -113,8 +115,57 @@ def run_stage(
     results_dir.mkdir(parents=True, exist_ok=True)
     log_path = (stage_root / "run.log").resolve()
 
+    target_repo: Path | None = None
+    try:
+        target_repo = stage.target_repo.expanduser().resolve()
+        return _run_resolved_stage(
+            stage,
+            target_repo=target_repo,
+            adapter=adapter,
+            artifacts_root=artifacts_root,
+            stage_root=stage_root,
+            results_dir=results_dir,
+            log_path=log_path,
+            parent_env=parent_env,
+            on_chunk=on_chunk,
+            tail_lines=tail_lines,
+        )
+    except Exception as exc:
+        logger.exception("stage %s crashed inside the executor", stage.name)
+        now = time.time()
+        return StageResult(
+            stage_name=stage.name,
+            framework=stage.framework,
+            tier=stage.tier,
+            returncode=4,
+            started_at=now,
+            finished_at=now,
+            duration_s=0.0,
+            log_path=None,
+            artifacts_dir=stage_root,
+            command=(),
+            output_tail="",
+            error=f"internal error: {exc}",
+            internal_failure=True,
+            target_repo=target_repo,
+        )
+
+
+def _run_resolved_stage(
+    stage: Stage,
+    *,
+    target_repo: Path,
+    adapter: FrameworkAdapter,
+    artifacts_root: Path,
+    stage_root: Path,
+    results_dir: Path,
+    log_path: Path,
+    parent_env: Mapping[str, str] | None,
+    on_chunk: Callable[[bytes], None] | None,
+    tail_lines: int,
+) -> StageResult:
     argv = adapter.build_argv(
-        target_repo=stage.target_repo,
+        target_repo=target_repo,
         results_dir=results_dir,
         stage_args=stage.args,
         workers=stage.workers,
@@ -138,7 +189,7 @@ def run_stage(
         try:
             proc = subprocess.Popen(  # noqa: S603 - argv is built by trusted adapters
                 argv,
-                cwd=str(stage.target_repo.expanduser().resolve()),
+                cwd=str(target_repo),
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -159,6 +210,7 @@ def run_stage(
                 buffer=buffer,
                 tail_lines=tail_lines,
                 returncode=127,
+                target_repo=target_repo,
             )
 
         assert proc.stdout is not None  # noqa: S101 — we asked for a pipe
@@ -190,7 +242,13 @@ def run_stage(
         error = error or report_error
 
     if stage.junit_xml:
-        _import_junit(stage, results_dir=results_dir, log_path=log_path, started_at=started_at)
+        _import_junit(
+            stage,
+            target_repo=target_repo,
+            results_dir=results_dir,
+            log_path=log_path,
+            started_at=started_at,
+        )
 
     duration = max(0.0, finished_at - started_at)
     return StageResult(
@@ -207,6 +265,7 @@ def run_stage(
         output_tail=output_tail,
         timed_out=timed_out,
         error=error,
+        target_repo=target_repo,
     )
 
 
@@ -238,6 +297,7 @@ def _failure_result(
     buffer: LogBuffer,
     tail_lines: int,
     returncode: int,
+    target_repo: Path,
 ) -> StageResult:
     return StageResult(
         stage_name=stage.name,
@@ -253,4 +313,5 @@ def _failure_result(
         output_tail=buffer.tail(max_lines=tail_lines),
         timed_out=False,
         error=error,
+        target_repo=target_repo,
     )

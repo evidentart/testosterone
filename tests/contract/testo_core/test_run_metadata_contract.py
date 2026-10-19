@@ -25,8 +25,8 @@ from testo_core.repository.db import get_repository, reset_repository_cache
 from testo_core.repository.db_config import reset_engine_cache
 from testo_core.repository.models import RunRecord, RunStatus
 
-# Read for runs from before v1.0's engine; nothing writes them today, so they read as None.
-LEGACY_KEYS = {"target_repo", "audit_json"}
+# Read for runs from before v1.0's engine; nothing writes it today, so it reads as None.
+LEGACY_KEYS = {"audit_json"}
 
 
 def _keys_read_by_views() -> set[str]:
@@ -94,6 +94,7 @@ def _persisted_record(artifacts_root: Path) -> RunRecord:
         stages=(stage,),
         aggregate_returncode=1,
         exit_code=EngineExitCode.DOMAIN_FAILURE,
+        target_repo=artifacts_root.parent,
     )
     run_id = DbBackend(artifacts_root).persist(result)
     assert run_id is not None
@@ -132,6 +133,14 @@ def test_persisted_run_has_test_time_in_its_view(sqlite_repo: None, tmp_path: Pa
 
 
 @pytest.mark.contract
+def test_persisted_run_has_target_repo_in_its_view(sqlite_repo: None, tmp_path: Path) -> None:
+    view = view_from_record(_persisted_record(tmp_path / "artifacts"))
+
+    assert view is not None
+    assert view.target_repo == str(tmp_path)
+
+
+@pytest.mark.contract
 def test_run_saved_before_test_time_existed_reads_as_unknown() -> None:
     legacy = RunRecord(
         status=RunStatus.COMPLETED,
@@ -143,3 +152,13 @@ def test_run_saved_before_test_time_existed_reads_as_unknown() -> None:
     assert view is not None
     assert view.metrics_duration_ms is None
     assert view.avg_case_ms is None
+
+
+@pytest.mark.contract
+def test_run_saved_before_target_repo_existed_reads_as_unknown() -> None:
+    legacy = RunRecord(status=RunStatus.COMPLETED, metadata_={"run_id": "old"})
+
+    view = view_from_record(legacy)
+
+    assert view is not None
+    assert view.target_repo is None

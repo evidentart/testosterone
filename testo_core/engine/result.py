@@ -33,6 +33,7 @@ class StageResult:
     # Test-pyramid tier the stage was configured with when it ran. Persisted in the
     # run record so `/runs/{id}/pyramid` doesn't depend on today's YAML.
     tier: str | None = None
+    target_repo: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -49,3 +50,4 @@ class PlanResult:
     error: str | None = None
     failure_type: str | None = None
     extra: dict[str, object] = field(default_factory=dict)
+    target_repo: Path | None = None
