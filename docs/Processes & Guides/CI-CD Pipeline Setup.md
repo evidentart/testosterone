@@ -93,7 +93,7 @@ What runs on Testosterone itself, as opposed to the wrappers above that run it i
 | `nightly-external.yml` | nightly, manual | External test tier |
 | `release-gate.yml` | manual | Release checks before publishing |
 | `dependabot.yml` (config, not a workflow) | weekly | Grouped dependency update PRs for pip, npm (`/` and `frontend/`) and GitHub Actions, committed as `chore(deps)` with the `no-changelog` label so commitlint and `changelog_required` pass |
-| `publish.yml`, `docker-publish.yml`, `artifactory-publish.yml` | GitHub Release published | PyPI, GHCR runner image, JFrog Artifactory ([Publishing to PyPI](Publishing%20to%20PyPI.md)) |
+| `publish.yml`, `docker-publish.yml`, `artifactory-publish.yml` | GitHub Release published (`publish.yml` can also be run by hand for an existing tag) | PyPI, GHCR runner image, JFrog Artifactory ([Publishing to PyPI](Publishing%20to%20PyPI.md)) |
 
 ## Versioning policy
 

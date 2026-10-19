@@ -3,25 +3,32 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to publish (e.g. v1.1.1)"
+        required: true
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  test-pypi:
-    name: Publish to Test PyPI (dry run)
+  pypi:
+    name: Publish to PyPI
     runs-on: ubuntu-latest
-    environment: test-pypi
+    environment: pypi
     permissions:
       id-token: write
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
 
       - name: Resolve version from tag
         id: version
-        env:
-          TAG: ${{ github.event.release.tag_name }}
         run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-python@v5
@@ -50,51 +57,13 @@ jobs:
       - name: Install the wheel with no extras and run a cycle
         run: bash scripts/package_smoke.sh dist
 
-      - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-
-      - name: Verify install from Test PyPI
-        run: |
-          sleep 30
-          python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ testo-core==${{ steps.version.outputs.version }}
-          testo --version
-
-  pypi:
-    name: Publish to PyPI
-    needs: test-pypi
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Resolve version from tag
-        id: version
-        env:
-          TAG: ${{ github.event.release.tag_name }}
-        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install build tools
-        run: python -m pip install --upgrade pip build twine
-
-      - name: Build package
-        run: python -m build
-
-      - name: Check distribution metadata
-        run: twine check --strict dist/*
-
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Verify install from PyPI
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           sleep 30
-          python -m pip install testo-core==${{ steps.version.outputs.version }}
+          python -m pip install "testo-core==$VERSION"
           testo --version

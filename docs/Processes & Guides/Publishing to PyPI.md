@@ -15,29 +15,27 @@ updated: 2026-10-19
 
 ## Prerequisites
 
-1. **PyPI and Test PyPI accounts**: register at https://pypi.org and https://test.pypi.org (2FA is required to publish). `testo-core` was still free on both on 2026-10-19.
-2. **Pending trusted publisher** on each index, which reserves the name before the first upload: account menu → "Publishing" → "Add a new pending publisher" → GitHub, with
+1. **PyPI account**: register at https://pypi.org (2FA is required to publish). There is no Test PyPI step: the build, metadata and clean-install checks run before the upload instead.
+2. **Pending trusted publisher** on PyPI, which reserves the name before the first upload: account menu → "Publishing" → "Add a new pending publisher" → GitHub, with
    - PyPI project name: `testo-core`
    - Owner: `taltal-beep`
    - Repository: `testosterone` (renamed from `unified-quality-orchestration-reporting-dashboard`; a publisher registered under the old name must be updated)
    - Workflow: `publish.yml`
-   - Environment: `pypi` on PyPI, `test-pypi` on Test PyPI
-3. **GitHub environments**: create `pypi` and `test-pypi` under the repository's Settings → Environments. Adding yourself as a required reviewer on `pypi` makes the real upload wait for a click after Test PyPI succeeds.
+   - Environment: `pypi`
+3. **GitHub environment**: create `pypi` under the repository's Settings → Environments. Adding yourself as a required reviewer makes the upload wait for a click.
 
 ## Publishing flow
 
 1. Create a GitHub Release with a semver tag matching `pyproject.toml` (e.g. `v1.1.1` for `version = "1.1.1"`).
-2. The `publish.yml` workflow triggers automatically:
-   - **Test PyPI job**: checks the tag matches the package version, builds, runs `twine check --strict`, installs the wheel with no extras and runs a cycle (`scripts/package_smoke.sh`), publishes to Test PyPI, then verifies `pip install` from Test PyPI.
-   - **PyPI job** (depends on Test PyPI success, and on the `pypi` environment's reviewer if one is set): builds, checks, publishes to PyPI, verifies `pip install`.
-3. Both jobs use `pypa/gh-action-pypi-publish` with OIDC authentication (no API token needed).
+2. The `publish.yml` workflow triggers automatically. Its one job waits for the `pypi` environment's reviewer, then checks out the tag, builds, checks the tag matches the package version, runs `twine check --strict`, installs the wheel with no extras and runs a cycle (`scripts/package_smoke.sh`), publishes with `pypa/gh-action-pypi-publish` over OIDC (no API token), and verifies `pip install`.
+3. To publish an existing tag whose automatic run failed (for example after fixing the trusted publisher), run the workflow by hand from the Actions tab with that tag as input. PyPI refuses a version that was already uploaded.
 4. The same Release also triggers `docker-publish.yml` (runner image to GHCR; the first push creates a private package, so set its visibility to public once) and `artifactory-publish.yml` (skipped while `ARTIFACTORY_URL` is unset).
 
 The `package` job in `ci.yml` runs the build and clean-install check on every pull request, so a release should not be the first time they run.
 
 ## Current state
 
-As of 2026-10-19 nothing has been published: the repository has no git tags or GitHub Releases, and `testo-core` is not on PyPI. Version 1.1.1 is the first release meant for PyPI; 1.1.0 was never published and its wheel crashed on `testo run` without the `[db]` extra (see `CHANGELOG.md`). Creating the `v1.1.1` Release publishes it, together with the moving `v1` tag the GitHub Action docs refer to ([CI-CD Pipeline Setup § Versioning policy](CI-CD%20Pipeline%20Setup.md#versioning-policy)).
+Version 1.1.1 is the first release meant for PyPI; 1.1.0 was never published and its wheel crashed on `testo run` without the `[db]` extra (see `CHANGELOG.md`). The `v1.1.1` GitHub Release was created on 2026-10-19; its automatic run stopped at the old Test PyPI step, so 1.1.1 is uploaded with a manual run of the workflow. The moving `v1` tag the GitHub Action docs refer to ([CI-CD Pipeline Setup § Versioning policy](CI-CD%20Pipeline%20Setup.md#versioning-policy)) is set separately.
 
 ## Version management
 
@@ -56,9 +54,8 @@ testo run --help
 ## Troubleshooting
 
 - **OIDC auth failure**: Verify trusted publisher configuration matches the workflow filename and GitHub environment name exactly.
-- **Tag does not match**: the first job stops when the tag (minus its `v`) differs from `[project] version`. Fix the version or the tag and create a new Release.
+- **Tag does not match**: the job stops when the tag (minus its `v`) differs from `[project] version`. Fix the version or the tag and create a new Release.
 - **`twine check` failure**: Check `pyproject.toml` for missing metadata fields (`description`, `readme`, `requires-python`).
-- **Test PyPI install failure**: Test PyPI may lack transitive dependencies. The workflow uses `--extra-index-url https://pypi.org/simple/` as fallback.
 - **Version conflict**: PyPI does not allow re-uploading the same version. Bump the version and create a new release.
 
 ## Related
