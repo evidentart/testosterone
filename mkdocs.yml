@@ -112,6 +112,7 @@ nav:
       - Open Source Features: Specs & ADRs/Open Source Features - 2026-10-19.md
       - GitHub Action PR Comment: Specs & ADRs/GitHub Action PR Comment - 2026-10-19.md
       - Docs Site: Specs & ADRs/Docs Site - 2026-10-19.md
+      - Plugin API: Specs & ADRs/Plugin API - 2026-10-19.md
       - Docs Vault and Wiki Sync: Specs & ADRs/Docs Vault and Wiki Sync - 2026-10-07.md
       - Interview Readiness Fixes: Specs & ADRs/Interview Readiness Fixes - 2026-10-07.md
       - Architecture Consolidation: Specs & ADRs/Architecture Consolidation - 2026-10-06.md

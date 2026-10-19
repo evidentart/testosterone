@@ -206,11 +206,13 @@ credentials) rather than as the API's own user.
 
 ## Extending
 
-- **New framework:** add an adapter in `testo_core/frameworks/` and its name to
-  `SUPPORTED_FRAMEWORKS` in `config/schema.py`. For anything that writes JUnit XML, the
-  `command` framework plus `junit_xml:` globs is usually enough.
-- **New reporter:** implement it in `testo_core/reporting/reporters/` and register it in
-  `SUPPORTED_REPORTER_TYPES`.
+- **New framework:** for anything that writes JUnit XML, the `command` framework plus
+  `junit_xml:` globs is usually enough. Otherwise ship an adapter in your own package under
+  the `testo.frameworks` entry point group (`testo_core/plugins.py`, example in
+  `examples/plugin/`), or add a built-in one in `testo_core/frameworks/` and its name to
+  `SUPPORTED_FRAMEWORKS` in `config/schema.py`.
+- **New reporter:** a `BaseReporter` subclass under the `testo.reporters` entry point group,
+  or a built-in in `testo_core/reporting/reporters/` registered in `SUPPORTED_REPORTER_TYPES`.
 - **New persistence target:** implement `PersistenceBackend` (`persistence/backend.py`) and
   add it to `composite_backend()`.
 

@@ -117,7 +117,7 @@ Add stages to the same cycle; they run in order.
         junit_xml: ["reports/junit/*.xml"]
 ```
 
-Every key (timeouts, workers, triggers on changed paths, reporters such as Allure) is in [Command Reference](CLI%20Commands/Command%20Reference.md).
+Every key (timeouts, workers, triggers on changed paths, reporters such as Allure) is in [Command Reference](CLI%20Commands/Command%20Reference.md). A runner or reporter that isn't built in can come from a [plugin](CLI%20Commands/Command%20Reference.md#plugins) package.
 
 ## Next
 

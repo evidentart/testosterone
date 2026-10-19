@@ -91,11 +91,13 @@ Each **equipment** name maps to an adapter implementing `FrameworkAdapter`:
 
 Adapters build `argv`, set Allure output under `allure-results/<framework>/`, and run in `stage.target_repo` as cwd.
 
+Any other name is looked up in installed `testo.frameworks` entry points (`testo_core/plugins.py`); built-in names always win. See [Command Reference § Plugins](../CLI%20Commands/Command%20Reference.md#plugins).
+
 ### `testo_core/reporting/`
 
 - **`collector.py`** — walks `artifacts/<cycle>/` for Allure result trees.
 - **`entry.py`** — `testo report` dispatch (generate, serve, json/junit export).
-- **`reporters/`** — plug-in reporters: `allure`, `extent`, `reportportal`, `testbeats`.
+- **`reporters/`** — plug-in reporters: `allure`, `extent`, `reportportal`, `testbeats`, plus installed `testo.reporters` entry points (`testo_core/plugins.py`).
 
 Post-run reporters are invoked from `CycleRunService` (`services/cycle_run.py`) after `run_plan()`, for both `testo run` and API cycle executions, when `reporters:` is set in YAML or `--reporter` is passed.
 

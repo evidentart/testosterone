@@ -44,3 +44,7 @@ Added [Open Source Features - 2026-10-19](Specs%20&%20ADRs/Open%20Source%20Featu
 ## 2026-10-19: GitHub Action PR comment note
 
 Added [GitHub Action PR Comment - 2026-10-19](Specs%20&%20ADRs/GitHub%20Action%20PR%20Comment%20-%202026-10-19.md), linked from the Specs & ADRs README.
+
+## 2026-10-19: plugin API
+
+Added [Plugin API - 2026-10-19](Specs%20&%20ADRs/Plugin%20API%20-%202026-10-19.md) and a Plugins section in [Command Reference](CLI%20Commands/Command%20Reference.md#plugins).

@@ -1,0 +1,11 @@
+version: 1
+cycles:
+  unit:
+    description: unittest through the example plugin.
+    stages:
+      - name: unit
+        equipment: unittest        # from the testo.frameworks entry point
+        args: [tests.test_math]
+reporters:
+  - type: json-summary              # from the testo.reporters entry point
+    out_dir: reports

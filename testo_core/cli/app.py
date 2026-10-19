@@ -57,6 +57,7 @@ def _register_commands() -> None:
     from testo_core.cli.commands import flaky as flaky_mod
     from testo_core.cli.commands import init_cmd as init_cmd_mod
     from testo_core.cli.commands import plans as cycles_cmd
+    from testo_core.cli.commands import plugins as plugins_mod
     from testo_core.cli.commands import report as report_cmd
     from testo_core.cli.commands import run as run_cmd
     from testo_core.cli.commands import version as version_cmd
@@ -87,6 +88,11 @@ def _register_commands() -> None:
         help="Tests whose outcome keeps flipping across a cycle's recent runs (``--cycle``).",
         rich_help_panel="Diagnostics",
     )(flaky_mod.flaky)
+    app.command(
+        name="plugins",
+        help="List built-in and installed framework and reporter plugins (``--check`` imports them).",
+        rich_help_panel="Diagnostics",
+    )(plugins_mod.plugins_cmd)
     app.add_typer(
         cycles_cmd.app,
         name="cycles",

@@ -24,11 +24,11 @@ from pathlib import Path
 from typing import Any, Protocol
 from uuid import UUID
 
+from testo_core import plugins
 from testo_core.config.errors import ConfigError, ConfigValidationError
 from testo_core.config.resolver import resolve_stages_for_plan
 from testo_core.config.schema import (
     DEFAULT_TIER_BY_FRAMEWORK,
-    SUPPORTED_FRAMEWORKS,
     Plan,
     Stage,
     TestosteroneConfig,
@@ -219,8 +219,8 @@ def single_stage_plan(
     Raises :class:`ConfigValidationError` for an unknown framework or a
     missing target directory.
     """
-    if framework not in SUPPORTED_FRAMEWORKS:
-        allowed = ", ".join(sorted(SUPPORTED_FRAMEWORKS))
+    if framework not in plugins.framework_names():
+        allowed = ", ".join(sorted(plugins.framework_names()))
         raise ConfigValidationError(f"unknown framework {framework!r}; expected one of: {allowed}")
     repo = Path(target_repo).expanduser().resolve()
     if not repo.is_dir():

@@ -239,6 +239,6 @@ subprocesses). Full details in [CHANGELOG.md](CHANGELOG.md).
 | Tests run in one-off Docker containers (`UQO_RUNNER_IMAGE`, `UQO_RUNNER_PREBUILT`) | stages run as host subprocesses; use `Dockerfile.testo-runner` as the CI job image if you want isolation |
 | Allure results uploaded to MinIO per run | per-run reports under `static/history/<run_id>/` (served at `/history`) and the report archive DB |
 | `locust` test type | `equipment: command` with `args: [locust, --headless, …]` |
-| Pluggy `plugins/*.py` runner hooks | a framework adapter in `testo_core/frameworks/` |
+| Pluggy `plugins/*.py` runner hooks | a framework adapter or reporter in your own package, registered as a `testo.frameworks` / `testo.reporters` entry point (see `examples/plugin/`) |
 
 </details>

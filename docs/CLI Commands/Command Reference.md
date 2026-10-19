@@ -215,6 +215,20 @@ Exits **2** on hard failures (config or missing required executables) — see [T
 
 ---
 
+## `testo plugins`
+
+Lists the built-in frameworks and reporters, then every installed [plugin](#plugins) with the package that registered it.
+
+```bash
+testo plugins            # table
+testo plugins --check    # also import each plugin and verify its interface
+testo plugins --json
+```
+
+Exits **1** when `--check` finds a plugin that fails to import or does not implement its interface; otherwise **0**.
+
+---
+
 ## `testo clean`
 
 Remove `artifacts/` (from config or `./artifacts`) and `./temp`; optional Docker prune.
@@ -287,7 +301,7 @@ The v1.0 `uqo` command (including its `uqo run --config` headless format with `-
 
 ## Reporter types (`reporters:` / `--reporter`)
 
-Supported: `allure`, `extent`, `reportportal`, `testbeats`. Configured in root `testosterone.yaml`; outputs often under `reports/` (see repo `testosterone.yaml` for examples).
+Supported: `allure`, `extent`, `reportportal`, `testbeats`, plus any installed [reporter plugin](#plugins). Configured in root `testosterone.yaml`; outputs often under `reports/` (see repo `testosterone.yaml` for examples).
 
 After `testo run`, terminal hints may point to `./reports/allure`, `./reports/extent`, etc.
 
@@ -298,6 +312,34 @@ After `testo run`, terminal hints may point to `./reports/allure`, `./reports/ex
 | Allure Report 3 | https://allurereport.org/docs/v3/ |
 | ReportPortal | https://reportportal.io/docs/api-development/ |
 | ReportPortal agents | https://reportportal.io/docs/log-data-in-reportportal/test-framework-integration/ |
+
+## Plugins
+
+A Python package can add a test runner (`equipment:`) or a reporter (`reporters:`) without changing Testosterone, through two entry point groups:
+
+```toml
+# the plugin's pyproject.toml
+[project.entry-points."testo.frameworks"]
+unittest = "testo_example_plugin:UnittestAdapter"
+
+[project.entry-points."testo.reporters"]
+json-summary = "testo_example_plugin:JsonSummaryReporter"
+```
+
+After `pip install`, the names work in `testosterone.yaml` and `--reporter`, and `testo plugins` lists them.
+
+| Group | Value | Interface |
+|-------|-------|-----------|
+| `testo.frameworks` | A class or factory returning an adapter | `FrameworkAdapter` in [`testo_core/frameworks/base.py`](../../testo_core/frameworks/base.py): `name`, `results_subdir()`, `build_argv(target_repo, results_dir, stage_args, workers)` and `native_report(stage_dir)` |
+| `testo.reporters` | A `BaseReporter` subclass | [`testo_core/reporting/reporters/base.py`](../../testo_core/reporting/reporters/base.py): `reporter_type` and `publish(results, context, console)`; YAML keys other than `type` arrive as `self._options` |
+
+- The stage process runs `build_argv`'s command in `target_repo`. Tests are counted from Allure `*-result.json` files written to `results_dir` (also exported as `TESTO_SHARED_ALLURE_RESULTS_DIR`), or from the stage's `junit_xml` globs.
+- A plugin stage defaults to `tier: unit` and gets `workers` passed through unchanged.
+- Built-in names always win; a plugin that reuses one, or a second plugin with the same name, is ignored with a warning.
+- Plugins are imported only when a stage or reporter uses them, or by `testo plugins --check`.
+- The API's ad-hoc run endpoint (`POST /api/v1/adhoc-executions`) accepts built-in frameworks only.
+
+[`examples/plugin`](../../examples/plugin/README.md) is a complete plugin with one of each. Design: [Plugin API](../Specs%20&%20ADRs/Plugin%20API%20-%202026-10-19.md).
 
 ## Related operational docs
 
