@@ -38,7 +38,14 @@ _DEFAULT_TAIL_LINES: int = 200
 logger = logging.getLogger(__name__)
 
 
-def _import_junit(stage: Stage, *, results_dir: Path, log_path: Path, started_at: float) -> None:
+def _import_junit(
+    stage: Stage,
+    *,
+    patterns: tuple[str, ...],
+    results_dir: Path,
+    log_path: Path,
+    started_at: float,
+) -> None:
     """Post-stage hook: turn the stage's JUnit XML into Allure results.
 
     Best-effort by design (like the BehaveX report hook): the process exit
@@ -50,14 +57,14 @@ def _import_junit(stage: Stage, *, results_dir: Path, log_path: Path, started_at
     try:
         imported = import_junit_reports(
             target_repo=stage.target_repo,
-            patterns=stage.junit_xml,
+            patterns=patterns,
             results_dir=results_dir,
             tool=stage.name,
             not_before=started_at,
         )
         lines = [
             f"[testo] junit_xml: imported {imported.tests} test(s) "
-            f"from {len(imported.files)} file(s) matching {list(stage.junit_xml)}"
+            f"from {len(imported.files)} file(s) matching {list(patterns)}"
         ]
         lines += [f"[testo] junit_xml: skipped malformed report {err}" for err in imported.errors]
     except Exception as exc:  # noqa: BLE001 — never let reporting fail a stage
@@ -128,6 +135,11 @@ def run_stage(
     if adapter_env is not None:
         for key, value in adapter_env().items():
             env.setdefault(key, value)
+    # Env that depends on the stage's paths (e.g. where Playwright writes its reports).
+    stage_env = getattr(adapter, "stage_env", None)
+    if stage_env is not None:
+        for key, value in stage_env(target_repo=stage.target_repo, results_dir=results_dir).items():
+            env.setdefault(key, value)
 
     started_at = time.time()
     returncode: int
@@ -189,8 +201,15 @@ def run_stage(
         # A timeout/launch error is the more important message; keep it.
         error = error or report_error
 
-    if stage.junit_xml:
-        _import_junit(stage, results_dir=results_dir, log_path=log_path, started_at=started_at)
+    junit_patterns: tuple[str, ...] = stage.junit_xml or getattr(adapter, "default_junit_xml", ())
+    if junit_patterns:
+        _import_junit(
+            stage,
+            patterns=junit_patterns,
+            results_dir=results_dir,
+            log_path=log_path,
+            started_at=started_at,
+        )
 
     duration = max(0.0, finished_at - started_at)
     return StageResult(

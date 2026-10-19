@@ -48,3 +48,7 @@ Added [GitHub Action PR Comment - 2026-10-19](Specs%20&%20ADRs/GitHub%20Action%2
 ## 2026-10-19: plugin API
 
 Added [Plugin API - 2026-10-19](Specs%20&%20ADRs/Plugin%20API%20-%202026-10-19.md) and a Plugins section in [Command Reference](CLI%20Commands/Command%20Reference.md#plugins).
+
+## 2026-10-19: Playwright adapter
+
+Added [Playwright Adapter - 2026-10-19](Specs%20&%20ADRs/Playwright%20Adapter%20-%202026-10-19.md).

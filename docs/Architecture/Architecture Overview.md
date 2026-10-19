@@ -30,7 +30,7 @@ flowchart TD
 
     SVC --> ENG[engine.orchestrator.run_plan<br/>sequential stages]
     ENG --> EXE[engine.executor.run_stage<br/>subprocess + timeout]
-    EXE --> FW[frameworks/<br/>pytest · behave · behavex · command]
+    EXE --> FW[frameworks/<br/>pytest · behave · behavex · playwright · command]
     FW --> TGT[(target repo)]
     ENG --> EV[(artifacts/&lt;cycle&gt;/events.ndjson<br/>run.log · allure-results)]
     ENG --> PER[persistence/<br/>JsonBackend + DbBackend]
@@ -78,7 +78,7 @@ Cycles are defined under `cycles:` in YAML (legacy key `plans:` is still accepte
 
 `testo_core/persistence/` provides the `PersistenceBackend` protocol used by the orchestrator (JSON + DB backends, composite fanout). See **Persistence** below.
 
-Execution is **sequential by design**; parallelization today is framework-internal through a stage's `workers` (BehaveX always, pytest when pytest-xdist is installed, native behave never; see [Deep Dive - Execution Logic § Framework level](Deep%20Dive%20-%20Execution%20Logic.md#framework-level--optional)).
+Execution is **sequential by design**; parallelization today is framework-internal through a stage's `workers` (BehaveX and Playwright always, pytest when pytest-xdist is installed, native behave never; see [Deep Dive - Execution Logic § Framework level](Deep%20Dive%20-%20Execution%20Logic.md#framework-level--optional)).
 
 ### `testo_core/frameworks/`
 
@@ -87,7 +87,8 @@ Each **equipment** name maps to an adapter implementing `FrameworkAdapter`:
 - `pytest` → `PytestAdapter`
 - `behave` → `BehaveAdapter`
 - `behavex` → `BehaveXAdapter`
-- `command` → `CommandAdapter`: any other runner (Jest, Playwright, Maestro, `go test`, ...). `args` is the whole argv. The stage's `junit_xml` globs are converted into Allure results after it exits (`testo_core/reporting/junit_import.py`), so the stage counts in summaries, health % and every reporter. See [Command Adapter and JUnit Import - 2026-09-25](../Specs%20&%20ADRs/Command%20Adapter%20and%20JUnit%20Import%20-%202026-09-25.md).
+- `playwright` → `PlaywrightAdapter`: `npx playwright test <args>` in the target repo, which must have `@playwright/test` installed. Adds `--reporter=list,junit,html` and `--workers=N` unless `args` set them; the JUnit file (`test-results/testo-junit.xml`) is imported like a `command` stage's `junit_xml`, and Playwright's HTML report is kept as the run's native report. Default tier `e2e`.
+- `command` → `CommandAdapter`: any other runner (Jest, Maestro, `go test`, ...). `args` is the whole argv. The stage's `junit_xml` globs are converted into Allure results after it exits (`testo_core/reporting/junit_import.py`), so the stage counts in summaries, health % and every reporter. See [Command Adapter and JUnit Import - 2026-09-25](../Specs%20&%20ADRs/Command%20Adapter%20and%20JUnit%20Import%20-%202026-09-25.md).
 
 Adapters build `argv`, set Allure output under `allure-results/<framework>/`, and run in `stage.target_repo` as cwd.
 

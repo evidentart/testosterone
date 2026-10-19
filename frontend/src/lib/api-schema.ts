@@ -411,7 +411,7 @@ export interface components {
              * Framework
              * @enum {string}
              */
-            framework: "pytest" | "behave" | "behavex" | "command";
+            framework: "pytest" | "behave" | "behavex" | "command" | "playwright";
             /**
              * Persist
              * @default true

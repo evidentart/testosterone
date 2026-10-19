@@ -24,7 +24,7 @@ flowchart TD
     CFG --> SVC[CycleRunService<br/>trigger gate → engine → reporters → metrics → archive]
     SVC --> ENG[engine.run_plan<br/>sequential stages]
     ENG --> EXE[executor.run_stage<br/>subprocess + timeout]
-    EXE --> FW[framework adapters<br/>pytest · behave · behavex · command]
+    EXE --> FW[framework adapters<br/>pytest · behave · behavex · playwright · command]
     ENG --> EV[(artifacts/&lt;cycle&gt;/events.ndjson)]
     ENG --> PER[persistence<br/>JsonBackend + DbBackend]
     PER --> DB[(Run history DB<br/>SQLite / Postgres / MySQL)]

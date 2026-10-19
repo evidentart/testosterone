@@ -16,7 +16,7 @@ After the first PyPI release (1.1.1) and the [docs site](Docs%20Site%20-%202026-
 | Flaky test detection | This note, below |
 | PR comment from the GitHub Action | [GitHub Action PR Comment - 2026-10-19](GitHub%20Action%20PR%20Comment%20-%202026-10-19.md) |
 | Plugin API for framework adapters and reporters | [Plugin API - 2026-10-19](Plugin%20API%20-%202026-10-19.md) |
-| More framework adapters | Planned |
+| More framework adapters | [Playwright Adapter - 2026-10-19](Playwright%20Adapter%20-%202026-10-19.md) |
 | GitLab mirror and CI template | Needs the owner's GitLab account ([GitLab Pages Demo](../Processes%20&%20Guides/GitLab%20Pages%20Demo.md#what-you-have-to-do-on-gitlab)) |
 
 ## Flaky test detection

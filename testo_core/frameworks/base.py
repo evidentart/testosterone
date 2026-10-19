@@ -71,6 +71,10 @@ def get_adapter(framework: str) -> FrameworkAdapter:
         from testo_core.frameworks.command_adapter import CommandAdapter
 
         return CommandAdapter()
+    if framework == "playwright":
+        from testo_core.frameworks.playwright_adapter import PlaywrightAdapter
+
+        return PlaywrightAdapter()
 
     from testo_core import plugins
 

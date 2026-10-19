@@ -52,7 +52,8 @@
               "pytest",
               "behave",
               "behavex",
-              "command"
+              "command",
+              "playwright"
             ],
             "title": "Framework",
             "type": "string"

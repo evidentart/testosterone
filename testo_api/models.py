@@ -66,7 +66,7 @@ class CycleExecutionRequest(ApiModel):
 class AdhocExecutionRequest(ApiModel):
     """Run one framework directly, without a cycle in ``testosterone.yaml``."""
 
-    framework: Literal["pytest", "behave", "behavex", "command"]
+    framework: Literal["pytest", "behave", "behavex", "command", "playwright"]
     target_repo: str
     args: list[str] = Field(default_factory=list)
     timeout_s: float | None = None
