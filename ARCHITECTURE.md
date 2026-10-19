@@ -99,7 +99,7 @@ Exit codes (`testo_core/engine/exit_codes.py`), propagated unchanged to CI:
 | Cycles | `GET /cycles`, `GET /cycles/{cycle}` |
 | Executions | `POST /cycles/{cycle}/executions`, `POST /adhoc-executions`, `GET /cycle-executions/{id}`, `GET /cycle-executions/{id}/events` (SSE) |
 | Runs | `GET /runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/reports`, `GET /runs/{run_id}/pyramid` |
-| Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
+| Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /analytics/flaky`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
 | AI | `GET /ai/config/status`, `PUT /ai/config`, `GET /runs/{run_id}/ai-summary`, `POST /runs/{run_id}/ai-summary:generate` |
 | Health | `GET /health/live`, `GET /health/ready` |
 

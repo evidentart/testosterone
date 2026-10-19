@@ -72,6 +72,8 @@ Regressions & risk
   regression   test_sub   passed   failed
 ```
 
+Once a cycle has a few runs, `testo flaky --cycle unit` lists tests that keep flipping between pass and fail.
+
 `testo report list` shows every recorded run and `testo diff <BASELINE_ID> <CURRENT_ID>` compares any two. How deltas are classified is in [Delta Comparison Policy](Specs%20&%20ADRs/Delta%20Comparison%20Policy.md).
 
 ## 5. Run it in GitHub Actions

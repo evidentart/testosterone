@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from testo_api.models import (
     DeltaCaseChange,
@@ -13,6 +13,8 @@ from testo_api.models import (
     DeltaReliabilityMetrics,
     DeltaStageDelta,
     DeltaStatusSummaryResponse,
+    FlakyTestItem,
+    FlakyTestsResponse,
 )
 from testo_core.history.read_model import get_run
 from testo_core.services.delta_models import MetricDelta
@@ -22,6 +24,7 @@ from testo_core.services.delta_service import (
     InvalidRunIdError,
     RunNotFoundComparisonError,
 )
+from testo_core.services.flaky_service import DEFAULT_WINDOW, find_flaky_tests
 from testo_core.services.run_snapshot_diff import diff_run_snapshots
 
 router = APIRouter(prefix="/api/v1", tags=["analytics"])
@@ -137,5 +140,37 @@ def get_delta_case_changes(current_run_id: str, baseline_run_id: str) -> DeltaCa
                 duration_delta_ms=c.duration_delta_ms,
             )
             for c in changes
+        ],
+    )
+
+
+@router.get("/analytics/flaky", response_model=FlakyTestsResponse)
+def get_flaky_tests(
+    cycle: str, window: int = Query(DEFAULT_WINDOW, ge=2, le=200)
+) -> FlakyTestsResponse:
+    """Tests that both passed and failed, flipping at least twice, in a cycle's last runs.
+
+    UI parity with ``testo flaky --cycle``; see ``testo_core/services/flaky_service.py``.
+    """
+    report = find_flaky_tests(cycle=cycle, window=window)
+    return FlakyTestsResponse(
+        cycle=report.cycle,
+        window=report.window,
+        runs_analyzed=report.runs_analyzed,
+        tests_analyzed=report.tests_analyzed,
+        items=[
+            FlakyTestItem(
+                key=t.key,
+                name=t.name,
+                group=t.group,
+                runs=t.runs,
+                passed=t.passed,
+                failed=t.failed,
+                flips=t.flips,
+                flip_rate=t.flip_rate,
+                last_status=t.last_status,
+                history=list(t.history),
+            )
+            for t in report.flaky
         ],
     )

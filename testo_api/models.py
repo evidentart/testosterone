@@ -274,6 +274,27 @@ class DeltaCaseChangesResponse(ApiModel):
     changes: list[DeltaCaseChange] = Field(default_factory=list)
 
 
+class FlakyTestItem(ApiModel):
+    key: str
+    name: str
+    group: str
+    runs: int
+    passed: int
+    failed: int
+    flips: int
+    flip_rate: float
+    last_status: str
+    history: list[str] = Field(default_factory=list)
+
+
+class FlakyTestsResponse(ApiModel):
+    cycle: str
+    window: int
+    runs_analyzed: int
+    tests_analyzed: int
+    items: list[FlakyTestItem] = Field(default_factory=list)
+
+
 class DashboardHeadlineKpis(ApiModel):
     latest_run_id: str | None = None
     latest_status: str | None = None

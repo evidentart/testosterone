@@ -331,3 +331,43 @@ def test_analytics_delta_incompatible_data(monkeypatch) -> None:  # noqa: ANN001
     assert resp.status_code == 422
     payload = resp.json()
     assert payload["error"]["code"] == "invalid_input"
+
+
+def test_analytics_flaky_contract(monkeypatch) -> None:  # noqa: ANN001
+    from testo_core.services.flaky_service import FlakyReport, FlakyTest
+
+    seen: dict[str, object] = {}
+
+    def _fake_find(*, cycle: str, window: int) -> FlakyReport:
+        seen.update(cycle=cycle, window=window)
+        return FlakyReport(
+            cycle=cycle,
+            window=window,
+            runs_analyzed=3,
+            tests_analyzed=4,
+            flaky=(
+                FlakyTest(
+                    key="k",
+                    name="test_flaky",
+                    group="tests.api",
+                    runs=3,
+                    passed=2,
+                    failed=1,
+                    flips=2,
+                    flip_rate=1.0,
+                    last_status="passed",
+                    history=("passed", "failed", "passed"),
+                ),
+            ),
+        )
+
+    monkeypatch.setattr("testo_api.routes.analytics.find_flaky_tests", _fake_find)
+    client = TestClient(create_app())
+    resp = client.get("/api/v1/analytics/flaky?cycle=fake-api")
+    assert resp.status_code == 200
+    assert seen == {"cycle": "fake-api", "window": 20}
+    payload = resp.json()
+    assert (payload["runs_analyzed"], payload["tests_analyzed"]) == (3, 4)
+    assert payload["items"][0]["history"] == ["passed", "failed", "passed"]
+
+    assert client.get("/api/v1/analytics/flaky?cycle=x&window=1").status_code == 422

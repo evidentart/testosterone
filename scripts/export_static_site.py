@@ -37,6 +37,7 @@ The layout it writes is the contract shared with ``static-backend.ts``:
     data/ai-config.json                    GET /api/v1/ai/config/status
     data/cycles.json                       GET /api/v1/cycles (cycles that ran)
     data/cycles/<name>.json                GET /api/v1/cycles/{name}
+    data/flaky/<name>.json                 GET /api/v1/analytics/flaky?cycle={name}
     data/runs.json                         GET /api/v1/runs
     data/runs/<run_id>/detail.json         GET /api/v1/runs/{id}
     data/runs/<run_id>/reports.json        GET /api/v1/runs/{id}/reports
@@ -229,6 +230,9 @@ class Exporter:
         for cycle in listing["items"]:
             name = cycle["name"]
             self._dump(f"/api/v1/cycles/{quote(name, safe='')}", f"cycles/{name}.json")
+            self._dump(
+                f"/api/v1/analytics/flaky?cycle={quote(name, safe='')}", f"flaky/{name}.json"
+            )
 
     def export_dashboard(self) -> None:
         overview = self._get("/api/v1/dashboard/overview?recent_limit=6")

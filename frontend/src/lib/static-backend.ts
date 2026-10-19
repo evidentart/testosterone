@@ -61,6 +61,11 @@ export function resolveStaticPath(pathname: string, search: URLSearchParams): st
   const runSub = /^\/runs\/([^/]+)\/(reports|pyramid|ai-summary)$/.exec(path);
   if (runSub) return `runs/${runSub[1]}/${runSub[2]}.json`;
 
+  if (path === "/analytics/flaky") {
+    const name = search.get("cycle");
+    return name ? `flaky/${name}.json` : null;
+  }
+
   if (path === "/analytics/delta" || path === "/analytics/delta/cases") {
     const current = search.get("current_run_id");
     const baseline = search.get("baseline_run_id");

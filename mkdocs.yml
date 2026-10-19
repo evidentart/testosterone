@@ -109,6 +109,7 @@ nav:
       - Changelog Policy: changelog_automation_policy.md
   - Decisions:
       - Specs & ADRs: Specs & ADRs/README.md
+      - Open Source Features: Specs & ADRs/Open Source Features - 2026-10-19.md
       - Docs Site: Specs & ADRs/Docs Site - 2026-10-19.md
       - Docs Vault and Wiki Sync: Specs & ADRs/Docs Vault and Wiki Sync - 2026-10-07.md
       - Interview Readiness Fixes: Specs & ADRs/Interview Readiness Fixes - 2026-10-07.md

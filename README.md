@@ -141,6 +141,7 @@ schema and every flag are in [Command Reference](docs/CLI%20Commands/Command%20R
 | `testo report …` | Generate, list, open and export reports (`testo diff` compares two archived runs) |
 | `testo cycles list/show` | Inspect configured cycles |
 | `testo watch --cycle <name>` | Re-run a cycle when files change |
+| `testo flaky --cycle <name>` | Tests that keep flipping between pass and fail across recent runs (`--fail-on-flaky` for CI) |
 | `testo doctor` | Check config, database and tools on PATH |
 
 Exit codes: `0` success (or trigger-skipped), `1` tests failed, `2` invalid input,
@@ -154,7 +155,7 @@ Details: [Troubleshooting and Error Codes](docs/CLI%20Commands/Troubleshooting%2
 | Cycles | `GET /cycles`, `GET /cycles/{cycle}` |
 | Executions | `POST /cycles/{cycle}/executions`, `POST /adhoc-executions`, `GET /cycle-executions/{id}`, `GET /cycle-executions/{id}/events` (SSE) |
 | Runs | `GET /runs`, `GET /runs/{id}`, `GET /runs/{id}/reports`, `GET /runs/{id}/pyramid` |
-| Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
+| Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /analytics/flaky`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
 | AI (bring your own key) | `GET /ai/config/status`, `PUT /ai/config`, `GET /runs/{id}/ai-summary`, `POST /runs/{id}/ai-summary:generate` |
 | Health | `GET /health/live`, `GET /health/ready` |
 

@@ -178,6 +178,27 @@ Note: this operates on `ReportArchive` UUIDs (`testo report list`), a separate i
 
 ---
 
+## `testo flaky`
+
+Tests whose outcome keeps flipping across a cycle's recent runs.
+
+```bash
+testo flaky --cycle fake-api               # last 20 runs
+testo flaky --cycle fake-api --window 50 --json
+testo flaky --cycle nightly --fail-on-flaky  # exit 1 when any test is flaky (CI gate)
+```
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--cycle` | required | Cycle whose run history to read |
+| `--window` | `20` | How many of the cycle's most recent runs to look at (min 2) |
+| `--json` | off | Print the report as JSON |
+| `--fail-on-flaky` | off | Exit `1` when any flaky test is found |
+
+A test is flaky when, within the window, it both passed and failed and its outcome changed at least twice (skipped runs are ignored). One change is a regression or a fix, which `testo summary` shows. Exit `2` when fewer than two runs with per-test results exist. Reads run-history records (`run_id`s) and each run's artifact snapshot, the same data as `GET /api/v1/analytics/flaky?cycle=<name>` and the Flaky tests card on the cycle page. See [Open Source Features - 2026-10-19](../Specs%20&%20ADRs/Open%20Source%20Features%20-%202026-10-19.md).
+
+---
+
 ## `testo doctor`
 
 Health check: config load, framework CLIs on PATH, Node.js + Allure Report 3 CLI, optional Docker warnings, DB probe if `DATABASE_URL` or config URL is set.

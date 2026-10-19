@@ -2,7 +2,7 @@
 type: roadmap
 status: current
 created: 2026-06-25
-updated: 2026-10-10
+updated: 2026-10-19
 ---
 
 # Product Roadmap
@@ -19,7 +19,7 @@ Where Testosterone (`testo-core`, CLI `testo`) stands today and what comes next.
 | CLI | `testo run` (Rich, `--stream`, `--ci` NDJSON), reports, diff/summary, config, doctor/clean/watch/init; exit codes `0`–`4` ([Command Reference](../CLI%20Commands/Command%20Reference.md)) |
 | Storage | SQLite by default, PostgreSQL/MySQL through the repository layer ([Repository Pattern](../Specs%20&%20ADRs/Repository%20Pattern%20-%20Database-Agnostic%20Refactor.md)). Docker and MinIO are not required |
 | UI | React + Vite + Tailwind frontend on the FastAPI `/api/v1` API; frontend types generated from the OpenAPI schema ([Phase 5 UI Redesign](../Specs%20&%20ADRs/Phase%205%20UI%20Redesign%20-%20Cycles-First%20Navigation.md)). The Streamlit prototype was removed |
-| Analytics | Dashboard, run-to-run delta with per-stage and per-test changes ([Delta Comparison Policy](../Specs%20&%20ADRs/Delta%20Comparison%20Policy.md)), test pyramid |
+| Analytics | Dashboard, run-to-run delta with per-stage and per-test changes ([Delta Comparison Policy](../Specs%20&%20ADRs/Delta%20Comparison%20Policy.md)), test pyramid, flaky test detection ([Open Source Features](../Specs%20&%20ADRs/Open%20Source%20Features%20-%202026-10-19.md)) |
 | AI | Bring-your-own-key failure summaries ([Phase 4 BYOK and Failure Analysis](../Specs%20&%20ADRs/Phase%204%20BYOK%20and%20Failure%20Analysis.md)) |
 | CI | GitHub Action and GitLab template wrapping `testo run --ci` ([CI-CD Pipeline Setup](../Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md)) |
 | Demo | A Pages pipeline runs testosterone on itself and on the deliberately broken fake-api app, then publishes the React UI as a read-only snapshot ([GitLab Pages Demo](../Processes%20&%20Guides/GitLab%20Pages%20Demo.md)) |
