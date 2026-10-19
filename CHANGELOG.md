@@ -8,13 +8,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-19
+
+First release meant for PyPI (`pip install testo-core`).
+
 ### Added
+- Open-source community files: `SECURITY.md` (private vulnerability reporting), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `CITATION.cff`, issue forms (`.github/ISSUE_TEMPLATE/*.yml`, blank issues off, links to Discussions and the security form) and `.github/dependabot.yml` (weekly grouped updates for pip, npm and GitHub Actions, `chore(deps)` commits with the `no-changelog` label; `commitlint.config.js` skips Dependabot's long commit bodies). `CONTRIBUTING.md` gains "Finding something to work on" and a note on the AI-agent files, and its Quickstart link is fixed
+- README: animated walkthroughs of the web UI and of the CLI (`docs/assets/demo/`)
 - `docs/Prompts & Snippets/Setup Prompts.md`: copy-paste prompts for an AI coding assistant to install Testosterone in another project, write its `testosterone.yaml`, run it in GitHub Actions or GitLab CI, open the web UI and troubleshoot. They install from GitHub until `testo-core` is on PyPI. Command Reference no longer calls `doctor`, `clean`, `watch` and `init` unimplemented
 
 ### Fixed
+- `pip install testo-core` followed by `testo run` crashed with `ModuleNotFoundError: No module named 'sqlalchemy'`: run history is always saved (SQLite by default) but `sqlmodel` was only in the `[db]` extra. It is now a core dependency; `[db]` keeps the Postgres driver and `tomli-w`. A new `package` CI job (`scripts/package_smoke.sh`) installs the built wheel with no extras and runs a cycle, and the publish workflow runs the same check before uploading
 - Compare showed "n/a" / "Unknown" for "Test time (sum)" and "Avg per test" on every run because nothing stored them. Both persistence backends now write `metrics_duration_ms` (sum of per-test Allure durations) and `avg_case_ms` (that sum over the test count, `null` with no tests), plus `test_time_ms` per stage. Runs saved earlier still show "n/a". A new contract test fails when `history/views.py` reads a run metadata key that persistence never writes
 
 ### Changed
+- Package metadata for PyPI: description, MIT license expression, author, keywords, classifiers and project links (homepage, docs, demo, issues, changelog). The README shown on PyPI has its relative images and links rewritten to GitHub URLs at build time (`hatch-fancy-pypi-readme`), and the sdist now carries only the Python package, its tests and the top-level docs (about 260 KB instead of 3.5 MB)
+- `publish.yml` fails before uploading when the release tag does not match `pyproject.toml`'s version, and runs `twine check --strict`
+- README: PyPI badge and a `pip install testo-core` quickstart
 - Pages demo: the read-only notice is now a dismissible alert with a × button, remembered across reloads, and a "Read-only demo" badge in the header reopens it
 - Detailed architecture diagram (`docs/assets/testosterone-architecture-detailed-{dark,light}.png`, drawn by `scripts/render_architecture_diagram.js`) showing `CycleRunService`, the `history/` read side and the repository; it replaces the six-box picture in the README and leads `docs/Architecture/System Diagram.md`
 - Docs vault: the architecture diagram now has its own note (`docs/Architecture/System Diagram.md`) so it shows in Obsidian and the GitHub wiki, not only the README; Architecture Overview's text sketch is a Mermaid flowchart. New decision note for the vault and wiki sync, the second wave of the 2026-10-07 interview fixes, and this repo's workflows in CI-CD Pipeline Setup. `scripts/docs_vault.py lint --base` accepts a second edit to a note already dated today

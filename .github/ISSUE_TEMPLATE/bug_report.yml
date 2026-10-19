@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in testo / testo-core isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. For a security problem, use the private form under the
+        Security tab instead (see SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Observed behavior. Include the exact command and its output or exit code.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Minimal commands to reproduce.
+      render: bash
+      placeholder: testo run --cycle sample-pytests
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: testo version
+      description: Output of `testo --version`.
+      placeholder: testo 1.1.1
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS and Python version
+      placeholder: macOS 15, Python 3.12
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant testosterone.yaml snippet
+      render: yaml
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or NDJSON output
+      description: Relevant `testo run --ci` output or `artifacts/**/*.log` content.
+      render: text

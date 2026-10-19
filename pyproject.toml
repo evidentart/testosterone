@@ -1,17 +1,48 @@
 [build-system]
-requires = ["hatchling>=1.24.0"]
+requires = ["hatchling>=1.27.0", "hatch-fancy-pypi-readme>=24.1.0"]
 build-backend = "hatchling.build"
 
 [project]
 name = "testo-core"
-version = "1.1.0"
-description = "Testosterone — unified quality orchestration core engine"
-readme = "README.md"
+version = "1.1.1"
+description = "Run your whole test cycle (pytest, Behave, BehaveX or any JUnit-writing command) from one YAML file, then see what changed since the last run."
+dynamic = ["readme"]
 requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Taltal", email = "ttlgptinc@gmail.com" }]
+keywords = [
+    "testing",
+    "test-orchestration",
+    "pytest",
+    "behave",
+    "bdd",
+    "allure",
+    "junit",
+    "ci",
+    "test-reporting",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
 # Lean runtime: only what `testo run` and `testo report` strictly need.
-# Anything UI-, API-, or DB-related must live in an extras group below.
+# Run history is always saved (SQLite by default), so sqlmodel is core; database
+# drivers other than SQLite, the API and metrics live in extras groups below.
 dependencies = [
     "python-dotenv>=1.0.0",
+    "sqlmodel>=0.0.24",
     "requests>=2.32.0",
     "behave>=1.3.0,<2",
     "behavex>=4.6.0",
@@ -37,7 +68,6 @@ api = [
     "pyjwt>=2.9.0",
 ]
 db = [
-    "sqlmodel>=0.0.24",
     "psycopg[binary]>=3.2.0",
     "tomli-w>=1.0.0",
 ]
@@ -59,6 +89,52 @@ dev = [
     # The dev profile installs every extra so the test suite covers the full
     # surface area without needing per-test installs.
     "testo-core[api,db,metrics]",
+]
+
+[project.urls]
+Homepage = "https://github.com/taltal-beep/testosterone"
+Documentation = "https://github.com/taltal-beep/testosterone/wiki"
+Demo = "https://taltal-beep.github.io/testosterone/"
+Source = "https://github.com/taltal-beep/testosterone"
+Issues = "https://github.com/taltal-beep/testosterone/issues"
+Changelog = "https://github.com/taltal-beep/testosterone/blob/main/CHANGELOG.md"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+# PyPI renders the README without the repository around it, so relative image
+# and link targets would break there. Images go to raw GitHub URLs first; the
+# last rule then points every remaining relative link at the file on GitHub.
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '(src|srcset)="(?!https?://)([^"]+)"'
+replacement = '\1="https://raw.githubusercontent.com/taltal-beep/testosterone/main/\2"'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '!\[([^\]]*)\]\((?!https?://)([^)\s]+)\)'
+replacement = '![\1](https://raw.githubusercontent.com/taltal-beep/testosterone/main/\2)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = 'href="(?!https?://|#)([^"]+)"'
+replacement = 'href="https://github.com/taltal-beep/testosterone/blob/main/\1"'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\((?!https?://|#)([^)\s]+)\)'
+replacement = '](https://github.com/taltal-beep/testosterone/blob/main/\1)'
+
+# The sdist carries what is needed to build and test the Python package; the
+# frontend, docs vault and CI wrappers stay in the repository.
+[tool.hatch.build.targets.sdist]
+include = [
+    "/testo_core",
+    "/testo_api",
+    "/tests",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/LICENSE",
+    "/pytest.ini",
 ]
 
 [tool.hatch.build.targets.wheel]

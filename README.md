@@ -4,6 +4,7 @@
 
 [![CI](https://github.com/taltal-beep/testosterone/actions/workflows/ci.yml/badge.svg)](https://github.com/taltal-beep/testosterone/actions/workflows/ci.yml)
 [![Pages demo](https://github.com/taltal-beep/testosterone/actions/workflows/pages-demo.yml/badge.svg)](https://github.com/taltal-beep/testosterone/actions/workflows/pages-demo.yml)
+[![PyPI](https://img.shields.io/pypi/v/testo-core)](https://pypi.org/project/testo-core/)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -20,6 +21,13 @@
 What you're looking at: Testosterone testing itself (its own test suite) and `fake-api`, a
 small app whose routes fail on purpose. CI runs both cycles and publishes the real results as a
 read-only static site.
+
+<details>
+<summary><strong>Watch a walkthrough of the UI</strong> (animated, about 1 minute)</summary>
+
+![Walkthrough of the web UI: starting the fake-api cycle from the browser with live stage status and event stream, then browsing the results](docs/assets/demo/ui-walkthrough.gif)
+
+</details>
 
 ## Why
 
@@ -46,6 +54,16 @@ backend (`testo_api`, `/api/v1`, live runs over server-sent events), a React fro
 
 ## Quickstart
 
+Install the CLI from PyPI and point it at your own tests:
+
+```bash
+pip install testo-core            # the `testo` CLI; add [api] for the REST API, [db] for Postgres
+testo config init                 # writes a starter testosterone.yaml; edit its stages
+testo run --cycle smoke-test      # run a cycle from it
+```
+
+Or work from a checkout of this repository, which ships sample cycles:
+
 ```bash
 git clone https://github.com/taltal-beep/testosterone.git
 cd testosterone
@@ -55,6 +73,13 @@ pip install -e ".[dev]"
 testo run --cycle sample-pytests      # run a cycle from testosterone.yaml
 testo report --cycle sample-pytests   # build the Allure report for it
 ```
+
+<details>
+<summary><strong>Watch it run</strong>: install, <code>testo doctor</code>, then a cycle against the deliberately broken fake-api app</summary>
+
+![Terminal recording: installing from a checkout, testo doctor passing, then showing and running the fake-api cycle](docs/assets/demo/cli-install-and-run.gif)
+
+</details>
 
 Adding Testosterone to your own project with an AI coding assistant? Paste one of the
 [Setup Prompts](docs/Prompts%20&%20Snippets/Setup%20Prompts.md).

@@ -1,0 +1,46 @@
+# Weekly update PRs, grouped so each ecosystem opens at most one PR a week.
+# Major versions are left out of the groups and arrive as separate PRs.
+# Commit messages follow Conventional Commits (commitlint), and the
+# no-changelog label satisfies ci.yml's changelog_required job.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    labels: ["dependencies", "no-changelog"]
+    groups:
+      python:
+        update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    labels: ["dependencies", "no-changelog"]
+    groups:
+      frontend:
+        update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    labels: ["dependencies", "no-changelog"]
+    groups:
+      tooling:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    labels: ["dependencies", "no-changelog"]
+    groups:
+      actions:
+        patterns: ["*"]

@@ -2,7 +2,7 @@
 type: architecture
 status: current
 created: 2026-06-25
-updated: 2026-10-08
+updated: 2026-10-19
 ---
 
 # Architecture Overview
@@ -135,7 +135,7 @@ Until v1.1 a second, Docker-based execution stack (`HeadlessEngineService` → `
 6. `run_plan()` runs each stage via `run_stage()` (subprocess + timeout from `defaults.timeout_s` or per-stage override).
 7. Events land in `artifacts/<cycle>/events.ndjson`; per-stage logs in `artifacts/<cycle>/<stage>/run.log`.
 8. Configured **reporters** run (`run_configured_reporters`).
-9. Optional **report archive** writes zip + metrics to SQL DB (`testo-core[db]`).
+9. **Report archive** writes zip + metrics to the SQL DB (SQLite by default; `testo-core[db]` adds the Postgres driver).
 
 ## Artifact layout
 
@@ -184,7 +184,7 @@ Two persistence layers exist, each at a different abstraction level:
 **Engine-level** (`testo_core/persistence/`): Called by `orchestrator.run_plan()` after a cycle completes. Uses a `PersistenceBackend` protocol with two built-in backends:
 
 - `JsonBackend` — writes `plan_result.json` to the artifacts tree (always active).
-- `DbBackend` — upserts a `RunRecord` via the repository layer (active when DB extras are installed), including failure evidence for failed runs (`persistence/failure_context.py`) and CI provenance when run in CI.
+- `DbBackend` — upserts a `RunRecord` via the repository layer (SQLite by default, so always available), including failure evidence for failed runs (`persistence/failure_context.py`) and CI provenance when run in CI.
 
 A `composite_backend()` factory fans out to both; individual backend failures never fail the run. Controlled by `--no-persist`.
 

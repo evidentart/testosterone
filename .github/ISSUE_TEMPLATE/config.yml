@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/taltal-beep/testosterone/discussions
+    about: Ask how to use Testosterone or float an idea before opening an issue.
+  - name: Security problem
+    url: https://github.com/taltal-beep/testosterone/security/advisories/new
+    about: Report a vulnerability privately (see SECURITY.md).
+  - name: Live demo
+    url: https://taltal-beep.github.io/testosterone/
+    about: See the read-only dashboard with real runs.

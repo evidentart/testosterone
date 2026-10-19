@@ -11,7 +11,13 @@ pip install -e ".[dev]"
 pre-commit install   # one-time; runs ruff + changelog-format checks before each commit
 ```
 
-See [README Quickstart](README.md#quickstart-copypaste) for the full local infrastructure setup (optional Postgres, frontend).
+See [README Quickstart](README.md#quickstart) for the full local infrastructure setup (optional Postgres, frontend).
+
+Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Found a security problem? Report it privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
+
+## Finding something to work on
+
+Issues labelled [`good first issue`](https://github.com/taltal-beep/testosterone/labels/good%20first%20issue) are small and self-contained, with the files to touch named in the issue. Comment on one to claim it. For anything bigger, open an issue or a discussion first so the approach can be agreed before you write the code.
 
 ## Before opening a PR
 
@@ -26,6 +32,10 @@ See [README Quickstart](README.md#quickstart-copypaste) for the full local infra
 ## Docs
 
 If your change alters CLI arguments, exit codes, `testosterone.yaml` config parsing, or a workflow lifecycle, update the matching note under `docs/` (the Obsidian vault — start at [docs/Index.md](docs/Index.md)) in the same PR. Large or multi-step changes (migrations, refactors, new architecture) should also get an entry in `docs/Specs & ADRs/` or `docs/Testing Workflows/Technical Debt Tracker.md` as appropriate.
+
+## Files for AI coding agents
+
+`CLAUDE.md`, `docs/CLAUDE.md` and `.claude/` hold instructions and hooks for AI coding agents working in this repository (which notes to read first, the docs vault rules, the pre-push review hook). They describe the same conventions as this file; you don't need an AI agent to contribute, and you can ignore them.
 
 ## PR review
 

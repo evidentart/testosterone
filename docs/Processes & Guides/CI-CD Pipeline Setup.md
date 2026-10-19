@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-05-02
-updated: 2026-10-08
+updated: 2026-10-19
 ---
 
 # CI Integrations
@@ -83,7 +83,7 @@ What runs on Testosterone itself, as opposed to the wrappers above that run it i
 
 | Workflow | Runs on | What it does |
 |----------|---------|--------------|
-| `ci.yml` | pull request, push to `main`, release | Blocking gates: ruff lint and format, mypy on `testo_core` and `testo_api`; the fast pytest suite with the coverage gate; frontend typecheck, generated API types up to date, vitest and build; `CHANGELOG.md` touched; docs vault lint. Builds the wheel on a release |
+| `ci.yml` | pull request, push to `main`, release | Blocking gates: ruff lint and format, mypy on `testo_core` and `testo_api`; the fast pytest suite with the coverage gate; frontend typecheck, generated API types up to date, vitest and build; `CHANGELOG.md` touched; docs vault lint; builds the sdist and wheel, runs `twine check --strict`, installs the wheel with no extras and runs a cycle (`scripts/package_smoke.sh`). Builds the wheel on a release |
 | `commitlint.yml` | pull request | Conventional commit messages |
 | `changelog-on-main.yml` | push to `main` | Drafts a `CHANGELOG.md` [Unreleased] entry from the pushed commits with Claude and commits it to `main`; skips when its bot secrets are missing |
 | `pages-demo.yml` | push to `main`, nightly | Runs the self-test and fake-api cycles and publishes the read-only UI to GitHub Pages ([GitLab Pages Demo](GitLab%20Pages%20Demo.md)) |
@@ -92,6 +92,7 @@ What runs on Testosterone itself, as opposed to the wrappers above that run it i
 | `pr-heavy.yml` | labeled pull request, manual | Heavy test tier |
 | `nightly-external.yml` | nightly, manual | External test tier |
 | `release-gate.yml` | manual | Release checks before publishing |
+| `dependabot.yml` (config, not a workflow) | weekly | Grouped dependency update PRs for pip, npm (`/` and `frontend/`) and GitHub Actions, committed as `chore(deps)` with the `no-changelog` label so commitlint and `changelog_required` pass |
 | `publish.yml`, `docker-publish.yml`, `artifactory-publish.yml` | GitHub Release published | PyPI, GHCR runner image, JFrog Artifactory ([Publishing to PyPI](Publishing%20to%20PyPI.md)) |
 
 ## Versioning policy

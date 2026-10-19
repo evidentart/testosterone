@@ -170,7 +170,7 @@ testo diff <BASELINE_ID> <CURRENT_ID>
 testo summary   # same family; see help for metrics-only variants
 ```
 
-Rich terminal diff of metrics and (for full diff) extracted Allure deltas. Requires `testo-core[db]`.
+Rich terminal diff of metrics and (for full diff) extracted Allure deltas. Reads the run history database (SQLite by default; `testo-core[db]` for Postgres).
 
 Prefer **`testo report compare`** for Rich diff plus Allure visual comparison pipeline.
 

@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use Testosterone in your work, please cite it as below."
+title: "Testosterone (testo-core)"
+abstract: "Run your whole test cycle (pytest, Behave, BehaveX or any JUnit-writing command) from one YAML file, then see what changed since the last run."
+type: software
+authors:
+  - alias: taltal-beep
+license: MIT
+version: 1.1.1
+date-released: "2026-10-19"
+repository-code: "https://github.com/taltal-beep/testosterone"
+url: "https://taltal-beep.github.io/testosterone/"
+keywords:
+  - testing
+  - test-orchestration
+  - pytest
+  - behave
+  - allure
