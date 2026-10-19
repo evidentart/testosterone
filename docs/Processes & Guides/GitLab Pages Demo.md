@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-10-07
-updated: 2026-10-10
+updated: 2026-10-19
 title: GitLab Pages Demo
 tags: [ci, gitlab, pages, frontend, demo]
 ---
@@ -181,6 +181,8 @@ environment; it is never written to the site.
 |---------|--------------|
 | Push to `main`, nightly schedule, manual run | Build, then deploy to Pages. |
 | Pull request touching the demo files | Build only, so a broken demo fails the PR instead of the site. |
+
+The same site also carries the docs: the `build` job runs `mkdocs build --strict --site-dir public/docs`, so the vault is at `https://taltal-beep.github.io/testosterone/docs/` ([Docs Site](../Specs%20&%20ADRs/Docs%20Site%20-%202026-10-19.md)). Pull requests that touch `mkdocs.yml` or `scripts/mkdocs_hooks.py` build it too.
 
 Run history is restored from and saved to the Actions cache under a fresh key
 per run (`testo-demo-history-<run_id>`, restored by prefix), because Actions

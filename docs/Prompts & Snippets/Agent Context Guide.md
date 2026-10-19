@@ -17,7 +17,8 @@ Map for AI coding agents working on Testosterone (`testo-core`, CLI `testo`): wh
 * **Pages demo:** [GitLab Pages Demo](../Processes%20&%20Guides/GitLab%20Pages%20Demo.md) (covers GitHub Pages too).
 * **Reporting:** [QA Strategies § How results are logged and surfaced](../Testing%20Workflows/QA%20Strategies.md#how-results-are-logged-and-surfaced) and the reporter section of [Command Reference](../CLI%20Commands/Command%20Reference.md).
 * **E2E harness:** [E2E Harness Operations Guide](../Processes%20&%20Guides/E2E%20Harness%20Operations%20Guide.md).
-* **Docs vault and wiki:** [vault schema](../CLAUDE.md) and [Docs Vault and Wiki Sync](../Specs%20&%20ADRs/Docs%20Vault%20and%20Wiki%20Sync%20-%202026-10-07.md). Images go under `docs/assets/` and must be embedded from a note to reach Obsidian and the wiki.
+* **Docs vault, wiki and site:** [vault schema](../CLAUDE.md), [Docs Vault and Wiki Sync](../Specs%20&%20ADRs/Docs%20Vault%20and%20Wiki%20Sync%20-%202026-10-07.md) and [Docs Site](../Specs%20&%20ADRs/Docs%20Site%20-%202026-10-19.md). Images go under `docs/assets/` and must be embedded from a note to reach Obsidian and the wiki. A new note gets a `nav` entry in `mkdocs.yml` to show in the site's menu.
+* **Getting started:** [Getting Started](../Getting%20Started.md) is tested by `examples/getting-started/` in CI. A change to the commands or config it shows updates both.
 * **UI:** the React frontend in `frontend/` is the only UI; its API types are generated from FastAPI's OpenAPI schema.
 * **Delta semantics:** [Delta Comparison Policy](../Specs%20&%20ADRs/Delta%20Comparison%20Policy.md).
 * **Design decisions:** [Specs & ADRs](../Specs%20&%20ADRs/README.md).

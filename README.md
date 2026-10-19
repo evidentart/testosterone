@@ -8,7 +8,7 @@
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**Live demo: <https://taltal-beep.github.io/testosterone/>**
+**Live demo: <https://taltal-beep.github.io/testosterone/>** · **Docs: <https://taltal-beep.github.io/testosterone/docs/>**
 
 [![Dashboard: health, pass count and duration trends for the latest run, with the recent self-test and fake-api runs](docs/assets/screenshots/dashboard.png)](https://taltal-beep.github.io/testosterone/)
 
@@ -61,6 +61,9 @@ pip install testo-core            # the `testo` CLI; add [api] for the REST API,
 testo config init                 # writes a starter testosterone.yaml; edit its stages
 testo run --cycle smoke-test      # run a cycle from it
 ```
+
+[Getting Started](docs/Getting%20Started.md) goes further in about five minutes: a regression
+between two runs, then the same cycle in GitHub Actions.
 
 Or work from a checkout of this repository, which ships sample cycles:
 
@@ -209,8 +212,9 @@ npm --prefix frontend test
 (`.github/workflows/ci.yml`'s `format` job), as are the frontend typecheck and tests.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full checklist. Start with
-[ARCHITECTURE.md](ARCHITECTURE.md) for the design; [docs/](docs/Index.md) holds internal design
-notes and ADRs (an Obsidian vault, so some links only resolve inside Obsidian).
+[ARCHITECTURE.md](ARCHITECTURE.md) for the design; [docs/](docs/Index.md) holds the design
+notes and ADRs, also published as the [docs site](https://taltal-beep.github.io/testosterone/docs/)
+(`pip install -e ".[docs]"` and `mkdocs serve` to preview it).
 
 ## History
 

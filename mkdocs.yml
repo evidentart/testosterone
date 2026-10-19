@@ -1,0 +1,130 @@
+# Docs site: the docs/ vault rendered with MkDocs Material.
+# Published under /docs/ of the GitHub Pages demo by .github/workflows/pages-demo.yml;
+# CI builds it with --strict on every pull request.
+#
+#   pip install -e ".[docs]"
+#   mkdocs serve                  # http://127.0.0.1:8000
+#
+# See docs/Specs & ADRs/Docs Site - 2026-10-19.md
+
+site_name: Testosterone
+site_description: One YAML file to run your whole test cycle, then see what changed since the last run.
+site_url: https://taltal-beep.github.io/testosterone/docs/
+repo_url: https://github.com/taltal-beep/testosterone
+repo_name: taltal-beep/testosterone
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+exclude_docs: |
+  .obsidian/
+not_in_nav: |
+  Archive/*.md
+
+hooks:
+  - scripts/mkdocs_hooks.py
+
+validation:
+  links:
+    not_found: warn
+    anchors: warn
+    absolute_links: warn
+    unrecognized_links: warn
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      # GitHub-style anchors (no collapsing of "--"), so links written for
+      # GitHub and Obsidian resolve here too.
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/taltal-beep/testosterone
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/testo-core/
+
+nav:
+  - Home: Index.md
+  - Getting Started: Getting Started.md
+  - Using Testosterone:
+      - Command Reference: CLI Commands/Command Reference.md
+      - Troubleshooting and Error Codes: CLI Commands/Troubleshooting and Error Codes.md
+      - CI-CD Pipeline Setup: Processes & Guides/CI-CD Pipeline Setup.md
+      - Setup Prompts: Prompts & Snippets/Setup Prompts.md
+  - Architecture:
+      - System Diagram: Architecture/System Diagram.md
+      - Architecture Overview: Architecture/Architecture Overview.md
+      - Deep Dive - Execution Logic: Architecture/Deep Dive - Execution Logic.md
+  - Testing:
+      - QA Strategies: Testing Workflows/QA Strategies.md
+      - E2E Harness Operations Guide: Processes & Guides/E2E Harness Operations Guide.md
+      - Pages Demo: Processes & Guides/GitLab Pages Demo.md
+  - Releasing:
+      - Publishing to PyPI: Processes & Guides/Publishing to PyPI.md
+      - Publishing Docker Images: Processes & Guides/Publishing Docker Images.md
+      - Publishing to Artifactory: Processes & Guides/Publishing to Artifactory.md
+      - Changelog Policy: changelog_automation_policy.md
+  - Decisions:
+      - Specs & ADRs: Specs & ADRs/README.md
+      - Docs Site: Specs & ADRs/Docs Site - 2026-10-19.md
+      - Docs Vault and Wiki Sync: Specs & ADRs/Docs Vault and Wiki Sync - 2026-10-07.md
+      - Interview Readiness Fixes: Specs & ADRs/Interview Readiness Fixes - 2026-10-07.md
+      - Architecture Consolidation: Specs & ADRs/Architecture Consolidation - 2026-10-06.md
+      - Command Adapter and JUnit Import: Specs & ADRs/Command Adapter and JUnit Import - 2026-09-25.md
+      - Delta Comparison Policy: Specs & ADRs/Delta Comparison Policy.md
+      - Library Packaging: Specs & ADRs/Library Packaging.md
+      - Repository Pattern: Specs & ADRs/Repository Pattern - Database-Agnostic Refactor.md
+      - Phase 3 Delta Comparison Engine Plan: Specs & ADRs/Phase 3 Delta Comparison Engine Plan.md
+      - Phase 3 Unified Dashboard Plan: Specs & ADRs/Phase 3 Unified Dashboard Plan.md
+      - Phase 4 BYOK and Failure Analysis: Specs & ADRs/Phase 4 BYOK and Failure Analysis.md
+      - Phase 5 UI Redesign: Specs & ADRs/Phase 5 UI Redesign - Cycles-First Navigation.md
+      - Product Roadmap: Roadmap & Strategy/Product Roadmap.md
+      - Technical Debt Tracker: Testing Workflows/Technical Debt Tracker.md
+  - Contributing:
+      - Agent Context Guide: Prompts & Snippets/Agent Context Guide.md
+      - Vault Schema: CLAUDE.md
+      - Vault Log: log.md
+      - Archive: Archive/README.md

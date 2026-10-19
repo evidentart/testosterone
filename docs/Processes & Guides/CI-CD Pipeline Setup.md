@@ -83,10 +83,10 @@ What runs on Testosterone itself, as opposed to the wrappers above that run it i
 
 | Workflow | Runs on | What it does |
 |----------|---------|--------------|
-| `ci.yml` | pull request, push to `main`, release | Blocking gates: ruff lint and format, mypy on `testo_core` and `testo_api`; the fast pytest suite with the coverage gate; frontend typecheck, generated API types up to date, vitest and build; `CHANGELOG.md` touched; docs vault lint; builds the sdist and wheel, runs `twine check --strict`, installs the wheel with no extras and runs a cycle (`scripts/package_smoke.sh`). Builds the wheel on a release |
+| `ci.yml` | pull request, push to `main`, release | Blocking gates: ruff lint and format, mypy on `testo_core` and `testo_api`; the fast pytest suite with the coverage gate; frontend typecheck, generated API types up to date, vitest and build; `CHANGELOG.md` touched; docs vault lint; the docs site with `mkdocs build --strict`; `examples/getting-started/` through the local GitHub Action; builds the sdist and wheel, runs `twine check --strict`, installs the wheel with no extras and runs a cycle (`scripts/package_smoke.sh`). Builds the wheel on a release |
 | `commitlint.yml` | pull request | Conventional commit messages |
 | `changelog-on-main.yml` | push to `main` | Drafts a `CHANGELOG.md` [Unreleased] entry from the pushed commits with Claude and commits it to `main`; skips when its bot secrets are missing |
-| `pages-demo.yml` | push to `main`, nightly | Runs the self-test and fake-api cycles and publishes the read-only UI to GitHub Pages ([GitLab Pages Demo](GitLab%20Pages%20Demo.md)) |
+| `pages-demo.yml` | push to `main`, nightly | Runs the self-test and fake-api cycles and publishes the read-only UI and the docs site to GitHub Pages ([GitLab Pages Demo](GitLab%20Pages%20Demo.md)) |
 | `wiki-sync.yml` | push to `main` touching `docs/` | Regenerates the GitHub wiki from `docs/` ([Docs Vault and Wiki Sync](../Specs%20&%20ADRs/Docs%20Vault%20and%20Wiki%20Sync%20-%202026-10-07.md)) |
 | `mirror-to-gitlab.yml` | push to `main` | Mirrors the repo to GitLab when `GITLAB_MIRROR_URL` / `GITLAB_MIRROR_TOKEN` are set |
 | `pr-heavy.yml` | labeled pull request, manual | Heavy test tier |

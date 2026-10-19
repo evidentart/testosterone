@@ -33,6 +33,8 @@ Issues labelled [`good first issue`](https://github.com/taltal-beep/testosterone
 
 If your change alters CLI arguments, exit codes, `testosterone.yaml` config parsing, or a workflow lifecycle, update the matching note under `docs/` (the Obsidian vault — start at [docs/Index.md](docs/Index.md)) in the same PR. Large or multi-step changes (migrations, refactors, new architecture) should also get an entry in `docs/Specs & ADRs/` or `docs/Testing Workflows/Technical Debt Tracker.md` as appropriate.
 
+The notes are also built as the [docs site](https://taltal-beep.github.io/testosterone/docs/). To preview it, `pip install -e ".[docs]"` and run `mkdocs serve`; a new note needs a `nav` entry in `mkdocs.yml` to show in the menu. CI runs `mkdocs build --strict`, so a broken link fails the build.
+
 ## Files for AI coding agents
 
 `CLAUDE.md`, `docs/CLAUDE.md` and `.claude/` hold instructions and hooks for AI coding agents working in this repository (which notes to read first, the docs vault rules, the pre-push review hook). They describe the same conventions as this file; you don't need an AI agent to contribute, and you can ignore them.

@@ -32,3 +32,7 @@ Added [System Diagram](Architecture/System%20Diagram.md): the architecture image
 ## 2026-10-19: setup prompts
 
 Added [Setup Prompts](Prompts%20&%20Snippets/Setup%20Prompts.md), copy-paste prompts for adopting Testosterone in another project, linked from Index. Fixed a stale claim in Command Reference: `doctor`, `clean`, `watch` and `init` are registered commands, not roadmap items.
+
+## 2026-10-19: getting started and docs site
+
+Added [Getting Started](Getting%20Started.md), linked from Index, and [Docs Site - 2026-10-19](Specs%20&%20ADRs/Docs%20Site%20-%202026-10-19.md). The vault is now also built as a MkDocs site under `/docs/` of the Pages demo; the notes themselves did not change shape.

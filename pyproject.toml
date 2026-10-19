@@ -78,6 +78,10 @@ metrics = [
     "matplotlib>=3.10.0",
     "influxdb-client>=1.48.0",
 ]
+# The docs site (mkdocs.yml). Material 9.x pins MkDocs below 2.0.
+docs = [
+    "mkdocs-material>=9.7,<10",
+]
 dev = [
     "pytest>=9.0.0",
     "pytest-cov>=5.0.0",

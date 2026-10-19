@@ -12,6 +12,9 @@ name: ci
 #                          (escape hatch: 'no-changelog' PR label)
 #   docs_vault           lints the docs/ vault against docs/CLAUDE.md (frontmatter,
 #                        links, orphans; on PRs also the `updated` date)
+#   docs_site            builds the MkDocs site from docs/ with --strict (broken links fail)
+#   getting_started      runs examples/getting-started through the GitHub Action, the
+#                        way docs/Getting Started.md tells a new user to
 #   package              builds the sdist and wheel, `twine check --strict`, then installs
 #                        the wheel with no extras and runs a cycle (scripts/package_smoke.sh)
 #   deploy               builds the distributable wheel on a published release
@@ -178,6 +181,43 @@ jobs:
         run: |
           git fetch origin "${{ github.base_ref }}"
           python scripts/docs_vault.py lint --base "origin/${{ github.base_ref }}"
+
+  docs_site:
+    name: docs site (mkdocs --strict)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install MkDocs
+        run: python -m pip install -e ".[docs]"
+      - name: Build the site
+        run: mkdocs build --strict
+
+  getting_started:
+    name: getting started (GitHub Action on the example)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install pytest
+      # The local copy of the action; it installs testo-core from PyPI, so this
+      # checks the guide against the published release.
+      - id: testo
+        uses: ./integrations/github-action
+        with:
+          config-path: examples/getting-started/testosterone.yaml
+          cycle: unit
+          python-version: "3.11"
+      - name: Check the action's outputs
+        run: test "${{ steps.testo.outputs.status }}" = success
 
   package:
     name: package (build + clean install)

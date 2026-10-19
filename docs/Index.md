@@ -8,9 +8,9 @@ updated: 2026-10-19
 # Testosterone docs
 
 Design notes for Testosterone (`testo-core`, CLI `testo`).
-New here? Start with [ARCHITECTURE.md](../ARCHITECTURE.md) and [README.md](../README.md).
+New here? [Getting Started](Getting%20Started.md) adds it to your project in about five minutes. For the design, start with [ARCHITECTURE.md](../ARCHITECTURE.md) and [README.md](../README.md).
 
-The notes are plain markdown and also open as an Obsidian vault. Dated plans, audits and phase checklists from earlier development are in the [Archive](Archive/README.md).
+The notes are plain markdown. They open as an Obsidian vault, and are published as a searchable site at <https://taltal-beep.github.io/testosterone/docs/>. Dated plans, audits and phase checklists from earlier development are in the [Archive](Archive/README.md).
 
 ## Architecture
 
@@ -20,6 +20,7 @@ The notes are plain markdown and also open as an Obsidian vault. Dated plans, au
 
 ## Using the CLI
 
+- [Getting Started](Getting%20Started.md): install, write `testosterone.yaml`, run a cycle, see what changed, run it in GitHub Actions
 - [Setup Prompts](Prompts%20&%20Snippets/Setup%20Prompts.md): copy-paste prompts for an AI assistant to install Testosterone in your project, write `testosterone.yaml`, add CI and open the UI
 - [Command Reference](CLI%20Commands/Command%20Reference.md): every `testo` command, flag and exit code, and the `testosterone.yaml` schema
 - [Troubleshooting and Error Codes](CLI%20Commands/Troubleshooting%20and%20Error%20Codes.md): exit codes, NDJSON errors, debugging playbook

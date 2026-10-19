@@ -3,7 +3,8 @@ name: Pages demo
 # GitHub twin of the GitLab demo pipeline (.gitlab-ci.yml): runs real
 # `testo run` cycles, freezes the read-only API into JSON with
 # scripts/export_static_site.py and publishes the React UI to GitHub Pages at
-# https://<owner>.github.io/<repo>/.
+# https://<owner>.github.io/<repo>/, with the MkDocs docs site (mkdocs.yml)
+# under /docs/.
 #
 #   - self-test: testosterone running its own fast suite. Red fails the job.
 #   - fake-api:  github.com/taltal-beep/fake-api, whose flaky, broken and slow
@@ -28,6 +29,8 @@ on:
       - "frontend/src/lib/static-backend.ts"
       - "frontend/src/components/StaticBuildBanner.tsx"
       - "testosterone.yaml"
+      - "mkdocs.yml"
+      - "scripts/mkdocs_hooks.py"
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
@@ -87,7 +90,7 @@ jobs:
 
       - name: Install
         run: |
-          python -m pip install -e ".[dev]"
+          python -m pip install -e ".[dev,docs]"
           npm install --no-audit --no-fund
           git clone --depth 1 --branch "$FAKE_API_REF" "$FAKE_API_REPO" .demo/fake-api
           python -m pip install -r .demo/fake-api/requirements.txt
@@ -129,6 +132,9 @@ jobs:
           cp -r frontend/dist/. public/
           cp public/index.html public/404.html
           touch public/.nojekyll
+
+      - name: Build the docs site under /docs/
+        run: mkdocs build --strict --site-dir public/docs
 
       - uses: actions/upload-pages-artifact@v3
         with:
