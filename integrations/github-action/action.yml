@@ -21,6 +21,22 @@ inputs:
     description: Python version used to run testo.
     required: false
     default: "3.11"
+  package:
+    description: What to pip install for testo, e.g. `testo-core==1.2.0`, or `.` for a checkout of this repository.
+    required: false
+    default: testo-core
+  job-summary:
+    description: Write the run (results, failing tests, changes since the last run) to the job summary.
+    required: false
+    default: "true"
+  comment-on-pr:
+    description: "On pull_request events, keep one comment per cycle on the pull request with the same summary. Needs `permissions: pull-requests: write`."
+    required: false
+    default: "false"
+  github-token:
+    description: Token used for the pull request comment.
+    required: false
+    default: ${{ github.token }}
 outputs:
   exit_code:
     description: testo process exit code.
@@ -45,13 +61,17 @@ runs:
       shell: bash
       run: |
         python -m pip install --upgrade pip
-        python -m pip install testo-core
+        python -m pip install "${{ inputs.package }}"
     - name: Run testo
       id: run_testo
       shell: bash
+      env:
+        TESTO_GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         python "${{ github.action_path }}/run_testo_action.py" \
           --config-path "${{ inputs.config-path }}" \
           --cycle "${{ inputs.cycle }}" \
           --ci-mode "${{ inputs.ci-mode }}" \
-          --persist "${{ inputs.persist }}"
+          --persist "${{ inputs.persist }}" \
+          --job-summary "${{ inputs.job-summary }}" \
+          --comment-on-pr "${{ inputs.comment-on-pr }}"

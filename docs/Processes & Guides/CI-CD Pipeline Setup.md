@@ -33,13 +33,20 @@ Run records written in CI include (when the provider exposes them):
 
 ## GitHub Action
 
-Source lives under `integrations/github-action/` (inputs: `config-path`, `cycle`, `ci-mode`, `persist`, `python-version`; outputs: `exit_code`, `status`, `summary_json`, `summary_path`).
+Source lives under `integrations/github-action/` (inputs: `config-path`, `cycle`, `ci-mode`, `persist`, `python-version`, `package`, `job-summary`, `comment-on-pr`, `github-token`; outputs: `exit_code`, `status`, `summary_json`, `summary_path`).
 
 ```yaml
-- uses: taltal-beep/testosterone/integrations/github-action@v1
-  with:
-    cycle: smoke
+permissions:
+  contents: read
+  pull-requests: write        # only for comment-on-pr
+steps:
+  - uses: taltal-beep/testosterone/integrations/github-action@v1
+    with:
+      cycle: smoke
+      comment-on-pr: "true"
 ```
+
+After a persisted run the action renders it with `testo report markdown` and writes it to the job summary (`job-summary`, default on). With `comment-on-pr: "true"` on `pull_request` events it keeps one comment per cycle on the pull request, found by its hidden marker and edited on later pushes. Both are best-effort: an error, such as a fork's read-only token, is a workflow warning and never changes the exit code. `package` is what gets pip-installed (`testo-core` by default; this repository's own CI passes `.`). Design: [GitHub Action PR Comment - 2026-10-19](../Specs%20&%20ADRs/GitHub%20Action%20PR%20Comment%20-%202026-10-19.md).
 
 ## GitLab include template
 
@@ -83,7 +90,7 @@ What runs on Testosterone itself, as opposed to the wrappers above that run it i
 
 | Workflow | Runs on | What it does |
 |----------|---------|--------------|
-| `ci.yml` | pull request, push to `main`, release | Blocking gates: ruff lint and format, mypy on `testo_core` and `testo_api`; the fast pytest suite with the coverage gate; frontend typecheck, generated API types up to date, vitest and build; `CHANGELOG.md` touched; docs vault lint; the docs site with `mkdocs build --strict`; `examples/getting-started/` through the local GitHub Action; builds the sdist and wheel, runs `twine check --strict`, installs the wheel with no extras and runs a cycle (`scripts/package_smoke.sh`). Builds the wheel on a release |
+| `ci.yml` | pull request, push to `main`, release | Blocking gates: ruff lint and format, mypy on `testo_core` and `testo_api`; the fast pytest suite with the coverage gate; frontend typecheck, generated API types up to date, vitest and build; `CHANGELOG.md` touched; docs vault lint; the docs site with `mkdocs build --strict`; `examples/getting-started/` through the local GitHub Action, once with the PyPI release and once with this checkout (which also posts the PR comment); builds the sdist and wheel, runs `twine check --strict`, installs the wheel with no extras and runs a cycle (`scripts/package_smoke.sh`). Builds the wheel on a release |
 | `commitlint.yml` | pull request | Conventional commit messages |
 | `changelog-on-main.yml` | push to `main` | Drafts a `CHANGELOG.md` [Unreleased] entry from the pushed commits with Claude and commits it to `main`; skips when its bot secrets are missing |
 | `pages-demo.yml` | push to `main`, nightly | Runs the self-test and fake-api cycles and publishes the read-only UI and the docs site to GitHub Pages ([GitLab Pages Demo](GitLab%20Pages%20Demo.md)) |

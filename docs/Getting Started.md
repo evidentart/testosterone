@@ -97,7 +97,7 @@ jobs:
           python-version: "3.11"         # same Python as above, so it sees your dependencies
 ```
 
-The action installs `testo-core`, runs `testo run --ci` (one JSON event per line in the log) and fails the job when the cycle fails. Its inputs and outputs, and the GitLab CI template, are in [CI-CD Pipeline Setup](Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md).
+The action installs `testo-core`, runs `testo run --ci` (one JSON event per line in the log), writes the results to the job summary and fails the job when the cycle fails. Add `comment-on-pr: "true"` (and `pull-requests: write` permission) to get the same summary as a comment on each pull request. Its inputs and outputs, and the GitLab CI template, are in [CI-CD Pipeline Setup](Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md).
 
 ## 6. Add other test runners
 

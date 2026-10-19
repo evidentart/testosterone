@@ -169,6 +169,7 @@ GitHub Actions:
 - uses: taltal-beep/testosterone/integrations/github-action@v1
   with:
     cycle: smoke          # optional: config-path, ci-mode, persist, python-version
+    comment-on-pr: "true" # results as a pull request comment (needs pull-requests: write)
 ```
 
 GitLab CI (a GitLab mirror of this repo is coming; until then, include the template straight

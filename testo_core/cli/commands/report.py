@@ -422,3 +422,32 @@ def report_pyramid(
         f"shape={shape.value} — {message}"
     )
     raise typer.Exit(code=0)
+
+
+@report_app.command(
+    "markdown",
+    help="A run as Markdown (job summary or pull request comment): results, failures, changes.",
+)
+def report_markdown(
+    cycle: str | None = typer.Option(None, "--cycle", help="Latest run of this cycle."),
+    run_id: str | None = typer.Option(None, "--run-id", help="A specific run (run-history id)."),
+    out: Path | None = typer.Option(
+        None, "--out", "-o", help="Write to this file instead of stdout."
+    ),
+    run_url: str | None = typer.Option(
+        None, "--run-url", help="Link added to the footer, e.g. the CI run that produced it."
+    ),
+) -> None:
+    from testo_core.services.run_summary_markdown import load_run_summary, render_markdown
+
+    summary = load_run_summary(cycle=cycle.strip() if cycle else None, run_id=run_id)
+    if summary is None:
+        typer.echo("no recorded run found", err=True)
+        raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT))
+    text = render_markdown(summary, run_url=run_url)
+    if out is None:
+        typer.echo(text, nl=False)
+    else:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+    raise typer.Exit(code=0)

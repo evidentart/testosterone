@@ -25,6 +25,10 @@ def test_action_contract_has_required_inputs_outputs() -> None:
         "ci-mode",
         "persist",
         "python-version",
+        "package",
+        "job-summary",
+        "comment-on-pr",
+        "github-token",
     }
     assert set(payload["outputs"].keys()) == {"exit_code", "summary_json", "summary_path", "status"}
 

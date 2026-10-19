@@ -14,6 +14,17 @@ job log, and exposes the final `plan_finished` event as step outputs.
 - `ci-mode` (optional, default `true`): NDJSON on stdout
 - `persist` (optional, default `true`): write `plan_result.json` and the run history record
 - `python-version` (optional, default `3.11`)
+- `package` (optional, default `testo-core`): what to pip install, e.g. `testo-core==1.2.0`
+- `job-summary` (optional, default `true`): write the run to the job summary
+- `comment-on-pr` (optional, default `false`): on `pull_request` events, keep one comment per
+  cycle on the pull request with the same summary (edited on later pushes, not re-posted).
+  Needs `permissions: pull-requests: write`; with a read-only token (fork PRs) it warns and moves on
+- `github-token` (optional, default `${{ github.token }}`): token for the comment
+
+The summary is `testo report markdown`: pass/fail counts, a per-stage table, failing tests and
+the tests that changed outcome since the cycle's previous run. "Previous run" needs run history
+from earlier jobs, which a fresh runner doesn't have unless you keep `testo_history.db`
+(e.g. with `actions/cache` or a `database.url` shared between jobs).
 
 ## Outputs
 
@@ -33,7 +44,10 @@ jobs:
       - uses: taltal-beep/testosterone/integrations/github-action@v1
         with:
           cycle: sample-pytests
+          comment-on-pr: "true"
 ```
+
+with `permissions: { contents: read, pull-requests: write }` on the job for the comment.
 
 ## Migrating from the v1.0 `uqo` action
 
