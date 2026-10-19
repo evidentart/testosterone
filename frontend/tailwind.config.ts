@@ -4,28 +4,31 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui", "sans-serif"]
+      },
       colors: {
-        // Near-black neutral surfaces (Vercel-style), replaces ad-hoc slate usage.
+        // Deep navy surfaces (Vision UI-style glass dashboard); 950 is the page, 900 the card base.
         ink: {
-          950: "#0a0a0a",
-          900: "#111113",
-          850: "#161619",
-          800: "#1c1c21",
-          700: "#26262c",
-          600: "#33333b",
-          500: "#4b4b55",
-          400: "#71717c",
-          300: "#9b9ba4",
-          200: "#c6c6cd",
-          100: "#ececf1"
+          950: "#060b26",
+          900: "#0b1437",
+          850: "#111a45",
+          800: "#1a2352",
+          700: "#252f66",
+          600: "#343f7c",
+          500: "#56618f",
+          400: "#7e88ae",
+          300: "#a0aec0",
+          200: "#cbd2e1",
+          100: "#f0f3fa"
         },
-        // Single brand accent, pulled from the TestOStErone logo blue.
+        // Single brand accent: the electric blue of the icon tiles and active nav.
         brand: {
-          300: "#93c5fd",
-          400: "#5ea1ff",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8"
+          300: "#8cbcff",
+          400: "#4a9bff",
+          500: "#0075ff",
+          600: "#0062d6",
+          700: "#004fb0"
         },
         success: {
           300: "#6ee7b7",

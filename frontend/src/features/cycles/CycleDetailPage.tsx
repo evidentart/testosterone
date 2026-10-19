@@ -58,7 +58,7 @@ export function CycleDetailPage() {
       <Card title={`Stages (${cycle.stages.length})`}>
         <ol className="space-y-3">
           {cycle.stages.map((stage, idx) => (
-            <li key={stage.name} className="rounded-lg border border-ink-700 bg-ink-950 p-3">
+            <li key={stage.name} className="rounded-2xl border border-white/5 bg-ink-950/70 p-3">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs text-ink-500">#{idx + 1}</span>
                 <span className="font-mono text-sm font-semibold text-ink-100">{stage.name}</span>

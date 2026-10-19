@@ -55,7 +55,7 @@ export function ExecutionProgress({
             ) : (
               <ul className="space-y-2">
                 {stageRows.map((s) => (
-                  <li key={s.stage} className="rounded-md border border-ink-700 bg-ink-950 p-2.5 text-sm">
+                  <li key={s.stage} className="rounded-xl border border-white/5 bg-ink-950/70 p-2.5 text-sm">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-ink-100">{s.stage}</span>
                       <StatusPill

@@ -78,7 +78,7 @@ export function RunPanel({ initialCycle, lockCycle = false }: RunPanelProps) {
             <label className="grid max-w-sm gap-1">
               <span className="text-xs font-medium text-ink-300">Cycle</span>
               <select
-                className="rounded-md border border-ink-600 bg-ink-950 px-3 py-2 text-sm text-ink-100"
+                className="rounded-xl border border-ink-600 bg-ink-950/80 px-3 py-2 focus:border-brand-500 focus:outline-none text-sm text-ink-100"
                 value={cycle}
                 onChange={(ev) => setCycle(ev.target.value)}
                 disabled={cyclesQuery.isLoading || busy}
@@ -110,13 +110,13 @@ export function RunPanel({ initialCycle, lockCycle = false }: RunPanelProps) {
               {showAdvanced ? "▾ Hide advanced options" : "▸ Advanced options"}
             </button>
             {showAdvanced ? (
-              <div className="mt-3 grid gap-4 rounded-lg border border-ink-700 bg-ink-950/60 p-4 sm:grid-cols-2">
+              <div className="mt-3 grid gap-4 rounded-2xl border border-white/5 bg-ink-950/70/60 p-4 sm:grid-cols-2">
                 <label className="grid gap-1">
                   <span className="text-xs font-medium text-ink-300">Workers override</span>
                   <input
                     type="number"
                     min={1}
-                    className="rounded-md border border-ink-600 bg-ink-950 px-3 py-2 text-sm text-ink-100"
+                    className="rounded-xl border border-ink-600 bg-ink-950/80 px-3 py-2 focus:border-brand-500 focus:outline-none text-sm text-ink-100"
                     value={workersOverride}
                     onChange={(ev) => setWorkersOverride(ev.target.value)}
                     placeholder="engine default"
@@ -149,7 +149,7 @@ export function RunPanel({ initialCycle, lockCycle = false }: RunPanelProps) {
                 <label className="grid gap-1">
                   <span className="text-xs font-medium text-ink-300">Config path</span>
                   <input
-                    className="rounded-md border border-ink-600 bg-ink-950 px-3 py-2 font-mono text-sm text-ink-100"
+                    className="rounded-xl border border-ink-600 bg-ink-950/80 px-3 py-2 focus:border-brand-500 focus:outline-none font-mono text-sm text-ink-100"
                     value={configPath}
                     onChange={(ev) => setConfigPath(ev.target.value)}
                     placeholder="testosterone.yaml (auto-discover)"
@@ -159,7 +159,7 @@ export function RunPanel({ initialCycle, lockCycle = false }: RunPanelProps) {
                 <label className="grid gap-1">
                   <span className="text-xs font-medium text-ink-300">Artifacts root</span>
                   <input
-                    className="rounded-md border border-ink-600 bg-ink-950 px-3 py-2 font-mono text-sm text-ink-100"
+                    className="rounded-xl border border-ink-600 bg-ink-950/80 px-3 py-2 focus:border-brand-500 focus:outline-none font-mono text-sm text-ink-100"
                     value={artifactsRoot}
                     onChange={(ev) => setArtifactsRoot(ev.target.value)}
                     placeholder="artifacts/"

@@ -57,7 +57,7 @@ export function FlakyTestsCard({ cycle }: { cycle: string }) {
       ) : (
         <ul className="space-y-2">
           {report.items.map((item) => (
-            <li key={item.key} className="rounded-lg border border-ink-700 bg-ink-950 p-3">
+            <li key={item.key} className="rounded-2xl border border-white/5 bg-ink-950/70 p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-sm text-ink-100">{item.name}</span>
                 <Badge tone="warn">

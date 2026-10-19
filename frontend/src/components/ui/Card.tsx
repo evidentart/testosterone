@@ -8,12 +8,12 @@ export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title">
 export function Card({ title, actions, className, children, ...props }: CardProps) {
   return (
     <div
-      className={`rounded-xl border border-ink-700 bg-ink-900 p-4 ${className ?? ""}`}
+      className={`glass-card p-5 ${className ?? ""}`}
       {...props}
     >
       {(title || actions) && (
-        <div className="mb-3 flex items-center justify-between gap-2">
-          {title ? <h3 className="text-sm font-semibold text-ink-100">{title}</h3> : <span />}
+        <div className="mb-4 flex items-center justify-between gap-2">
+          {title ? <h3 className="text-base font-bold text-white">{title}</h3> : <span />}
           {actions}
         </div>
       )}

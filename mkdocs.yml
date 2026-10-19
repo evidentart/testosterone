@@ -109,6 +109,7 @@ nav:
       - Changelog Policy: changelog_automation_policy.md
   - Decisions:
       - Specs & ADRs: Specs & ADRs/README.md
+      - UI Restyle: Specs & ADRs/UI Restyle - 2026-10-19.md
       - Open Source Features: Specs & ADRs/Open Source Features - 2026-10-19.md
       - GitHub Action PR Comment: Specs & ADRs/GitHub Action PR Comment - 2026-10-19.md
       - Docs Site: Specs & ADRs/Docs Site - 2026-10-19.md

@@ -52,3 +52,7 @@ Added [Plugin API - 2026-10-19](Specs%20&%20ADRs/Plugin%20API%20-%202026-10-19.m
 ## 2026-10-19: Playwright adapter
 
 Added [Playwright Adapter - 2026-10-19](Specs%20&%20ADRs/Playwright%20Adapter%20-%202026-10-19.md).
+
+## 2026-10-19: UI restyle
+
+Added [UI Restyle - 2026-10-19](Specs%20&%20ADRs/UI%20Restyle%20-%202026-10-19.md) to Specs & ADRs and pointed the Phase 5 note at it for the sidebar and the navy tokens.

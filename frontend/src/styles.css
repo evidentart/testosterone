@@ -6,8 +6,30 @@ body {
   height: 100%;
 }
 
+/* Deep navy page lit by a soft electric-blue glow, as in the Vision UI reference. */
 body {
   background-color: theme(colors.ink.950);
+  background-image:
+    radial-gradient(ellipse 60% 45% at 70% 60%, rgb(0 117 255 / 0.38), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 15% 10%, rgb(99 65 255 / 0.18), transparent 70%),
+    linear-gradient(159deg, #0f123b 14%, #090d2e 56%, #020515 86%);
+  background-attachment: fixed;
   color: theme(colors.ink.100);
 }
 
+/* Frosted card surface shared by Card, KPI tiles and page-level panels. */
+@utility glass-card {
+  border-radius: 1.25rem;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  background-image: linear-gradient(127deg, rgb(6 11 40 / 0.94) 19%, rgb(10 14 35 / 0.55) 77%);
+  box-shadow: 0 20px 27px rgb(0 0 0 / 0.05);
+  backdrop-filter: blur(60px);
+}
+
+/* Sidebar and help card: the same glass, a little brighter at the top. */
+@utility glass-panel {
+  border-radius: 1.25rem;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  background-image: linear-gradient(112deg, rgb(6 11 38 / 0.94) 60%, rgb(26 31 55 / 0.6) 100%);
+  backdrop-filter: blur(42px);
+}
