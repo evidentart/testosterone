@@ -93,11 +93,12 @@ What runs on Testosterone itself, as opposed to the wrappers above that run it i
 | `nightly-external.yml` | nightly, manual | External test tier |
 | `release-gate.yml` | manual | Release checks before publishing |
 | `dependabot.yml` (config, not a workflow) | weekly | Grouped dependency update PRs for pip, npm (`/` and `frontend/`) and GitHub Actions, committed as `chore(deps)` with the `no-changelog` label so commitlint and `changelog_required` pass |
-| `publish.yml`, `docker-publish.yml`, `artifactory-publish.yml` | GitHub Release published (`publish.yml` can also be run by hand for an existing tag) | PyPI, GHCR runner image, JFrog Artifactory ([Publishing to PyPI](Publishing%20to%20PyPI.md)) |
+| `publish.yml`, `docker-publish.yml`, `artifactory-publish.yml` | GitHub Release published (`publish.yml` and `docker-publish.yml` can also be run by hand for an existing tag) | PyPI, GHCR runner image, JFrog Artifactory ([Publishing to PyPI](Publishing%20to%20PyPI.md), [Publishing Docker Images](Publishing%20Docker%20Images.md)) |
+| `move-major-tag.yml` | GitHub Release published (not prereleases), manual | Force-moves the `v<major>` tag (e.g. `v1`) to the release's commit |
 
 ## Versioning policy
 
-- GitHub action: publish immutable semver tags (`v1.0.0`, `v1.0.1`, ...), keep `v1` moving to latest stable `v1.x`, and recommend SHA pinning for strict supply-chain policies.
+- GitHub action: publish immutable semver tags (`v1.0.0`, `v1.0.1`, ...), keep `v1` moving to latest stable `v1.x` (done by `move-major-tag.yml`), and recommend SHA pinning for strict supply-chain policies.
 - GitLab template: pin `include` to immutable tag or commit SHA in production pipelines.
 - Runner image tags:
   - immutable: `v1.x.y`, `sha-<commit>`

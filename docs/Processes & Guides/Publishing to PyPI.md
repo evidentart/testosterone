@@ -35,7 +35,7 @@ The `package` job in `ci.yml` runs the build and clean-install check on every pu
 
 ## Current state
 
-Version 1.1.1 is the first release meant for PyPI; 1.1.0 was never published and its wheel crashed on `testo run` without the `[db]` extra (see `CHANGELOG.md`). It is on PyPI since 2026-10-19 (https://pypi.org/project/testo-core/). The `v1.1.1` Release's automatic run stopped at the old Test PyPI step, so 1.1.1 was uploaded with a manual run of the workflow. The moving `v1` tag the GitHub Action docs refer to ([CI-CD Pipeline Setup § Versioning policy](CI-CD%20Pipeline%20Setup.md#versioning-policy)) is set separately.
+Version 1.1.1 is the first release meant for PyPI; 1.1.0 was never published and its wheel crashed on `testo run` without the `[db]` extra (see `CHANGELOG.md`). It is on PyPI since 2026-10-19 (https://pypi.org/project/testo-core/). The `v1.1.1` Release's automatic run stopped at the old Test PyPI step, so 1.1.1 was uploaded with a manual run of the workflow. The moving `v1` tag the GitHub Action docs refer to ([CI-CD Pipeline Setup § Versioning policy](CI-CD%20Pipeline%20Setup.md#versioning-policy)) is moved by `move-major-tag.yml` on each stable release.
 
 ## Version management
 

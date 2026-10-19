@@ -14,7 +14,7 @@ Working on Testosterone itself instead? Use the [Agent Context Guide](Agent%20Co
 ## Before you start
 
 - **Install source.** The prompts install `testo-core` from PyPI (published since 1.1.1, [Publishing to PyPI](../Processes%20&%20Guides/Publishing%20to%20PyPI.md)).
-- **The GitHub Action and GitLab template** in [CI-CD Pipeline Setup](../Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md) are referenced by a `v1` tag, which doesn't exist yet (2026-10-19). Until it does, prompts 4 and 5 write a plain CI job that runs `pip install testo-core`.
+- **The GitHub Action and GitLab template** in [CI-CD Pipeline Setup](../Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md) are referenced by the moving `v1` tag. Prompts 4 and 5 write a plain CI job that runs `pip install testo-core` instead, which is easier to adapt to the project's own toolchain.
 - **Requirements:** Python 3.11+. Node.js only for HTML reports (`testo report`) and the web UI.
 
 Run order for a new project: 1, 2, then whichever of 3 to 7 you need.
@@ -105,8 +105,7 @@ branch.
   and upload testo-output.ndjson, testo-summary.json and artifacts/ with
   actions/upload-artifact.
 - Leave a comment in the workflow: this can become
-  `uses: taltal-beep/testosterone/integrations/github-action@v1` with `cycle: smoke`
-  once that tag exists.
+  `uses: taltal-beep/testosterone/integrations/github-action@v1` with `cycle: smoke`.
 
 Reference: https://github.com/taltal-beep/testosterone/blob/main/docs/Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md
 ```

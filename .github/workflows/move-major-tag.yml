@@ -1,0 +1,41 @@
+name: Move major version tag
+
+# Keeps the moving `v<major>` tag (e.g. `v1`) on the latest stable release, so
+# `uses: taltal-beep/testosterone/integrations/github-action@v1` and the GitLab
+# include follow new releases. See docs "CI-CD Pipeline Setup § Versioning policy".
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to point the major tag at (e.g. v1.1.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  move-tag:
+    name: Point v<major> at the release
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Move the tag
+        run: |
+          if ! [[ "$TAG" =~ ^v([0-9]+)\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::$TAG is not a stable vX.Y.Z tag"
+            exit 1
+          fi
+          major="v${BASH_REMATCH[1]}"
+          sha="$(git rev-list -n 1 "refs/tags/$TAG")"
+          git tag -f "$major" "$sha"
+          git push -f origin "refs/tags/$major"
+          echo "$major -> $TAG ($sha)" >> "$GITHUB_STEP_SUMMARY"

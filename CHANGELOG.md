@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `publish.yml` publishes straight to PyPI (the Test PyPI step is gone; the build, metadata and clean-install checks still run before the upload) and can be run by hand for an existing release tag
 - Runner image: `Dockerfile.testo-runner` uses the floating `python:3.11-slim-bookworm` base (the `3.11.9` pin carried 9 fixable CRITICAL Debian CVEs that failed the v1.1.1 image scan), and `docker-publish.yml` scans and smoke-runs the image before pushing it and can be run by hand for an existing release tag
 - Setup prompts install `testo-core` from PyPI instead of the GitHub zip
+- `move-major-tag.yml` keeps the moving `v1` tag on the latest stable release (and can be run by hand for an existing tag)
 
 ## [1.1.1] - 2026-10-19
 
