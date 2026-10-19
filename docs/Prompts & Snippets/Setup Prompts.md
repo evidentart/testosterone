@@ -13,8 +13,8 @@ Working on Testosterone itself instead? Use the [Agent Context Guide](Agent%20Co
 
 ## Before you start
 
-- **Install source.** `testo-core` is not on PyPI yet ([Publishing to PyPI](../Processes%20&%20Guides/Publishing%20to%20PyPI.md)), so the prompts install it from GitHub. Once it is published, replace the GitHub URL with plain `testo-core`.
-- **The GitHub Action and GitLab template** in [CI-CD Pipeline Setup](../Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md) run `pip install testo-core` and are referenced by a `v1` tag, so they work only after the first release. Until then, prompts 4 and 5 write a plain CI job that installs from GitHub.
+- **Install source.** The prompts install `testo-core` from PyPI (published since 1.1.1, [Publishing to PyPI](../Processes%20&%20Guides/Publishing%20to%20PyPI.md)).
+- **The GitHub Action and GitLab template** in [CI-CD Pipeline Setup](../Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md) are referenced by a `v1` tag, which doesn't exist yet (2026-10-19). Until it does, prompts 4 and 5 write a plain CI job that runs `pip install testo-core`.
 - **Requirements:** Python 3.11+. Node.js only for HTML reports (`testo report`) and the web UI.
 
 Run order for a new project: 1, 2, then whichever of 3 to 7 you need.
@@ -25,9 +25,9 @@ Run order for a new project: 1, 2, then whichever of 3 to 7 you need.
 Install Testosterone (Python package testo-core, CLI `testo`) into this project's
 development environment.
 
-- It is not on PyPI yet. Install it from GitHub into a virtualenv (create .venv
-  with Python 3.11+ if the project has none):
-    pip install "testo-core @ https://github.com/taltal-beep/testosterone/archive/refs/heads/main.zip"
+- Install it from PyPI into a virtualenv (create .venv with Python 3.11+ if the
+  project has none):
+    pip install testo-core
   Add the extras I need in brackets after testo-core: [api] for the web UI backend,
   [db] for Postgres/MySQL run history, [metrics] for InfluxDB.
 - Pin it the same way the project pins other dev dependencies (requirements-dev.txt,
@@ -96,17 +96,17 @@ branch.
 
 - Set up Python 3.11 and whatever toolchains the stages need (Node, browsers, etc.)
   the same way our existing workflows do. Reuse their dependency install steps.
-- Install Testosterone from GitHub (it is not on PyPI yet, so the published
-  action can't install it):
-    pip install "testo-core @ https://github.com/taltal-beep/testosterone/archive/refs/heads/main.zip"
+- Install Testosterone from PyPI:
+    pip install testo-core
 - Run: `set -o pipefail; testo run --ci --cycle smoke | tee testo-output.ndjson`.
   --ci prints one JSON event per line; the job's exit code is testo's (0 pass,
   1 tests failed, 2 bad config, 3 infrastructure, 4 internal error).
 - Always (even on failure) save the last plan_finished line as testo-summary.json
   and upload testo-output.ndjson, testo-summary.json and artifacts/ with
   actions/upload-artifact.
-- Leave a comment in the workflow: once testo-core is released, this can become
-  `uses: taltal-beep/testosterone/integrations/github-action@v1` with `cycle: smoke`.
+- Leave a comment in the workflow: this can become
+  `uses: taltal-beep/testosterone/integrations/github-action@v1` with `cycle: smoke`
+  once that tag exists.
 
 Reference: https://github.com/taltal-beep/testosterone/blob/main/docs/Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md
 ```
@@ -119,9 +119,7 @@ https://github.com/taltal-beep/testosterone/blob/main/ci/gitlab/testo.gitlab-ci.
 but adapted to this project.
 
 - Use an image with Python 3.11+ plus whatever the stages need.
-- testo-core is not on PyPI yet, so install it with:
-    pip install "testo-core @ https://github.com/taltal-beep/testosterone/archive/refs/heads/main.zip"
-  (a .zip URL, so the image doesn't need git).
+- Install it with `pip install testo-core`.
 - Run `set -o pipefail; testo run --ci --cycle smoke | tee testo-output.ndjson`,
   write the last plan_finished line to testo-summary.json in after_script, and keep
   testo-output.ndjson, testo-summary.json and artifacts/ as artifacts with
@@ -137,7 +135,7 @@ Get the Testosterone web UI running against this project's testosterone.yaml and
 run history.
 
 1. Install the API extra into the project's venv:
-     pip install "testo-core[api] @ https://github.com/taltal-beep/testosterone/archive/refs/heads/main.zip"
+     pip install "testo-core[api]"
 2. Start the API from this repository's root (it finds testosterone.yaml in the
    current directory and reads the run history next to it): `testo-api`.
    Check http://127.0.0.1:8000/api/v1/cycles lists our cycles.

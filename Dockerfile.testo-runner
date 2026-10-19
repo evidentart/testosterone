@@ -1,4 +1,6 @@
-ARG TESTO_RUNNER_BASE=python:3.11.9-slim-bookworm
+# Floating tag: each build picks up the Debian security fixes in the latest
+# official image (the old 3.11.9 pin failed the CRITICAL Trivy scan).
+ARG TESTO_RUNNER_BASE=python:3.11-slim-bookworm
 
 FROM ${TESTO_RUNNER_BASE} AS builder
 

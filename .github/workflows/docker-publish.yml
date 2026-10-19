@@ -3,6 +3,11 @@ name: Publish Docker Image
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to (re)publish the image for, e.g. v1.1.1. Builds the selected branch, which must carry that version"
+        required: true
 
 env:
   REGISTRY: ghcr.io
@@ -16,8 +21,18 @@ jobs:
   build-and-push:
     name: Build and push multi-arch image
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the tag matches the package version
+        run: |
+          pkg="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          if [ "$pkg" != "${TAG#v}" ]; then
+            echo "::error::tag $TAG does not match pyproject.toml version $pkg"
+            exit 1
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -38,9 +53,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{version}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
+            type=semver,pattern={{major}},value=${{ env.TAG }}
             type=sha,prefix=
             type=raw,value=latest,enable=${{ !github.event.release.prerelease }}
 
@@ -52,6 +67,34 @@ jobs:
           exit-code: 1
           severity: CRITICAL,HIGH
 
+      # Build and check the amd64 image locally first, so an image that fails
+      # the scan or doesn't start is never pushed.
+      - name: Build image for scanning
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.testo-runner
+          load: true
+          platforms: linux/amd64
+          tags: testo-runner:scan
+          build-args: |
+            TESTO_VERSION=${{ env.TAG }}
+            TESTO_COMMIT_SHA=${{ github.sha }}
+            TESTO_CREATED=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: testo-runner:scan
+          exit-code: 1
+          severity: CRITICAL
+          ignore-unfixed: true
+
+      - name: Verify image
+        run: docker run --rm testo-runner:scan run --help
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -62,20 +105,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            TESTO_VERSION=${{ github.event.release.tag_name }}
+            TESTO_VERSION=${{ env.TAG }}
             TESTO_COMMIT_SHA=${{ github.sha }}
-            TESTO_CREATED=${{ github.event.release.created_at }}
+            TESTO_CREATED=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Scan published image with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
-          exit-code: 1
-          severity: CRITICAL
-          ignore-unfixed: true
-
-      - name: Verify image
-        run: |
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} run --help
