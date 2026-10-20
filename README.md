@@ -218,6 +218,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full checklist. Start with
 notes and ADRs, also published as the [docs site](https://taltal-beep.github.io/testosterone/docs/)
 (`pip install -e ".[docs]"` and `mkdocs serve` to preview it).
 
+## Contributors
+
+Thank you to everyone who has helped make Testosterone better:
+
+| Contributor | Contributions |
+|-------------|---------------|
+| [@taltal-beep](https://github.com/taltal-beep) | Creator and maintainer |
+| [@evidentart](https://github.com/evidentart) | Run history records the repository each run tested ([#115](https://github.com/taltal-beep/testosterone/pull/115), fixes [#102](https://github.com/taltal-beep/testosterone/issues/102)) |
+
+Want to join them? The [good first issues](https://github.com/taltal-beep/testosterone/labels/good%20first%20issue)
+are a friendly place to start, and [CONTRIBUTING.md](CONTRIBUTING.md) walks you through the setup.
+
 ## History
 
 The project started as UQO ("Unified Quality Orchestrator") and was renamed to Testosterone

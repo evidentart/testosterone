@@ -2,7 +2,7 @@
 type: architecture
 status: current
 created: 2026-06-25
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # Architecture Overview

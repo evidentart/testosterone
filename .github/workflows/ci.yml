@@ -145,7 +145,10 @@ jobs:
           fetch-depth: 0
       - name: Require CHANGELOG.md update
         run: |
-          git fetch origin "${{ github.base_ref }}" --depth=1
+          # No --depth here: a shallow fetch into this full clone cuts the base
+          # branch's history, so `base...HEAD` finds no merge base once the base
+          # has moved on (seen on fork pull requests).
+          git fetch origin "${{ github.base_ref }}"
           changed_files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
           echo "Changed files:"
           echo "$changed_files"
