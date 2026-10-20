@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Added
+- Unit tests for the Extent, ReportPortal and TestBeats reporters, the reporter factory, reporter config parsing and Docker results collection (recovered from an old branch)
 - Flaky test detection: `testo flaky --cycle <name>` (`--window`, `--json`, `--fail-on-flaky`), `GET /api/v1/analytics/flaky` and a Flaky tests card on the cycle page (also in the Pages demo). A test is flaky when it both passed and failed and flipped at least twice in the cycle's last runs (`testo_core/services/flaky_service.py`)
 - GitHub Action run summary: after a persisted run the action writes the results, failing tests and per-test changes since the previous run to the job summary, and with `comment-on-pr: "true"` keeps one comment per cycle on the pull request (edited in place). New inputs `job-summary`, `comment-on-pr`, `github-token` and `package`. The text comes from the new `testo report markdown` command. This repository's CI runs the action on its own checkout and comments on its own pull requests
 - Plugin API: a package can add a test runner or a reporter through the `testo.frameworks` and `testo.reporters` entry point groups (`testo_core/plugins.py`), with no change to Testosterone. `testo plugins` lists built-ins and installed plugins (`--check` imports and verifies them, `--json`), and `examples/plugin/` is a complete plugin with a `unittest` adapter and a `json-summary` reporter
