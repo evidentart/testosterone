@@ -52,7 +52,8 @@
               "pytest",
               "behave",
               "behavex",
-              "command"
+              "command",
+              "playwright"
             ],
             "title": "Framework",
             "type": "string"
@@ -1614,6 +1615,103 @@
         "title": "DeltaStatusSummaryResponse",
         "type": "object"
       },
+      "FlakyTestItem": {
+        "properties": {
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "flip_rate": {
+            "title": "Flip Rate",
+            "type": "number"
+          },
+          "flips": {
+            "title": "Flips",
+            "type": "integer"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "type": "string"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "last_status": {
+            "title": "Last Status",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "integer"
+          },
+          "runs": {
+            "title": "Runs",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "group",
+          "runs",
+          "passed",
+          "failed",
+          "flips",
+          "flip_rate",
+          "last_status",
+          "history"
+        ],
+        "title": "FlakyTestItem",
+        "type": "object"
+      },
+      "FlakyTestsResponse": {
+        "properties": {
+          "cycle": {
+            "title": "Cycle",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FlakyTestItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "runs_analyzed": {
+            "title": "Runs Analyzed",
+            "type": "integer"
+          },
+          "tests_analyzed": {
+            "title": "Tests Analyzed",
+            "type": "integer"
+          },
+          "window": {
+            "title": "Window",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cycle",
+          "window",
+          "runs_analyzed",
+          "tests_analyzed",
+          "items"
+        ],
+        "title": "FlakyTestsResponse",
+        "type": "object"
+      },
       "GenerateAiSummaryRequest": {
         "properties": {
           "force_refresh": {
@@ -2583,6 +2681,61 @@
           }
         },
         "summary": "Get Delta Case Changes",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/flaky": {
+      "get": {
+        "description": "Tests that both passed and failed, flipping at least twice, in a cycle's last runs.\n\nUI parity with ``testo flaky --cycle``; see ``testo_core/services/flaky_service.py``.",
+        "operationId": "get_flaky_tests_api_v1_analytics_flaky_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cycle",
+            "required": true,
+            "schema": {
+              "title": "Cycle",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 200,
+              "minimum": 2,
+              "title": "Window",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlakyTestsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Flaky Tests",
         "tags": [
           "analytics"
         ]

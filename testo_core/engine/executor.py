@@ -39,7 +39,13 @@ logger = logging.getLogger(__name__)
 
 
 def _import_junit(
-    stage: Stage, *, target_repo: Path, results_dir: Path, log_path: Path, started_at: float
+    stage: Stage,
+    *,
+    target_repo: Path,
+    patterns: tuple[str, ...],
+    results_dir: Path,
+    log_path: Path,
+    started_at: float,
 ) -> None:
     """Post-stage hook: turn the stage's JUnit XML into Allure results.
 
@@ -52,14 +58,14 @@ def _import_junit(
     try:
         imported = import_junit_reports(
             target_repo=target_repo,
-            patterns=stage.junit_xml,
+            patterns=patterns,
             results_dir=results_dir,
             tool=stage.name,
             not_before=started_at,
         )
         lines = [
             f"[testo] junit_xml: imported {imported.tests} test(s) "
-            f"from {len(imported.files)} file(s) matching {list(stage.junit_xml)}"
+            f"from {len(imported.files)} file(s) matching {list(patterns)}"
         ]
         lines += [f"[testo] junit_xml: skipped malformed report {err}" for err in imported.errors]
     except Exception as exc:  # noqa: BLE001 — never let reporting fail a stage
@@ -179,6 +185,11 @@ def _run_resolved_stage(
     if adapter_env is not None:
         for key, value in adapter_env().items():
             env.setdefault(key, value)
+    # Env that depends on the stage's paths (e.g. where Playwright writes its reports).
+    stage_env = getattr(adapter, "stage_env", None)
+    if stage_env is not None:
+        for key, value in stage_env(target_repo=target_repo, results_dir=results_dir).items():
+            env.setdefault(key, value)
 
     started_at = time.time()
     returncode: int
@@ -241,10 +252,12 @@ def _run_resolved_stage(
         # A timeout/launch error is the more important message; keep it.
         error = error or report_error
 
-    if stage.junit_xml:
+    junit_patterns: tuple[str, ...] = stage.junit_xml or getattr(adapter, "default_junit_xml", ())
+    if junit_patterns:
         _import_junit(
             stage,
             target_repo=target_repo,
+            patterns=junit_patterns,
             results_dir=results_dir,
             log_path=log_path,
             started_at=started_at,

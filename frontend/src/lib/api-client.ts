@@ -33,6 +33,8 @@ export type DeltaStageDelta = Schemas["DeltaStageDelta"];
 export type DeltaCaseChange = Schemas["DeltaCaseChange"];
 export type CaseChangeKind = DeltaCaseChange["kind"];
 export type DeltaCaseChangesResponse = Schemas["DeltaCaseChangesResponse"];
+export type FlakyTestItem = Schemas["FlakyTestItem"];
+export type FlakyTestsResponse = Schemas["FlakyTestsResponse"];
 
 export type AiConfigStatus = Schemas["AiConfigStatusResponse"];
 export type UpdateAiConfigRequest = Schemas["AiConfigUpdateRequest"];
@@ -131,6 +133,10 @@ export const apiClient = {
       baseline_run_id: baselineRunId
     });
     return api<DeltaCaseChangesResponse>(`/api/v1/analytics/delta/cases?${params.toString()}`);
+  },
+  getFlakyTests(cycle: string): Promise<FlakyTestsResponse> {
+    const params = new URLSearchParams({ cycle });
+    return api<FlakyTestsResponse>(`/api/v1/analytics/flaky?${params.toString()}`);
   },
   getDashboardOverview(recentLimit = 5): Promise<DashboardOverviewResponse> {
     return api<DashboardOverviewResponse>(`/api/v1/dashboard/overview?recent_limit=${recentLimit}`);

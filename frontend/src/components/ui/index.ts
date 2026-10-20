@@ -11,3 +11,4 @@ export { StackedBar, HealthBar } from "./StackedBar";
 export type { StackedBarSegment } from "./StackedBar";
 export { TestPyramid } from "./TestPyramid";
 export { RunLabel } from "./RunLabel";
+export * as Icons from "./icons";

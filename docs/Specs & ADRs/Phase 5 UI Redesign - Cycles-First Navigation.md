@@ -2,7 +2,7 @@
 type: spec
 status: current
 created: 2026-07-04
-updated: 2026-07-04
+updated: 2026-10-19
 ---
 
 # Phase 5 UI Redesign — Cycles-First Navigation
@@ -22,14 +22,14 @@ Post-Phase-3 feedback: the React UI read as an unpolished AI-generated beta — 
 - Models in `testo_api/models.py` (`CycleSummary`, `CycleListResponse`, `StageSummary`, `CycleDetailResponse`); routes in `testo_api/routes/cycles.py`; contract tests in `tests/contract/api/test_cycles_contract.py`.
 
 ### 2. Cycles-first information architecture
-- Nav: **Dashboard · Cycles · Runs · Compare**, plus health indicator (`GET /api/v1/health/ready`, polled 30s) and an **Advanced ▾** menu (Legacy Execution, AI Settings).
+- Nav: **Dashboard · Cycles · Runs · Compare**, plus health indicator (`GET /api/v1/health/ready`, polled 30s) and an **Advanced ▾** menu (Legacy Execution, AI Settings). Since [UI Restyle - 2026-10-19](UI%20Restyle%20-%202026-10-19.md) these sit in a desktop sidebar.
 - New pages: `frontend/src/features/cycles/CyclesPage.tsx` (card grid, Run buttons), `CycleDetailPage.tsx` (stage breakdown + run panel).
 - **RunPanel** (`frontend/src/features/cycles/RunPanel.tsx`) replaces the free-text `LiveExecutionConsole` (deleted): cycle dropdown fed by the new endpoint, core toggles (stream/persist/fail-fast/force), and a progressive-disclosure Advanced accordion covering every `CycleExecutionRequest` field (workers, reporters, report DB, config path, artifacts root). SSE consumption unchanged (locked NDJSON event contract).
 - Dashboard shows a **3-step first-run guide** when no runs exist instead of "n/a" KPI walls.
 - Route renames with redirects: `/history`→`/runs`, `/runner`→`/cycles`, `/execution`→`/advanced/execution`.
 
 ### 3. Design system
-- Tailwind tokens in `frontend/tailwind.config.ts`: `ink` near-black neutral scale (Vercel-like), single `brand` blue accent (from the logo), semantic `success`/`danger`/`warn`.
+- Tailwind tokens in `frontend/tailwind.config.ts`: `ink` neutral scale (near-black until 2026-10-19, now navy; see [UI Restyle - 2026-10-19](UI%20Restyle%20-%202026-10-19.md)), single `brand` blue accent (from the logo), semantic `success`/`danger`/`warn`.
 - Shared components in `frontend/src/components/ui/`: Button, Card, Badge, StatusPill, PageHeader, EmptyState, Spinner, KeyValue.
 - **Pixel arm-muscle mascot** in `frontend/src/components/mascot/` (crisp-edge SVG grids): logo mark in nav, `MuscleFlex` on run success, `MuscleDefeated` on failure, `MuscleShrug` for empty states. Animations via `muscle-flex`/`muscle-droop` keyframes.
 

@@ -1,0 +1,4 @@
+artifacts/
+reports/
+testo_history.db
+*.egg-info/

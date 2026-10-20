@@ -7,8 +7,9 @@ import os
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from testo_core import plugins
 from testo_core.config.resolver import _interpolate
-from testo_core.config.schema import SUPPORTED_REPORTER_TYPES, ReporterSpec
+from testo_core.config.schema import ReporterSpec
 from testo_core.reporting.collector import CollectedResults
 from testo_core.reporting.reporters.allure_reporter import AllureReporter
 from testo_core.reporting.reporters.base import BaseReporter, ReportContext, ReporterResult
@@ -41,10 +42,9 @@ def resolve_active_reporter_specs(
             t = str(token).strip().lower()
             if not t:
                 continue
-            if t not in SUPPORTED_REPORTER_TYPES:
-                raise ValueError(
-                    f"unsupported reporter type {t!r}; supported: {sorted(SUPPORTED_REPORTER_TYPES)}"
-                )
+            supported = plugins.reporter_types()
+            if t not in supported:
+                raise ValueError(f"unsupported reporter type {t!r}; supported: {sorted(supported)}")
             normalised.append(ReporterSpec(type=t, options=()))
         return tuple(normalised)
     return config_reporters
@@ -70,9 +70,12 @@ class ReporterFactory:
         for spec in active:
             cls = _REPORTER_REGISTRY.get(spec.type)
             if cls is None:
-                raise ValueError(
-                    f"unsupported reporter type {spec.type!r}; supported: {sorted(_REPORTER_REGISTRY)}"
-                )
+                supported = plugins.reporter_types()
+                if spec.type not in supported:
+                    raise ValueError(
+                        f"unsupported reporter type {spec.type!r}; supported: {sorted(supported)}"
+                    )
+                cls = plugins.load_reporter(spec.type)
             opts = _interpolate_options(dict(spec.options))
             reporters.append(cls(options=opts))
         return reporters

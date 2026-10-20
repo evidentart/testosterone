@@ -95,6 +95,7 @@ def _missing_executables(cfg) -> list[str]:  # type: ignore[no-untyped-def]
         "pytest": "pytest",
         "behave": "behave",
         "behavex": "behavex",
+        "playwright": "npx",
     }
     missing: list[str] = []
     for fw in sorted(used):

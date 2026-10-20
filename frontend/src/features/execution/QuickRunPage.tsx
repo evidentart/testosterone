@@ -7,9 +7,9 @@ import { Toggle } from "../cycles/RunPanel";
 import { ExecutionProgress } from "./ExecutionProgress";
 import { useCycleExecution } from "./useCycleExecution";
 
-const FRAMEWORKS: AdhocFramework[] = ["pytest", "behave", "behavex", "command"];
+const FRAMEWORKS: AdhocFramework[] = ["pytest", "behave", "behavex", "playwright", "command"];
 
-const inputClass = "rounded-md border border-ink-600 bg-ink-950 px-3 py-2 text-sm text-ink-100";
+const inputClass = "rounded-xl border border-ink-600 bg-ink-950/80 px-3 py-2 focus:border-brand-500 focus:outline-none text-sm text-ink-100";
 const labelClass = "grid gap-1 text-xs font-medium text-ink-300";
 
 /**

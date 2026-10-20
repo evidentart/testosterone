@@ -114,7 +114,8 @@ testo report pyramid <run-id>
 | `testo report open --id <uuid>` | Extract archive and regenerate/serve Allure |
 | `testo report compare` | Rich diff + Allure comparison (optional baseline/current UUIDs) |
 | `testo report native [ROUTINE]` | List or open BehaveX/pytest native HTML under stage dirs |
-| `testo report pyramid RUN_ID [-c CONFIG]` | ASCII unit/integration/e2e test pyramid for a completed run (`run_id`, not the archive UUID); stage→tier is the stage's `tier:` (default inferred from `equipment`: pytest→unit, behave→integration, behavex→e2e) as recorded in the run when it executed; `-c` is only read for older runs that predate recorded tiers. See [Architecture Overview § Test pyramid](../Architecture/Architecture%20Overview.md#test-pyramid). |
+| `testo report markdown [--cycle NAME \| --run-id ID] [--out FILE] [--run-url URL]` | The cycle's latest run (or one run) as GitHub-flavored Markdown: headline counts, per-stage table, failing tests, and per-test changes since the cycle's previous run. The first line is a hidden `<!-- testo-summary:<cycle> -->` marker. Exit `2` when no run is recorded. The GitHub Action uses it for the job summary and the PR comment |
+| `testo report pyramid RUN_ID [-c CONFIG]` | ASCII unit/integration/e2e test pyramid for a completed run (`run_id`, not the archive UUID); stage→tier is the stage's `tier:` (default inferred from `equipment`: pytest→unit, behave→integration, behavex→e2e, playwright→e2e) as recorded in the run when it executed; `-c` is only read for older runs that predate recorded tiers. See [Architecture Overview § Test pyramid](../Architecture/Architecture%20Overview.md#test-pyramid). |
 
 ---
 
@@ -140,7 +141,7 @@ Config errors print `[fail]config error: …` and exit **2**.
 
 | Subcommand | Description |
 |------------|-------------|
-| `testo config validate` | Load YAML; optional `--check-executables` for pytest/behave/behavex on PATH |
+| `testo config validate` | Load YAML; optional `--check-executables` for pytest/behave/behavex (and `npx` for playwright) on PATH |
 | `testo config init` | Write starter `testosterone.yaml` (`--path`, `--force`) |
 | `testo config db` | Set `database.url` (PostgreSQL prompts or `--url`) |
 
@@ -178,6 +179,27 @@ Note: this operates on `ReportArchive` UUIDs (`testo report list`), a separate i
 
 ---
 
+## `testo flaky`
+
+Tests whose outcome keeps flipping across a cycle's recent runs.
+
+```bash
+testo flaky --cycle fake-api               # last 20 runs
+testo flaky --cycle fake-api --window 50 --json
+testo flaky --cycle nightly --fail-on-flaky  # exit 1 when any test is flaky (CI gate)
+```
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--cycle` | required | Cycle whose run history to read |
+| `--window` | `20` | How many of the cycle's most recent runs to look at (min 2) |
+| `--json` | off | Print the report as JSON |
+| `--fail-on-flaky` | off | Exit `1` when any flaky test is found |
+
+A test is flaky when, within the window, it both passed and failed and its outcome changed at least twice (skipped runs are ignored). One change is a regression or a fix, which `testo summary` shows. Exit `2` when fewer than two runs with per-test results exist. Reads run-history records (`run_id`s) and each run's artifact snapshot, the same data as `GET /api/v1/analytics/flaky?cycle=<name>` and the Flaky tests card on the cycle page. See [Open Source Features - 2026-10-19](../Specs%20&%20ADRs/Open%20Source%20Features%20-%202026-10-19.md).
+
+---
+
 ## `testo doctor`
 
 Health check: config load, framework CLIs on PATH, Node.js + Allure Report 3 CLI, optional Docker warnings, DB probe if `DATABASE_URL` or config URL is set.
@@ -190,6 +212,20 @@ testo doctor -c testosterone.yaml
 **Output:** Rich table with Check / Status / Detail rows (`PASS`, `FAIL`, `WARN`, `SKIP`).
 
 Exits **2** on hard failures (config or missing required executables) — see [Troubleshooting and Error Codes § Commands that use exit codes](Troubleshooting%20and%20Error%20Codes.md#commands-that-use-exit-codes).
+
+---
+
+## `testo plugins`
+
+Lists the built-in frameworks and reporters, then every installed [plugin](#plugins) with the package that registered it.
+
+```bash
+testo plugins            # table
+testo plugins --check    # also import each plugin and verify its interface
+testo plugins --json
+```
+
+Exits **1** when `--check` finds a plugin that fails to import or does not implement its interface; otherwise **0**.
 
 ---
 
@@ -265,7 +301,7 @@ The v1.0 `uqo` command (including its `uqo run --config` headless format with `-
 
 ## Reporter types (`reporters:` / `--reporter`)
 
-Supported: `allure`, `extent`, `reportportal`, `testbeats`. Configured in root `testosterone.yaml`; outputs often under `reports/` (see repo `testosterone.yaml` for examples).
+Supported: `allure`, `extent`, `reportportal`, `testbeats`, plus any installed [reporter plugin](#plugins). Configured in root `testosterone.yaml`; outputs often under `reports/` (see repo `testosterone.yaml` for examples).
 
 After `testo run`, terminal hints may point to `./reports/allure`, `./reports/extent`, etc.
 
@@ -276,6 +312,34 @@ After `testo run`, terminal hints may point to `./reports/allure`, `./reports/ex
 | Allure Report 3 | https://allurereport.org/docs/v3/ |
 | ReportPortal | https://reportportal.io/docs/api-development/ |
 | ReportPortal agents | https://reportportal.io/docs/log-data-in-reportportal/test-framework-integration/ |
+
+## Plugins
+
+A Python package can add a test runner (`equipment:`) or a reporter (`reporters:`) without changing Testosterone, through two entry point groups:
+
+```toml
+# the plugin's pyproject.toml
+[project.entry-points."testo.frameworks"]
+unittest = "testo_example_plugin:UnittestAdapter"
+
+[project.entry-points."testo.reporters"]
+json-summary = "testo_example_plugin:JsonSummaryReporter"
+```
+
+After `pip install`, the names work in `testosterone.yaml` and `--reporter`, and `testo plugins` lists them.
+
+| Group | Value | Interface |
+|-------|-------|-----------|
+| `testo.frameworks` | A class or factory returning an adapter | `FrameworkAdapter` in [`testo_core/frameworks/base.py`](../../testo_core/frameworks/base.py): `name`, `results_subdir()`, `build_argv(target_repo, results_dir, stage_args, workers)` and `native_report(stage_dir)` |
+| `testo.reporters` | A `BaseReporter` subclass | [`testo_core/reporting/reporters/base.py`](../../testo_core/reporting/reporters/base.py): `reporter_type` and `publish(results, context, console)`; YAML keys other than `type` arrive as `self._options` |
+
+- The stage process runs `build_argv`'s command in `target_repo`. Tests are counted from Allure `*-result.json` files written to `results_dir` (also exported as `TESTO_SHARED_ALLURE_RESULTS_DIR`), or from the stage's `junit_xml` globs.
+- A plugin stage defaults to `tier: unit` and gets `workers` passed through unchanged.
+- Built-in names always win; a plugin that reuses one, or a second plugin with the same name, is ignored with a warning.
+- Plugins are imported only when a stage or reporter uses them, or by `testo plugins --check`.
+- The API's ad-hoc run endpoint (`POST /api/v1/adhoc-executions`) accepts built-in frameworks only.
+
+[`examples/plugin`](../../examples/plugin/README.md) is a complete plugin with one of each. Design: [Plugin API](../Specs%20&%20ADRs/Plugin%20API%20-%202026-10-19.md).
 
 ## Related operational docs
 

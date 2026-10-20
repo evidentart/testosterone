@@ -9,10 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Added
+- Flaky test detection: `testo flaky --cycle <name>` (`--window`, `--json`, `--fail-on-flaky`), `GET /api/v1/analytics/flaky` and a Flaky tests card on the cycle page (also in the Pages demo). A test is flaky when it both passed and failed and flipped at least twice in the cycle's last runs (`testo_core/services/flaky_service.py`)
+- GitHub Action run summary: after a persisted run the action writes the results, failing tests and per-test changes since the previous run to the job summary, and with `comment-on-pr: "true"` keeps one comment per cycle on the pull request (edited in place). New inputs `job-summary`, `comment-on-pr`, `github-token` and `package`. The text comes from the new `testo report markdown` command. This repository's CI runs the action on its own checkout and comments on its own pull requests
+- Plugin API: a package can add a test runner or a reporter through the `testo.frameworks` and `testo.reporters` entry point groups (`testo_core/plugins.py`), with no change to Testosterone. `testo plugins` lists built-ins and installed plugins (`--check` imports and verifies them, `--json`), and `examples/plugin/` is a complete plugin with a `unittest` adapter and a `json-summary` reporter
+- `equipment: playwright`: runs `npx playwright test` with its JUnit and HTML reporters wired in, so Playwright tests count in summaries, diffs and the UI with no `junit_xml` setup, the HTML report is kept per run as the native report, and `workers` becomes `--workers`. Also offered on the Quick Run page
 - Docs site: the `docs/` vault built with MkDocs Material (`mkdocs.yml`, `scripts/mkdocs_hooks.py`, `[docs]` extra) and published at <https://taltal-beep.github.io/testosterone/docs/> by the Pages demo workflow. A new `docs_site` CI job builds it with `--strict`
 - `docs/Getting Started.md`: from `pip install testo-core` to a regression in `testo summary` and the GitHub Action, with the same project in `examples/getting-started/`. A new `getting_started` CI job runs that example through the GitHub Action
 
 ### Changed
+- Web UI restyled after the Vision UI dashboard look: navy palette, glass cards over a blue glow, Plus Jakarta Sans, a desktop sidebar with icon tiles and a docs card, and icon tiles on the Dashboard KPI cards. Phones keep the top bar and menu. See `docs/Specs & ADRs/UI Restyle - 2026-10-19.md`
 - `publish.yml` publishes straight to PyPI (the Test PyPI step is gone; the build, metadata and clean-install checks still run before the upload) and can be run by hand for an existing release tag
 - Runner image: `Dockerfile.testo-runner` uses the floating `python:3.11-slim-bookworm` base (the `3.11.9` pin carried 9 fixable CRITICAL Debian CVEs that failed the v1.1.1 image scan), and `docker-publish.yml` scans and smoke-runs the image before pushing it and can be run by hand for an existing release tag
 - Setup prompts install `testo-core` from PyPI instead of the GitHub zip

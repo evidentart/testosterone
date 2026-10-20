@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { apiClient, UpdateAiConfigRequest } from "../../lib/api-client";
 
-const inputClass = "rounded border border-ink-700 bg-ink-950 px-3 py-2 text-sm text-ink-100";
+const inputClass = "rounded-xl border border-ink-600 bg-ink-950/80 px-3 py-2 focus:border-brand-500 focus:outline-none text-sm text-ink-100";
 const labelClass = "grid gap-1 text-xs font-medium text-ink-300";
 
 export function AIIntegrationSettingsPage() {
@@ -80,7 +80,7 @@ export function AIIntegrationSettingsPage() {
         <p className="text-sm text-ink-300">Bring your own key. Tokens are masked and never returned by the API.</p>
       </header>
 
-      <form onSubmit={onSubmit} className="grid max-w-lg gap-3 rounded-xl border border-ink-700 bg-ink-900 p-4">
+      <form onSubmit={onSubmit} className="grid max-w-lg gap-3 glass-card p-4">
         <label className="flex items-center gap-2 text-sm text-ink-300">
           <input
             type="checkbox"

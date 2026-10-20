@@ -36,3 +36,23 @@ Added [Setup Prompts](Prompts%20&%20Snippets/Setup%20Prompts.md), copy-paste pro
 ## 2026-10-19: getting started and docs site
 
 Added [Getting Started](Getting%20Started.md), linked from Index, and [Docs Site - 2026-10-19](Specs%20&%20ADRs/Docs%20Site%20-%202026-10-19.md). The vault is now also built as a MkDocs site under `/docs/` of the Pages demo; the notes themselves did not change shape.
+
+## 2026-10-19: post-publish features note
+
+Added [Open Source Features - 2026-10-19](Specs%20&%20ADRs/Open%20Source%20Features%20-%202026-10-19.md), the decision record for the Tier 3 feature pull requests (flaky test detection first).
+
+## 2026-10-19: GitHub Action PR comment note
+
+Added [GitHub Action PR Comment - 2026-10-19](Specs%20&%20ADRs/GitHub%20Action%20PR%20Comment%20-%202026-10-19.md), linked from the Specs & ADRs README.
+
+## 2026-10-19: plugin API
+
+Added [Plugin API - 2026-10-19](Specs%20&%20ADRs/Plugin%20API%20-%202026-10-19.md) and a Plugins section in [Command Reference](CLI%20Commands/Command%20Reference.md#plugins).
+
+## 2026-10-19: Playwright adapter
+
+Added [Playwright Adapter - 2026-10-19](Specs%20&%20ADRs/Playwright%20Adapter%20-%202026-10-19.md).
+
+## 2026-10-19: UI restyle
+
+Added [UI Restyle - 2026-10-19](Specs%20&%20ADRs/UI%20Restyle%20-%202026-10-19.md) to Specs & ADRs and pointed the Phase 5 note at it for the sidebar and the navy tokens.

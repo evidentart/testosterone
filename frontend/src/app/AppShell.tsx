@@ -1,83 +1,145 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type ComponentType, type RefObject } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "../lib/api-client";
 import { MuscleLogo } from "../components/mascot";
 import { DemoBadge } from "../components/StaticBuildBanner";
+import { Icons } from "../components/ui";
 
-const PRIMARY_LINKS: { to: string; label: string; end?: boolean }[] = [
-  { to: "/", label: "Dashboard", end: true },
-  { to: "/cycles", label: "Cycles" },
-  { to: "/runs", label: "Runs" },
-  { to: "/compare", label: "Compare" }
+type NavLinkSpec = { to: string; label: string; icon: ComponentType; end?: boolean };
+
+const PRIMARY_LINKS: NavLinkSpec[] = [
+  { to: "/", label: "Dashboard", icon: Icons.HomeIcon, end: true },
+  { to: "/cycles", label: "Cycles", icon: Icons.CyclesIcon },
+  { to: "/runs", label: "Runs", icon: Icons.RunsIcon },
+  { to: "/compare", label: "Compare", icon: Icons.CompareIcon }
 ];
 
-const ADVANCED_LINKS = [
-  { to: "/quick-run", label: "Quick Run" },
-  { to: "/settings/ai", label: "AI Settings" }
+const ADVANCED_LINKS: NavLinkSpec[] = [
+  { to: "/quick-run", label: "Quick Run", icon: Icons.BoltIcon },
+  { to: "/settings/ai", label: "AI Settings", icon: Icons.SparkIcon }
 ];
 
+const DOCS_URL = "https://taltal-beep.github.io/testosterone/docs/";
+
+/** Breadcrumb label for the current page, from the first path segment. */
+function sectionLabel(pathname: string): string {
+  const link = [...PRIMARY_LINKS, ...ADVANCED_LINKS].find((l) =>
+    l.to === "/" ? pathname === "/" : pathname === l.to || pathname.startsWith(`${l.to}/`)
+  );
+  return link?.label ?? "Not found";
+}
+
+/**
+ * Desktop: a floating glass sidebar (nav, Advanced section, docs card) beside
+ * the page. Below `lg` the sidebar is hidden and a top bar with a disclosure
+ * menu takes its place.
+ */
 export function AppShell() {
+  const { pathname } = useLocation();
   return (
     <div className="min-h-full">
-      <header className="sticky top-0 z-20 border-b border-ink-800 bg-ink-950/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2" aria-label="Testo home">
-              <MuscleLogo size={26} />
-              <span className="text-sm font-bold uppercase tracking-[0.2em] text-ink-100">Testo</span>
-            </Link>
-            <nav className="hidden items-center gap-1 text-sm sm:flex">
-              {PRIMARY_LINKS.map((link) => (
-                <NavItem key={link.to} to={link.to} end={link.end}>
-                  {link.label}
-                </NavItem>
-              ))}
-            </nav>
-          </div>
+      <aside className="glass-panel fixed inset-y-4 left-4 z-20 hidden w-64 flex-col overflow-y-auto px-4 py-6 lg:flex">
+        <Link to="/" className="flex items-center justify-center gap-2.5 pb-6" aria-label="Testo home">
+          <MuscleLogo size={26} />
+          <span className="text-sm font-bold uppercase tracking-[0.3em] text-white">Testo</span>
+        </Link>
+        <div className="mb-5 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" aria-hidden />
+        <nav aria-label="Sections" className="flex flex-col gap-1 text-sm">
+          {PRIMARY_LINKS.map((link) => (
+            <NavItem key={link.to} link={link} />
+          ))}
+          <p className="mb-1 mt-5 px-4 text-[11px] font-bold uppercase tracking-wider text-white">Advanced</p>
+          {ADVANCED_LINKS.map((link) => (
+            <NavItem key={link.to} link={link} />
+          ))}
+        </nav>
+        <HelpCard />
+      </aside>
+
+      <header className="sticky top-0 z-30 border-b border-white/5 bg-ink-950/80 backdrop-blur-xl lg:hidden">
+        <div className="relative flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <Link to="/" className="flex items-center gap-2" aria-label="Testo home">
+            <MuscleLogo size={26} />
+            <span className="text-sm font-bold uppercase tracking-[0.2em] text-white">Testo</span>
+          </Link>
           <div className="flex items-center gap-3">
             <DemoBadge />
             <HealthDot />
-            <div className="hidden sm:block">
-              <AdvancedMenu />
-            </div>
             <MobileMenu />
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <Outlet />
-      </main>
+
+      <div className="lg:pl-[18rem]">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:pt-5">
+          <div className="mb-5 hidden items-center justify-between gap-4 lg:flex">
+            <p className="text-xs text-ink-300">
+              Testo <span className="text-ink-500">/</span> <span className="font-semibold text-white">{sectionLabel(pathname)}</span>
+            </p>
+            <div className="flex items-center gap-4">
+              <DemoBadge />
+              <HealthDot />
+            </div>
+          </div>
+          <main>
+            <Outlet />
+          </main>
+        </div>
+      </div>
     </div>
   );
 }
 
-function NavItem({
-  to,
-  end,
-  size = "compact",
-  children
-}: {
-  to: string;
-  end?: boolean;
-  size?: "compact" | "touch";
-  children: string;
-}) {
+function NavItem({ link, size = "compact" }: { link: NavLinkSpec; size?: "compact" | "touch" }) {
+  const Icon = link.icon;
   return (
     <NavLink
-      to={to}
-      end={end}
+      to={link.to}
+      end={link.end}
       className={({ isActive }) =>
         [
-          "rounded-md px-3 transition-colors",
-          size === "touch" ? "py-2.5" : "py-1.5",
-          isActive ? "bg-ink-800 text-ink-100" : "text-ink-300 hover:bg-ink-850 hover:text-ink-100"
+          "group flex items-center gap-3 rounded-2xl px-4 font-medium transition-colors",
+          size === "touch" ? "py-2.5" : "py-2",
+          isActive ? "bg-ink-800/80 text-white shadow-lg shadow-black/20" : "text-ink-300 hover:bg-ink-800/40 hover:text-white"
         ].join(" ")
       }
     >
-      {children}
+      {({ isActive }) => (
+        <>
+          <span
+            className={[
+              "flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-xl transition-colors",
+              isActive ? "bg-brand-500 text-white" : "bg-ink-800 text-brand-400 group-hover:bg-ink-700"
+            ].join(" ")}
+          >
+            <Icon />
+          </span>
+          {link.label}
+        </>
+      )}
     </NavLink>
+  );
+}
+
+function HelpCard() {
+  return (
+    <div className="relative mt-auto overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_85%_15%,#7b61ff_0%,#2a2f9e_35%,#0075ff_70%,#061049_100%)] p-4">
+      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-brand-500">
+        <Icons.HelpIcon />
+      </span>
+      <p className="mt-3 text-sm font-bold text-white">Need help?</p>
+      <p className="text-xs text-white/80">Please check our docs</p>
+      <a
+        href={DOCS_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-3 block rounded-xl bg-ink-950/60 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur transition-colors hover:bg-ink-950/80"
+      >
+        Documentation
+      </a>
+    </div>
   );
 }
 
@@ -126,7 +188,7 @@ function MobileMenu() {
   return (
     <div
       ref={ref}
-      className="sm:hidden"
+      className="lg:hidden"
       // Tabbing past the last link closes the panel instead of leaving it over the page.
       onBlur={(e) => {
         if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget)) close();
@@ -136,7 +198,7 @@ function MobileMenu() {
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md p-2 text-ink-300 transition-colors hover:bg-ink-850 hover:text-ink-100"
+        className="rounded-xl p-2 text-ink-300 transition-colors hover:bg-ink-800 hover:text-white"
         aria-label="Menu"
         aria-expanded={open}
         aria-controls="mobile-nav"
@@ -153,21 +215,17 @@ function MobileMenu() {
         onClick={(e) => {
           if ((e.target as Element).closest("a")) close();
         }}
-        className="absolute inset-x-0 top-full border-b border-ink-800 bg-ink-950 px-4 py-3 text-sm shadow-xl"
+        className="absolute inset-x-0 top-full border-b border-white/5 bg-ink-950/95 px-4 py-3 text-sm shadow-xl backdrop-blur-xl"
       >
         <div className="flex flex-col gap-1">
           {PRIMARY_LINKS.map((link) => (
-            <NavItem key={link.to} to={link.to} end={link.end} size="touch">
-              {link.label}
-            </NavItem>
+            <NavItem key={link.to} link={link} size="touch" />
           ))}
         </div>
-        <p className="mt-3 px-3 text-xs uppercase tracking-wider text-ink-500">Advanced</p>
+        <p className="mt-3 px-4 text-[11px] font-bold uppercase tracking-wider text-white">Advanced</p>
         <div className="mt-1 flex flex-col gap-1">
           {ADVANCED_LINKS.map((link) => (
-            <NavItem key={link.to} to={link.to} size="touch">
-              {link.label}
-            </NavItem>
+            <NavItem key={link.to} link={link} size="touch" />
           ))}
         </div>
       </nav>
@@ -203,59 +261,5 @@ function HealthDot() {
       <span className={`h-2.5 w-2.5 rounded-full ${color}`} aria-hidden />
       <span className="hidden sm:inline">{label}</span>
     </span>
-  );
-}
-
-function AdvancedMenu() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const close = useCallback(() => setOpen(false), []);
-  useDismiss(open, close, ref, buttonRef);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="rounded-md px-3 py-1.5 text-sm text-ink-300 transition-colors hover:bg-ink-850 hover:text-ink-100"
-        aria-haspopup="menu"
-        aria-expanded={open}
-      >
-        Advanced ▾
-      </button>
-      {open ? (
-        <div
-          role="menu"
-          className="absolute right-0 mt-1 w-48 overflow-hidden rounded-md border border-ink-700 bg-ink-900 py-1 shadow-xl"
-        >
-          {ADVANCED_LINKS.map((link) => (
-            <MenuLink key={link.to} to={link.to} onClick={close}>
-              {link.label}
-            </MenuLink>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function MenuLink({ to, onClick, children }: { to: string; onClick: () => void; children: string }) {
-  return (
-    <NavLink
-      to={to}
-      onClick={onClick}
-      role="menuitem"
-      className={({ isActive }) =>
-        [
-          "block px-3 py-2 text-sm",
-          isActive ? "bg-ink-800 text-ink-100" : "text-ink-300 hover:bg-ink-850 hover:text-ink-100"
-        ].join(" ")
-      }
-    >
-      {children}
-    </NavLink>
   );
 }

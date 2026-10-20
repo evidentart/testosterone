@@ -141,6 +141,7 @@ schema and every flag are in [Command Reference](docs/CLI%20Commands/Command%20R
 | `testo report …` | Generate, list, open and export reports (`testo diff` compares two archived runs) |
 | `testo cycles list/show` | Inspect configured cycles |
 | `testo watch --cycle <name>` | Re-run a cycle when files change |
+| `testo flaky --cycle <name>` | Tests that keep flipping between pass and fail across recent runs (`--fail-on-flaky` for CI) |
 | `testo doctor` | Check config, database and tools on PATH |
 
 Exit codes: `0` success (or trigger-skipped), `1` tests failed, `2` invalid input,
@@ -154,7 +155,7 @@ Details: [Troubleshooting and Error Codes](docs/CLI%20Commands/Troubleshooting%2
 | Cycles | `GET /cycles`, `GET /cycles/{cycle}` |
 | Executions | `POST /cycles/{cycle}/executions`, `POST /adhoc-executions`, `GET /cycle-executions/{id}`, `GET /cycle-executions/{id}/events` (SSE) |
 | Runs | `GET /runs`, `GET /runs/{id}`, `GET /runs/{id}/reports`, `GET /runs/{id}/pyramid` |
-| Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
+| Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /analytics/flaky`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
 | AI (bring your own key) | `GET /ai/config/status`, `PUT /ai/config`, `GET /runs/{id}/ai-summary`, `POST /runs/{id}/ai-summary:generate` |
 | Health | `GET /health/live`, `GET /health/ready` |
 
@@ -168,6 +169,7 @@ GitHub Actions:
 - uses: taltal-beep/testosterone/integrations/github-action@v1
   with:
     cycle: smoke          # optional: config-path, ci-mode, persist, python-version
+    comment-on-pr: "true" # results as a pull request comment (needs pull-requests: write)
 ```
 
 GitLab CI (a GitLab mirror of this repo is coming; until then, include the template straight
@@ -237,6 +239,6 @@ subprocesses). Full details in [CHANGELOG.md](CHANGELOG.md).
 | Tests run in one-off Docker containers (`UQO_RUNNER_IMAGE`, `UQO_RUNNER_PREBUILT`) | stages run as host subprocesses; use `Dockerfile.testo-runner` as the CI job image if you want isolation |
 | Allure results uploaded to MinIO per run | per-run reports under `static/history/<run_id>/` (served at `/history`) and the report archive DB |
 | `locust` test type | `equipment: command` with `args: [locust, --headless, …]` |
-| Pluggy `plugins/*.py` runner hooks | a framework adapter in `testo_core/frameworks/` |
+| Pluggy `plugins/*.py` runner hooks | a framework adapter or reporter in your own package, registered as a `testo.frameworks` / `testo.reporters` entry point (see `examples/plugin/`) |
 
 </details>

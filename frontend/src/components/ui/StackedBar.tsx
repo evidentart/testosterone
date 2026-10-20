@@ -16,7 +16,7 @@ export function StackedBar({ segments, className }: StackedBarProps) {
   return (
     <div className={className}>
       <div
-        className="flex h-2.5 w-full overflow-hidden rounded-full bg-ink-800"
+        className="flex h-2.5 w-full overflow-hidden rounded-full bg-ink-800/80"
         role="img"
         aria-label={segments.map((s) => `${s.label}: ${s.value}`).join(", ")}
       >

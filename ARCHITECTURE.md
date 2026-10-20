@@ -24,7 +24,7 @@ flowchart TD
     CFG --> SVC[CycleRunService<br/>trigger gate → engine → reporters → metrics → archive]
     SVC --> ENG[engine.run_plan<br/>sequential stages]
     ENG --> EXE[executor.run_stage<br/>subprocess + timeout]
-    EXE --> FW[framework adapters<br/>pytest · behave · behavex · command]
+    EXE --> FW[framework adapters<br/>pytest · behave · behavex · playwright · command]
     ENG --> EV[(artifacts/&lt;cycle&gt;/events.ndjson)]
     ENG --> PER[persistence<br/>JsonBackend + DbBackend]
     PER --> DB[(Run history DB<br/>SQLite / Postgres / MySQL)]
@@ -99,7 +99,7 @@ Exit codes (`testo_core/engine/exit_codes.py`), propagated unchanged to CI:
 | Cycles | `GET /cycles`, `GET /cycles/{cycle}` |
 | Executions | `POST /cycles/{cycle}/executions`, `POST /adhoc-executions`, `GET /cycle-executions/{id}`, `GET /cycle-executions/{id}/events` (SSE) |
 | Runs | `GET /runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/reports`, `GET /runs/{run_id}/pyramid` |
-| Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
+| Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /analytics/flaky`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
 | AI | `GET /ai/config/status`, `PUT /ai/config`, `GET /runs/{run_id}/ai-summary`, `POST /runs/{run_id}/ai-summary:generate` |
 | Health | `GET /health/live`, `GET /health/ready` |
 
@@ -206,11 +206,13 @@ credentials) rather than as the API's own user.
 
 ## Extending
 
-- **New framework:** add an adapter in `testo_core/frameworks/` and its name to
-  `SUPPORTED_FRAMEWORKS` in `config/schema.py`. For anything that writes JUnit XML, the
-  `command` framework plus `junit_xml:` globs is usually enough.
-- **New reporter:** implement it in `testo_core/reporting/reporters/` and register it in
-  `SUPPORTED_REPORTER_TYPES`.
+- **New framework:** for anything that writes JUnit XML, the `command` framework plus
+  `junit_xml:` globs is usually enough. Otherwise ship an adapter in your own package under
+  the `testo.frameworks` entry point group (`testo_core/plugins.py`, example in
+  `examples/plugin/`), or add a built-in one in `testo_core/frameworks/` and its name to
+  `SUPPORTED_FRAMEWORKS` in `config/schema.py`.
+- **New reporter:** a `BaseReporter` subclass under the `testo.reporters` entry point group,
+  or a built-in in `testo_core/reporting/reporters/` registered in `SUPPORTED_REPORTER_TYPES`.
 - **New persistence target:** implement `PersistenceBackend` (`persistence/backend.py`) and
   add it to `composite_backend()`.
 

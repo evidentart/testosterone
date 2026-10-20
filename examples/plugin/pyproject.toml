@@ -1,0 +1,21 @@
+# A complete Testosterone plugin: one framework adapter and one reporter.
+# pip install -e examples/plugin, then `testo plugins --check`.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "testo-example-plugin"
+version = "0.1.0"
+description = "Example Testosterone plugin: a unittest runner and a JSON summary reporter."
+requires-python = ">=3.11"
+dependencies = ["testo-core"]
+
+[project.entry-points."testo.frameworks"]
+unittest = "testo_example_plugin:UnittestAdapter"
+
+[project.entry-points."testo.reporters"]
+json-summary = "testo_example_plugin:JsonSummaryReporter"
+
+[tool.setuptools]
+packages = ["testo_example_plugin"]

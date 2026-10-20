@@ -35,6 +35,11 @@ describe("resolveStaticPath", () => {
     );
   });
 
+  it("maps flaky tests to the cycle's exported file", () => {
+    expect(resolve("/api/v1/analytics/flaky?cycle=fake-api")).toBe("flaky/fake-api.json");
+    expect(resolve("/api/v1/analytics/flaky")).toBeNull();
+  });
+
   it("works when the API base URL puts the site subpath in front of /api/v1", () => {
     expect(resolve("https://example.gitlab.io/testosterone/api/v1/runs")).toBe("runs.json");
   });

@@ -102,6 +102,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/analytics/flaky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Flaky Tests
+         * @description Tests that both passed and failed, flipping at least twice, in a cycle's last runs.
+         *
+         *     UI parity with ``testo flaky --cycle``; see ``testo_core/services/flaky_service.py``.
+         */
+        get: operations["get_flaky_tests_api_v1_analytics_flaky_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cycle-executions/{execution_id}": {
         parameters: {
             query?: never;
@@ -389,7 +411,7 @@ export interface components {
              * Framework
              * @enum {string}
              */
-            framework: "pytest" | "behave" | "behavex" | "command";
+            framework: "pytest" | "behave" | "behavex" | "command" | "playwright";
             /**
              * Persist
              * @default true
@@ -879,6 +901,42 @@ export interface components {
             /** Unknown */
             unknown: string[];
         };
+        /** FlakyTestItem */
+        FlakyTestItem: {
+            /** Failed */
+            failed: number;
+            /** Flip Rate */
+            flip_rate: number;
+            /** Flips */
+            flips: number;
+            /** Group */
+            group: string;
+            /** History */
+            history: string[];
+            /** Key */
+            key: string;
+            /** Last Status */
+            last_status: string;
+            /** Name */
+            name: string;
+            /** Passed */
+            passed: number;
+            /** Runs */
+            runs: number;
+        };
+        /** FlakyTestsResponse */
+        FlakyTestsResponse: {
+            /** Cycle */
+            cycle: string;
+            /** Items */
+            items: components["schemas"]["FlakyTestItem"][];
+            /** Runs Analyzed */
+            runs_analyzed: number;
+            /** Tests Analyzed */
+            tests_analyzed: number;
+            /** Window */
+            window: number;
+        };
         /** GenerateAiSummaryRequest */
         GenerateAiSummaryRequest: {
             /**
@@ -1235,6 +1293,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeltaCaseChangesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_flaky_tests_api_v1_analytics_flaky_get: {
+        parameters: {
+            query: {
+                cycle: string;
+                window?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlakyTestsResponse"];
                 };
             };
             /** @description Validation Error */

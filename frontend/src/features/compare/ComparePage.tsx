@@ -57,7 +57,7 @@ const PERFORMANCE_ORDER: Array<{ key: keyof PerformanceMetrics; label: string }>
 
 const ALL_CYCLES = "";
 
-const selectClass = "w-full min-w-0 max-w-full rounded border border-ink-700 bg-ink-950 px-3 py-2 text-sm text-ink-100";
+const selectClass = "w-full min-w-0 max-w-full rounded-xl border border-ink-600 bg-ink-950/80 px-3 py-2 focus:border-brand-500 focus:outline-none text-sm text-ink-100";
 const labelClass = "grid min-w-0 gap-1 text-xs font-medium text-ink-300";
 
 export function ComparePage() {
@@ -116,7 +116,7 @@ export function ComparePage() {
     <section className="space-y-4">
       <PageHeader title="Run Comparison" subtitle="Pick a baseline and a current run to see what regressed and what improved." />
 
-      <div className="grid gap-4 rounded-xl border border-ink-700 bg-ink-900 p-4 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 glass-card p-4 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_minmax(0,1fr)]">
         <label className={labelClass}>
           Cycle
           <select
@@ -196,7 +196,7 @@ export function ComparePage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-ink-300">
                   <thead>
-                    <tr className="text-xs text-ink-400">
+                    <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-ink-400">
                       <th className="pb-1 pr-2 font-medium">Stage</th>
                       <th className="pb-1 pr-2 text-right font-medium">Baseline</th>
                       <th className="pb-1 pr-2 text-right font-medium">Current</th>
@@ -205,7 +205,7 @@ export function ComparePage() {
                   </thead>
                   <tbody>
                     {payload.stage_deltas.map((stage) => (
-                      <tr key={stage.stage_name} className="border-t border-ink-800">
+                      <tr key={stage.stage_name} className="border-t border-white/5">
                         <td className="py-1.5 pr-2 text-ink-100">
                           {stage.stage_name}
                           {stage.framework ? <span className="ml-2 text-xs text-ink-400">{stage.framework}</span> : null}
@@ -313,7 +313,7 @@ function MetricTable<K extends string>({
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm text-ink-300">
           <thead>
-            <tr className="text-xs text-ink-400">
+            <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-ink-400">
               <th className="pb-1 pr-2 font-medium">Metric</th>
               <th className="pb-1 pr-2 text-right font-medium">Baseline</th>
               <th className="pb-1 pr-2 text-right font-medium">Current</th>
@@ -326,7 +326,7 @@ function MetricTable<K extends string>({
               const metric = metrics[key];
               const badge = CLASSIFICATION_BADGE[metric.classification];
               return (
-                <tr key={key} className="border-t border-ink-800" data-testid={`metric-${key}`}>
+                <tr key={key} className="border-t border-white/5" data-testid={`metric-${key}`}>
                   <td className="py-1.5 pr-2 text-ink-100">{label}</td>
                   <td className="py-1.5 pr-2 whitespace-nowrap text-right font-mono text-xs">{formatMetricValue(metric.baseline_value, metric.unit)}</td>
                   <td className="py-1.5 pr-2 whitespace-nowrap text-right font-mono text-xs">{formatMetricValue(metric.current_value, metric.unit)}</td>
@@ -439,7 +439,7 @@ function TestLevelChanges({ currentRunId, baselineRunId }: { currentRunId: strin
   }, [filtered]);
 
   return (
-    <section className="rounded-xl border border-ink-700 bg-ink-900 p-4">
+    <section className="glass-card p-4">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -471,7 +471,7 @@ function TestLevelChanges({ currentRunId, baselineRunId }: { currentRunId: strin
           {grouped.map(([group, groupChanges]) => (
             <div key={group}>
               <p className="mb-1 font-mono text-xs text-ink-400">{group}</p>
-              <ul className="space-y-1 border-l border-ink-800 pl-3">
+              <ul className="space-y-1 border-l border-white/5 pl-3">
                 {groupChanges.map((change) => (
                   <li key={change.key} className="flex flex-wrap items-center gap-2 text-sm">
                     <span className={`text-xs font-semibold uppercase ${CASE_KIND_TONE[change.kind]}`}>{change.kind}</span>

@@ -83,7 +83,12 @@ def doctor(
         for plan in cfg.cycles.values():
             for st in plan.stages:
                 used_fw.add(str(st.framework))
-        exe_map = {"pytest": "pytest", "behave": "behave", "behavex": "behavex"}
+        exe_map = {
+            "pytest": "pytest",
+            "behave": "behave",
+            "behavex": "behavex",
+            "playwright": "npx",
+        }
         for fw in sorted(used_fw):
             exe = exe_map.get(fw)
             if not exe:

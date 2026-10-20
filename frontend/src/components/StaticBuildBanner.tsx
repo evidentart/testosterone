@@ -68,12 +68,12 @@ export function StaticBuildBanner() {
   const commit = manifest?.commit ? manifest.commit.slice(0, 8) : null;
 
   return (
-    <div className="px-4 pt-3 sm:px-6">
+    <div className="px-4 pt-3 sm:px-6 lg:pl-[19.5rem] lg:pt-5">
       <div
         id="demo-notice"
         role="region"
         aria-label="Read-only demo"
-        className="relative mx-auto flex max-w-6xl gap-3 rounded-md border border-warn-400/40 border-l-4 border-l-warn-400 bg-warn-400/10 py-3 pl-3 pr-10 text-xs text-ink-200 shadow-lg"
+        className="relative mx-auto flex max-w-6xl gap-3 rounded-2xl border border-warn-400/40 border-l-4 border-l-warn-400 bg-ink-950/70 py-3 pl-3 pr-10 text-xs text-ink-200 shadow-lg backdrop-blur-xl"
       >
         <svg
           className="mt-0.5 h-4 w-4 shrink-0 text-warn-400"
@@ -122,7 +122,7 @@ export function StaticBuildBanner() {
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          className="absolute right-2 top-2 rounded-md p-1.5 text-ink-400 transition-colors hover:bg-ink-850 hover:text-ink-100"
+          className="absolute right-2 top-2 rounded-md p-1.5 text-ink-400 transition-colors hover:bg-ink-800 hover:text-white"
           aria-label="Dismiss read-only demo notice"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>

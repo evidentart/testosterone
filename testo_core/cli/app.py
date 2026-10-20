@@ -54,8 +54,10 @@ def _register_commands() -> None:
     from testo_core.cli.commands import config_db as config_db_cmd
     from testo_core.cli.commands import diff_cli as diff_cli_mod
     from testo_core.cli.commands import doctor as doctor_mod
+    from testo_core.cli.commands import flaky as flaky_mod
     from testo_core.cli.commands import init_cmd as init_cmd_mod
     from testo_core.cli.commands import plans as cycles_cmd
+    from testo_core.cli.commands import plugins as plugins_mod
     from testo_core.cli.commands import report as report_cmd
     from testo_core.cli.commands import run as run_cmd
     from testo_core.cli.commands import version as version_cmd
@@ -81,6 +83,16 @@ def _register_commands() -> None:
         help="Rich diff of the two most recent archived runs (optional ``--cycle``).",
         rich_help_panel="Diagnostics",
     )(diff_cli_mod.summary_reports)
+    app.command(
+        name="flaky",
+        help="Tests whose outcome keeps flipping across a cycle's recent runs (``--cycle``).",
+        rich_help_panel="Diagnostics",
+    )(flaky_mod.flaky)
+    app.command(
+        name="plugins",
+        help="List built-in and installed framework and reporter plugins (``--check`` imports them).",
+        rich_help_panel="Diagnostics",
+    )(plugins_mod.plugins_cmd)
     app.add_typer(
         cycles_cmd.app,
         name="cycles",

@@ -1,8 +1,9 @@
+import type { ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { DashboardOverviewResponse, DashboardTrendIndicator, apiClient } from "../../lib/api-client";
-import { Badge, Card, HealthBar, PageHeader, RunLabel, Spinner, StatusPill } from "../../components/ui";
+import { Badge, Card, HealthBar, Icons, PageHeader, RunLabel, Spinner, StatusPill } from "../../components/ui";
 import { MuscleShrug } from "../../components/mascot";
 import { countLabel } from "../../lib/format";
 
@@ -59,20 +60,23 @@ export function DashboardPage() {
       <TrendBaseline kpis={data.headline_kpis} />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Health" value={formatPct(data.headline_kpis.health_pct)} trend={data.trend_indicators.health} />
+        <KpiCard label="Health" icon={Icons.HeartIcon} value={formatPct(data.headline_kpis.health_pct)} trend={data.trend_indicators.health} />
         <KpiCard
           label="Failed"
+          icon={Icons.CrossIcon}
           value={formatInt(data.headline_kpis.fail_count)}
           trend={data.trend_indicators.failed_count}
           lowerIsBetter
         />
         <KpiCard
           label="Pass Count"
+          icon={Icons.CheckIcon}
           value={formatInt(data.headline_kpis.pass_count)}
           trend={{ direction: "unknown", delta_abs: null, delta_pct: null }}
         />
         <KpiCard
           label="Duration"
+          icon={Icons.ClockIcon}
           value={formatMs(data.headline_kpis.duration_ms)}
           trend={data.trend_indicators.duration}
           lowerIsBetter
@@ -123,7 +127,7 @@ export function DashboardPage() {
         {recentRuns.length === 0 ? (
           <p className="text-sm text-ink-400">No recent runs available.</p>
         ) : (
-          <ul className="divide-y divide-ink-800">
+          <ul className="divide-y divide-white/5">
             {recentRuns.map((run) => (
               <li key={run.run_id} className="space-y-1.5 py-2.5 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -245,11 +249,13 @@ function RollupBadges({
 
 function KpiCard({
   label,
+  icon: Icon,
   value,
   trend,
   lowerIsBetter = false
 }: {
   label: string;
+  icon: ComponentType;
   value: string;
   trend: DashboardTrendIndicator;
   lowerIsBetter?: boolean;
@@ -262,12 +268,17 @@ function KpiCard({
         ? "text-danger-400"
         : "text-ink-400";
   return (
-    <article className="rounded-xl border border-ink-700 bg-ink-900 p-4">
-      <strong className="text-sm font-medium text-ink-300">{label}</strong>
-      <p className="my-1 text-2xl font-semibold text-white">{value}</p>
-      <p data-testid={`${label.toLowerCase().replace(/\s+/g, "-")}-trend`} className={`text-xs ${trendColor}`}>
-        Trend: {semantic.label}
-      </p>
+    <article className="glass-card flex items-center justify-between gap-3 p-4">
+      <div className="min-w-0">
+        <strong className="text-xs font-medium text-ink-300">{label}</strong>
+        <p className="my-0.5 text-lg font-bold text-white">{value}</p>
+        <p data-testid={`${label.toLowerCase().replace(/\s+/g, "-")}-trend`} className={`text-xs font-semibold ${trendColor}`}>
+          Trend: {semantic.label}
+        </p>
+      </div>
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/30">
+        <Icon />
+      </span>
     </article>
   );
 }

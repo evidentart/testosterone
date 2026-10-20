@@ -72,6 +72,8 @@ Regressions & risk
   regression   test_sub   passed   failed
 ```
 
+Once a cycle has a few runs, `testo flaky --cycle unit` lists tests that keep flipping between pass and fail.
+
 `testo report list` shows every recorded run and `testo diff <BASELINE_ID> <CURRENT_ID>` compares any two. How deltas are classified is in [Delta Comparison Policy](Specs%20&%20ADRs/Delta%20Comparison%20Policy.md).
 
 ## 5. Run it in GitHub Actions
@@ -95,7 +97,7 @@ jobs:
           python-version: "3.11"         # same Python as above, so it sees your dependencies
 ```
 
-The action installs `testo-core`, runs `testo run --ci` (one JSON event per line in the log) and fails the job when the cycle fails. Its inputs and outputs, and the GitLab CI template, are in [CI-CD Pipeline Setup](Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md).
+The action installs `testo-core`, runs `testo run --ci` (one JSON event per line in the log), writes the results to the job summary and fails the job when the cycle fails. Add `comment-on-pr: "true"` (and `pull-requests: write` permission) to get the same summary as a comment on each pull request. Its inputs and outputs, and the GitLab CI template, are in [CI-CD Pipeline Setup](Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md).
 
 ## 6. Add other test runners
 
@@ -115,7 +117,7 @@ Add stages to the same cycle; they run in order.
         junit_xml: ["reports/junit/*.xml"]
 ```
 
-Every key (timeouts, workers, triggers on changed paths, reporters such as Allure) is in [Command Reference](CLI%20Commands/Command%20Reference.md).
+Every key (timeouts, workers, triggers on changed paths, reporters such as Allure) is in [Command Reference](CLI%20Commands/Command%20Reference.md). A runner or reporter that isn't built in can come from a [plugin](CLI%20Commands/Command%20Reference.md#plugins) package.
 
 ## Next
 

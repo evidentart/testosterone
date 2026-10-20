@@ -351,7 +351,13 @@ def test_unresolvable_target_preserves_terminal_lifecycle_and_persistence(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     loop = tmp_path / "loop"
-    loop.symlink_to(loop)
+    original_resolve = Path.resolve
+
+    def resolve_target(self: Path, strict: bool = False) -> Path:
+        if self == loop:
+            raise RuntimeError("Symlink loop from 'loop'")
+        return original_resolve(self, strict=strict)
+
     plan = Plan(
         name="broken-target",
         description=None,
@@ -371,7 +377,11 @@ def test_unresolvable_target_preserves_terminal_lifecycle_and_persistence(
         lambda *, artifacts_root: JsonBackend(artifacts_root),
     )
 
-    result = orchestrator.run_plan(plan, renderer=renderer, artifacts_root=tmp_path)
+    # Non-strict resolve no longer raises for symlink loops on Python 3.13.
+    # Fail only this target; artifact paths must still resolve normally.
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "resolve", resolve_target)
+        result = orchestrator.run_plan(plan, renderer=renderer, artifacts_root=tmp_path)
 
     assert result.exit_code is EngineExitCode.INTERNAL_ERROR
     assert result.stages[0].internal_failure

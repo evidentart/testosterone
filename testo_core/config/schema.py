@@ -12,11 +12,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 # Supported frameworks. Add new ones in :mod:`testo_core.frameworks` and append here.
-SUPPORTED_FRAMEWORKS: frozenset[str] = frozenset({"pytest", "behave", "behavex", "command"})
+SUPPORTED_FRAMEWORKS: frozenset[str] = frozenset(
+    {"pytest", "behave", "behavex", "command", "playwright"}
+)
 
 # Frameworks that act on a stage's ``workers``: BehaveX always (``--parallel-processes``),
-# pytest only when pytest-xdist is installed (``-n``). The others run single-process.
-PARALLEL_FRAMEWORKS: frozenset[str] = frozenset({"pytest", "behavex"})
+# Playwright always (``--workers``), pytest only when pytest-xdist is installed (``-n``).
+# The others run single-process.
+PARALLEL_FRAMEWORKS: frozenset[str] = frozenset({"pytest", "behavex", "playwright"})
 
 # Test-pyramid tiers a stage's tests are counted under. See `pyramid_data.py`.
 SUPPORTED_TIERS: frozenset[str] = frozenset({"unit", "integration", "e2e"})
@@ -26,6 +29,7 @@ DEFAULT_TIER_BY_FRAMEWORK: dict[str, str] = {
     "pytest": "unit",
     "behave": "integration",
     "behavex": "e2e",
+    "playwright": "e2e",
     # Any other runner (Jest, Playwright, Maestro, go test, ...): the stage's
     # ``args`` are the whole argv; results come in through ``junit_xml``.
     "command": "unit",

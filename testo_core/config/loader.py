@@ -25,12 +25,12 @@ from typing import Any
 
 import yaml
 
+from testo_core import plugins
 from testo_core.config.errors import ConfigDiscoveryError, ConfigValidationError
 from testo_core.config.schema import (
     DEFAULT_TIER_BY_FRAMEWORK,
     PARALLEL_FRAMEWORKS,
     SUPPORTED_FRAMEWORKS,
-    SUPPORTED_REPORTER_TYPES,
     SUPPORTED_TIERS,
     CycleTrigger,
     Defaults,
@@ -185,10 +185,10 @@ def _build_legacy_runs_config(
             raise ConfigValidationError(f"runs[{idx}] is missing 'test_type' / 'framework'.")
         if framework == "behave_native":
             framework = "behave"
-        if framework not in SUPPORTED_FRAMEWORKS:
+        if framework not in plugins.framework_names():
             raise ConfigValidationError(
                 f"runs[{idx}] unsupported framework {framework!r}; "
-                f"supported: {sorted(SUPPORTED_FRAMEWORKS)}"
+                f"supported: {sorted(plugins.framework_names())}"
             )
         stage = _parse_stage(
             stage_raw={
@@ -297,10 +297,10 @@ def _parse_reporters(raw: Any, *, config_dir: Path) -> tuple[ReporterSpec, ...]:
         reporter_type = str(item.get("type") or item.get("name") or "").strip().lower()
         if not reporter_type:
             raise ConfigValidationError(f"reporters[{idx}] is missing 'type'.")
-        if reporter_type not in SUPPORTED_REPORTER_TYPES:
+        if reporter_type not in plugins.reporter_types():
             raise ConfigValidationError(
                 f"reporters[{idx}] has unsupported type {reporter_type!r}; "
-                f"supported: {sorted(SUPPORTED_REPORTER_TYPES)}"
+                f"supported: {sorted(plugins.reporter_types())}"
             )
         options: list[tuple[str, str]] = []
         for key, value in item.items():
@@ -334,10 +334,10 @@ def _parse_stage(*, stage_raw: Mapping[str, Any], defaults: Defaults, config_dir
         raise ConfigValidationError(f"stage {name!r} is missing 'equipment' (legacy: 'framework').")
     if framework == "behave_native":
         framework = "behave"
-    if framework not in SUPPORTED_FRAMEWORKS:
+    if framework not in plugins.framework_names():
         raise ConfigValidationError(
             f"stage {name!r} has unsupported framework {framework!r}; "
-            f"supported: {sorted(SUPPORTED_FRAMEWORKS)}"
+            f"supported: {sorted(plugins.framework_names())}"
         )
 
     target_repo_raw = stage_raw.get("target_repo")
@@ -362,7 +362,12 @@ def _parse_stage(*, stage_raw: Mapping[str, Any], defaults: Defaults, config_dir
         raise ConfigValidationError(f"stage {name!r}: 'args' must be a string or list.")
 
     workers = int(stage_raw.get("workers", defaults.workers))
-    if "workers" in stage_raw and framework not in PARALLEL_FRAMEWORKS:
+    # Plugin adapters get ``workers`` in build_argv and decide for themselves.
+    if (
+        "workers" in stage_raw
+        and framework in SUPPORTED_FRAMEWORKS
+        and framework not in PARALLEL_FRAMEWORKS
+    ):
         logger.warning(
             "stage %r: 'workers' has no effect on framework %r (it runs single-process).",
             name,
