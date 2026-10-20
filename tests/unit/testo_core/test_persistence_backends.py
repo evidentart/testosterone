@@ -28,6 +28,7 @@ def _make_plan_result(
     plan_name: str = "smoke",
     exit_code: EngineExitCode = EngineExitCode.SUCCESS,
     artifacts_dir: Path = Path("artifacts/smoke"),
+    target_repo: Path | None = None,
 ) -> PlanResult:
     stage = StageResult(
         stage_name="api",
@@ -51,6 +52,7 @@ def _make_plan_result(
         stages=(stage,),
         aggregate_returncode=stage.returncode,
         exit_code=exit_code,
+        target_repo=target_repo,
     )
 
 
@@ -82,13 +84,14 @@ class TestJsonBackend:
 
     def test_writes_plan_result_json(self, tmp_path: Path) -> None:
         backend = JsonBackend(tmp_path)
-        result = _make_plan_result()
+        result = _make_plan_result(target_repo=tmp_path)
         backend.persist(result)
 
         out = tmp_path / "smoke" / "plan_result.json"
         assert out.exists()
         data = json.loads(out.read_text())
         assert data["plan"] == "smoke"
+        assert data["target_repo"] == str(tmp_path)
         assert data["exit_code"] == 0
         assert len(data["stages"]) == 1
         assert data["stages"][0]["name"] == "api"
@@ -101,6 +104,7 @@ class TestJsonBackend:
 
         data = json.loads((tmp_path / "smoke" / "plan_result.json").read_text())
         assert data["exit_code"] == 1
+        assert data["target_repo"] is None
         assert data["stages"][0]["returncode"] == 1
 
     def test_silently_handles_write_error(self, tmp_path: Path) -> None:
@@ -215,13 +219,14 @@ class TestDbBackend:
         mock_get_repo.return_value = mock_repo
 
         backend = DbBackend(tmp_path)
-        result = _make_plan_result()
+        result = _make_plan_result(target_repo=tmp_path)
         backend.persist(result)
 
         mock_repo.create_run.assert_called_once()
         call_kwargs = mock_repo.create_run.call_args[1]
         assert call_kwargs["status"].value == "COMPLETED"
         assert call_kwargs["metadata"]["plan"] == "smoke"
+        assert call_kwargs["metadata"]["target_repo"] == str(tmp_path)
         assert call_kwargs["metadata"]["source"] == "engine"
         assert call_kwargs["metadata"]["stages"][0]["tier"] == "integration"
 
@@ -275,6 +280,7 @@ class TestDbBackend:
 
         call_kwargs = mock_repo.create_run.call_args[1]
         assert call_kwargs["status"].value == "FAILED"
+        assert call_kwargs["metadata"]["target_repo"] is None
 
     @patch("testo_core.repository.db.get_repository", side_effect=Exception("no db"))
     def test_silently_handles_db_error(self, _mock: MagicMock, tmp_path: Path) -> None:

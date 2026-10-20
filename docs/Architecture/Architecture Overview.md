@@ -189,6 +189,8 @@ Two persistence layers exist, each at a different abstraction level:
 - `JsonBackend` — writes `plan_result.json` to the artifacts tree (always active).
 - `DbBackend` — upserts a `RunRecord` via the repository layer (SQLite by default, so always available), including failure evidence for failed runs (`persistence/failure_context.py`) and CI provenance when run in CI.
 
+Both backends store the resolved `target_repo` from `PlanResult` when attempted stages have one authoritative repository path; runs with different resolved targets or none store `null`.
+
 A `composite_backend()` factory fans out to both; individual backend failures never fail the run. Controlled by `--no-persist`.
 
 **Service-level** (`testo_core/repository/`): Dialect-agnostic adapters selected by `DATABASE_URL` / `database.url` (SQLite default, PostgreSQL/MySQL for teams with existing infra). Used by `DbBackend`, the history read side (`testo_core/history/`), and the report archive system. Nothing outside `repository/` opens a database session. Rationale: [Repository Pattern - Database-Agnostic Refactor](../Specs%20&%20ADRs/Repository%20Pattern%20-%20Database-Agnostic%20Refactor.md). Factory: `testo_core/repository/db.py` → `get_repository()`.

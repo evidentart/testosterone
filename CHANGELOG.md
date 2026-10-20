@@ -23,6 +23,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Setup prompts install `testo-core` from PyPI instead of the GitHub zip
 - `move-major-tag.yml` keeps the moving `v1` tag on the latest stable release (and can be run by hand for an existing tag)
 
+### Fixed
+- New run-history records include the repository used by a run when its attempted stages have one resolved target; runs using multiple repositories leave it unknown.
+
 ## [1.1.1] - 2026-10-19
 
 First release meant for PyPI (`pip install testo-core`).

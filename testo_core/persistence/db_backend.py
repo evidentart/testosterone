@@ -87,6 +87,9 @@ class DbBackend:
                 status=status,
                 metadata={
                     "plan": result.plan_name,
+                    "target_repo": str(result.target_repo)
+                    if result.target_repo is not None
+                    else None,
                     "test_kind": "cycle",
                     "returncode": int(result.exit_code),
                     "exit_code": int(result.exit_code),

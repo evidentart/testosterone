@@ -32,6 +32,7 @@ class JsonBackend:
 
             payload = {
                 "plan": result.plan_name,
+                "target_repo": str(result.target_repo) if result.target_repo is not None else None,
                 "started_at": result.started_at,
                 "finished_at": result.finished_at,
                 "duration_s": result.duration_s,

@@ -3,20 +3,23 @@
 Complements ``test_orchestrator.py`` (fail-fast rows): full ``events.ndjson``
 contract, renderer event sequence, streaming chunk fan-out, persistence
 hand-off (``plan_result.json``), and the internal-failure path (EC-04).
-The executor is stubbed; real-subprocess coverage lives in
-``tests/integration/testo_core/engine/test_subprocess_smoke.py``.
+Most tests stub the executor; targeted regressions also run real subprocesses.
 """
 
 from __future__ import annotations
 
 import json
+import sys
 import time
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 import testo_core.persistence
+from testo_core.config.loader import discover_and_load
+from testo_core.config.resolver import resolve_plan, resolve_stages_for_plan
 from testo_core.config.schema import Plan, Stage
 from testo_core.engine import orchestrator
 from testo_core.engine.events import (
@@ -30,7 +33,7 @@ from testo_core.engine.events import (
 from testo_core.engine.exit_codes import EngineExitCode
 from testo_core.engine.result import PlanResult, StageResult
 from testo_core.persistence.json_backend import JsonBackend
-from tests.fixtures.engine import read_artifact_events
+from tests.fixtures.engine import read_artifact_events, stage_spec, use_echo_adapter, write_config
 
 pytestmark = [pytest.mark.unit, pytest.mark.tier_fast]
 
@@ -74,6 +77,7 @@ def _result(
         output_tail="",
         timed_out=timed_out,
         error=error,
+        target_repo=stage.target_repo.expanduser().resolve(),
     )
 
 
@@ -231,6 +235,7 @@ def test_internal_failure_yields_exit_code_4(
     assert result.exit_code is EngineExitCode.INTERNAL_ERROR
     assert result.stages[0].returncode == 4
     assert result.stages[0].internal_failure is True
+    assert result.target_repo is None
     assert "adapter blew up" in (result.stages[0].error or "")
 
     finished = [
@@ -239,6 +244,209 @@ def test_internal_failure_yields_exit_code_4(
     assert finished["internal_failure"] is True
     plan_finished = read_artifact_events(tmp_path, plan.name)[-1]
     assert plan_finished["exit_code"] == 4
+
+
+@pytest.mark.parametrize(
+    ("override", "expected"),
+    [(None, "default_repo"), ("override_repo", "override_repo")],
+)
+def test_run_target_repo_comes_from_loaded_stage_default_or_override(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, override: str | None, expected: str
+) -> None:
+    (tmp_path / "default_repo").mkdir()
+    (tmp_path / "override_repo").mkdir()
+    stage = stage_spec("api")
+    if override is not None:
+        stage["target_repo"] = override
+    config_path = write_config(
+        tmp_path,
+        {
+            "version": 1,
+            "defaults": {"target_repo": "default_repo"},
+            "cycles": {"smoke": {"stages": [stage]}},
+        },
+    )
+    cfg = discover_and_load(config_path=config_path)
+    plan = resolve_plan(cfg, plan_name="smoke")
+    effective_plan = replace(plan, stages=resolve_stages_for_plan(plan))
+    use_echo_adapter(monkeypatch)
+
+    result = orchestrator.run_plan(
+        effective_plan, renderer=_RecordingRenderer(), artifacts_root=tmp_path, persist=False
+    )
+
+    assert result.target_repo == (tmp_path / expected).resolve()
+    assert result.stages[0].target_repo == result.target_repo
+
+
+def test_run_target_repo_uses_same_resolved_path_for_all_stages(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    plan = replace(
+        _plan("api", "ui"),
+        stages=(
+            replace(_stage("api"), target_repo=repo),
+            replace(_stage("ui"), target_repo=repo / ".." / "repo"),
+        ),
+    )
+    _stub_executor(monkeypatch, _result)
+
+    result = orchestrator.run_plan(
+        plan, renderer=_RecordingRenderer(), artifacts_root=tmp_path, persist=False
+    )
+
+    assert result.target_repo == repo.resolve()
+
+
+def test_run_target_repo_is_none_for_different_repositories(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "api").mkdir()
+    (tmp_path / "ui").mkdir()
+    plan = replace(
+        _plan("api", "ui"),
+        stages=(
+            replace(_stage("api"), target_repo=tmp_path / "api"),
+            replace(_stage("ui"), target_repo=tmp_path / "ui"),
+        ),
+    )
+    _stub_executor(monkeypatch, _result)
+
+    result = orchestrator.run_plan(
+        plan, renderer=_RecordingRenderer(), artifacts_root=tmp_path, persist=False
+    )
+
+    assert result.target_repo is None
+
+
+def test_fail_fast_ignores_unattempted_target(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first = tmp_path / "first"
+    first.mkdir()
+    plan = replace(
+        _plan("first", "never-ran"),
+        stages=(
+            replace(_stage("first"), target_repo=first),
+            replace(_stage("never-ran"), target_repo=tmp_path / "other"),
+        ),
+    )
+    _stub_executor(monkeypatch, lambda stage: _result(stage, returncode=1))
+
+    result = orchestrator.run_plan(
+        plan,
+        renderer=_RecordingRenderer(),
+        artifacts_root=tmp_path,
+        persist=False,
+        fail_fast=True,
+    )
+
+    assert len(result.stages) == 1
+    assert result.target_repo == first
+
+
+def test_unresolvable_target_preserves_terminal_lifecycle_and_persistence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    loop = tmp_path / "loop"
+    original_resolve = Path.resolve
+
+    def resolve_target(self: Path, strict: bool = False) -> Path:
+        if self == loop:
+            raise RuntimeError("Symlink loop from 'loop'")
+        return original_resolve(self, strict=strict)
+
+    plan = Plan(
+        name="broken-target",
+        description=None,
+        stages=(
+            Stage(
+                name="broken",
+                framework="command",
+                target_repo=loop,
+                args=(sys.executable, "-c", "pass"),
+            ),
+        ),
+    )
+    renderer = _RecordingRenderer()
+    monkeypatch.setattr(
+        testo_core.persistence,
+        "composite_backend",
+        lambda *, artifacts_root: JsonBackend(artifacts_root),
+    )
+
+    # Non-strict resolve no longer raises for symlink loops on Python 3.13.
+    # Fail only this target; artifact paths must still resolve normally.
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "resolve", resolve_target)
+        result = orchestrator.run_plan(plan, renderer=renderer, artifacts_root=tmp_path)
+
+    assert result.exit_code is EngineExitCode.INTERNAL_ERROR
+    assert result.stages[0].internal_failure
+    assert "Symlink loop" in (result.stages[0].error or "")
+    assert result.stages[0].target_repo is None
+    assert result.target_repo is None
+    assert isinstance(renderer.events[-1], PlanFinished)
+    assert read_artifact_events(tmp_path, plan.name)[-1]["event"] == "plan_finished"
+    payload = json.loads((tmp_path / plan.name / "plan_result.json").read_text())
+    assert payload["target_repo"] is None
+    assert payload["exit_code"] == 4
+
+
+def test_symlink_change_after_execution_does_not_change_persisted_target(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    first.mkdir()
+    second.mkdir()
+    link = tmp_path / "repo"
+    link.symlink_to(first, target_is_directory=True)
+    plan = Plan(
+        name="moving-target",
+        description=None,
+        stages=(
+            Stage(
+                name="cwd",
+                framework="command",
+                target_repo=link,
+                args=(sys.executable, "-c", "import os; print(os.getcwd())"),
+            ),
+        ),
+    )
+
+    class _RetargetingRenderer(_RecordingRenderer):
+        def handle(self, event: EngineEvent) -> None:
+            super().handle(event)
+            if isinstance(event, StageFinished):
+                link.unlink()
+                link.symlink_to(second, target_is_directory=True)
+
+    monkeypatch.setattr(
+        testo_core.persistence,
+        "composite_backend",
+        lambda *, artifacts_root: JsonBackend(artifacts_root),
+    )
+
+    result = orchestrator.run_plan(plan, renderer=_RetargetingRenderer(), artifacts_root=tmp_path)
+
+    assert result.exit_code is EngineExitCode.SUCCESS
+    assert result.stages[0].output_tail.strip() == str(first)
+    assert result.stages[0].target_repo == first
+    assert result.target_repo == first
+    assert link.resolve() == second
+    payload = json.loads((tmp_path / plan.name / "plan_result.json").read_text())
+    assert payload["target_repo"] == str(first)
+
+
+def test_run_target_repo_is_none_without_stages(tmp_path: Path) -> None:
+    result = orchestrator.run_plan(
+        _plan(), renderer=_RecordingRenderer(), artifacts_root=tmp_path, persist=False
+    )
+
+    assert result.target_repo is None
 
 
 def test_persist_true_hands_result_to_composite_backend(
