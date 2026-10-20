@@ -35,4 +35,11 @@ testo --version
 testo config validate
 testo run --cycle smoke
 test -f testo_history.db
+# Run data lands in the project (.testo/), never inside the installed package.
+test -d .testo/static/history || { echo "no run data under .testo/" >&2; exit 1; }
+site="$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+if [ -e "$site/static" ] || [ -e "$site/static_reports" ]; then
+  echo "run data was written under $site" >&2
+  exit 1
+fi
 echo "package smoke passed: $(basename "$wheel")"

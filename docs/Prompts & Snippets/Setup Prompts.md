@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-10-19
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # Setup Prompts
@@ -63,7 +63,7 @@ https://github.com/taltal-beep/testosterone/blob/main/README.md
    - Set `tier:` (unit, integration, e2e) when the default from the equipment is
      wrong, so the test pyramid is correct.
    - Add a `trigger: paths:` list only if I ask for change-based skipping.
-4. Add artifacts/ and testo_history.db to .gitignore.
+4. Add artifacts/, .testo/ and testo_history.db to .gitignore.
 5. Run `testo config validate`, then `testo run --cycle smoke` and show me the
    summary. Exit code 1 means tests failed (fine to report); 2 means the config or
    arguments are wrong, 3 an infrastructure problem: fix those and re-run.

@@ -7,11 +7,47 @@ the presentation layer stay DRY and framework-agnostic.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-ORCHESTRATOR_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
+# Overrides where runtime data (``static/``, ``static_reports/``) is written.
+DATA_HOME_ENV: Final[str] = "TESTO_HOME"
+# Default data directory, under the working directory, for an installed package.
+DEFAULT_DATA_DIRNAME: Final[str] = ".testo"
+
+
+def source_checkout_root(package_dir: Path | None = None) -> Path | None:
+    """The repository root when ``testo_core`` runs from a source checkout or editable install.
+
+    A wheel installed into ``site-packages`` has no ``pyproject.toml`` next to it, so this
+    returns None there.
+    """
+    pkg = (package_dir or Path(__file__).resolve().parent).resolve()
+    root = pkg.parent
+    if (root / "pyproject.toml").is_file() and root.name != "site-packages":
+        return root
+    return None
+
+
+def resolve_data_root(*, package_dir: Path | None = None, cwd: Path | None = None) -> Path:
+    """Where runtime data lives.
+
+    Precedence: ``$TESTO_HOME`` → the source checkout root (unchanged repo behaviour)
+    → ``<cwd>/.testo`` for a ``pip install``, so nothing is written into ``site-packages``.
+    """
+    override = (os.environ.get(DATA_HOME_ENV) or "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    checkout = source_checkout_root(package_dir)
+    if checkout is not None:
+        return checkout
+    return (cwd or Path.cwd()).resolve() / DEFAULT_DATA_DIRNAME
+
+
+# Resolved once at import, so the CLI and the API use the directory they were started in.
+ORCHESTRATOR_ROOT: Final[Path] = resolve_data_root()
 STATIC_DIR: Final[Path] = ORCHESTRATOR_ROOT / "static"
 
 # Per-run report bundles (``static/history/<run_id>/``), served by the API at ``/history``.

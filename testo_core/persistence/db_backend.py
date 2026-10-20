@@ -26,7 +26,7 @@ class DbBackend:
         self._artifacts_root = artifacts_root
 
     def _local_snapshot_dir(self, plan_name: str) -> str | None:
-        """Path of this plan's artifacts relative to ``paths.ORCHESTRATOR_ROOT`` (the repo root).
+        """Path of this plan's artifacts relative to ``paths.ORCHESTRATOR_ROOT`` (the data root).
 
         ``history.snapshots`` reads local ``snapshot_dir`` values relative to
         ``ORCHESTRATOR_ROOT``, so only return a value when the artifacts live under it.

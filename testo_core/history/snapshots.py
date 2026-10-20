@@ -9,7 +9,7 @@ from testo_core.history.views import CompletedRunView
 def snapshot_files_for_download(*, record: CompletedRunView) -> list[tuple[str, bytes]]:
     """``(relative_path, bytes)`` for each file in the run's snapshot, sorted by path.
 
-    ``snapshot_dir`` is relative to the repository root.
+    ``snapshot_dir`` is relative to ``paths.ORCHESTRATOR_ROOT`` (the data root).
     """
     if not record.snapshot_dir:
         return []

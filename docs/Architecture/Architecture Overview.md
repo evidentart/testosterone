@@ -156,6 +156,12 @@ artifacts/
 
 The collector and `testo report` both assume this layout. See `testo_core/reporting/collector.py`.
 
+`artifacts/` and the SQLite file are relative to the working directory. Per-run report copies (`static/history/<run_id>/`, served by the API at `/history`) live under the **data root**, `paths.ORCHESTRATOR_ROOT`, which `testo_core/paths.py` resolves once at import:
+
+1. `$TESTO_HOME`, when set.
+2. The repository root, when `testo_core` runs from a source checkout or an editable install (a `pyproject.toml` next to the package).
+3. Otherwise `<cwd>/.testo/`, so a `pip install` never writes into `site-packages`. The `package` CI job (`scripts/package_smoke.sh`) checks this.
+
 ## Test pyramid
 
 Each `Stage` carries a `tier: unit | integration | e2e` (`testo_core/config/schema.py`), explicit in `testosterone.yaml` or inferred from `equipment` (pytest→unit, behave→integration, behavex→e2e). `testo_core/reporting/pyramid_data.py::build_pyramid_model` sums each stage's `total_tests` (from the run's existing `stage_health`, computed by `testo_core/persistence/health.py::compute_stage_health`) into its tier bucket, producing a `PyramidModel(unit, integration, e2e)`. The tier is recorded on each stage row of the run record when the run executes (`StageResult.tier`, persisted by the JSON and DB backends), so renaming or re-tiering a stage later doesn't re-bucket old runs. Only records written before tiers were persisted fall back to the current `testosterone.yaml`.

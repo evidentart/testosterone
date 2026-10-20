@@ -10,7 +10,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-ORCHESTRATOR_ROOT = Path(__file__).resolve().parents[2]
+from testo_core.paths import source_checkout_root
+
 DEFAULT_ALLURE_VERSION = (os.environ.get("TESTO_ALLURE_VERSION") or "3").strip()
 ALLURE_CONFIG_NAMES = ("allurerc.mjs", "allurerc.js", "allurerc.cjs")
 
@@ -37,7 +38,7 @@ def find_repo_root(*, start: Path | None = None) -> Path:
             directory / "node_modules" / ".bin" / "allure"
         ).is_file():
             return directory
-    return ORCHESTRATOR_ROOT
+    return source_checkout_root() or cur
 
 
 def find_config_path(*, repo_root: Path | None = None) -> Path | None:

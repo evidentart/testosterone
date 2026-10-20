@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-10-19
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # Getting Started
@@ -53,7 +53,7 @@ testo run --cycle unit
 
 You get a panel per stage, a summary table (total, passed, failed, skipped) and the exit code: `0` when everything passed, `1` when a test failed. All exit codes are in [Troubleshooting and Error Codes](CLI%20Commands/Troubleshooting%20and%20Error%20Codes.md).
 
-Each run is recorded in `testo_history.db` (SQLite, next to the config) with its logs under `artifacts/`. Add both to `.gitignore`.
+Each run is recorded in `testo_history.db` (SQLite, next to the config) with its logs under `artifacts/` and a per-run copy of its reports under `.testo/` (set `TESTO_HOME` to put that elsewhere). Add all three to `.gitignore`.
 
 ## 4. See what changed
 

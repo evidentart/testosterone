@@ -31,6 +31,9 @@ artifacts/release-gate-*/
 # Generated report HTML (static/history/ is served by the API for each run's Report Links)
 static/
 
+# Run data of an installed package run from this directory (testo_core/paths.py)
+.testo/
+
 # Persisted run history (SQLite + per-run HTML snapshots)
 artifacts/uqo_run_history.sqlite
 artifacts/testo_sandbox.db
