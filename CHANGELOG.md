@@ -17,7 +17,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `docs/Getting Started.md`: from `pip install testo-core` to a regression in `testo summary` and the GitHub Action, with the same project in `examples/getting-started/`. A new `getting_started` CI job runs that example through the GitHub Action
 
 ### Changed
-- Web UI restyled after the Vision UI dashboard look: navy palette, glass cards over a blue glow, Plus Jakarta Sans, a desktop sidebar with icon tiles and a docs card, and icon tiles on the Dashboard KPI cards. Phones keep the top bar and menu. See `docs/Specs & ADRs/UI Restyle - 2026-10-19.md`
+- Web UI restyled after the Vision UI dashboard look: navy palette, glass cards over a blue glow, Plus Jakarta Sans, a desktop sidebar with icon tiles and a docs card, and icon tiles on the Dashboard KPI cards. Faint line art of the testosterone molecule and of vials with a syringe sits behind the pages. Phones keep the top bar and menu. See `docs/Specs & ADRs/UI Restyle - 2026-10-19.md`
 - `publish.yml` publishes straight to PyPI (the Test PyPI step is gone; the build, metadata and clean-install checks still run before the upload) and can be run by hand for an existing release tag
 - Runner image: `Dockerfile.testo-runner` uses the floating `python:3.11-slim-bookworm` base (the `3.11.9` pin carried 9 fixable CRITICAL Debian CVEs that failed the v1.1.1 image scan), and `docker-publish.yml` scans and smoke-runs the image before pushing it and can be run by hand for an existing release tag
 - Setup prompts install `testo-core` from PyPI instead of the GitHub zip

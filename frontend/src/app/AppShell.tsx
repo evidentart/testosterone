@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "../lib/api-client";
 import { MuscleLogo } from "../components/mascot";
+import { BackgroundArt } from "../components/BackgroundArt";
 import { DemoBadge } from "../components/StaticBuildBanner";
 import { Icons } from "../components/ui";
 
@@ -40,6 +41,7 @@ export function AppShell() {
   const { pathname } = useLocation();
   return (
     <div className="min-h-full">
+      <BackgroundArt />
       <aside className="glass-panel fixed inset-y-4 left-4 z-20 hidden w-64 flex-col overflow-y-auto px-4 py-6 lg:flex">
         <Link to="/" className="flex items-center justify-center gap-2.5 pb-6" aria-label="Testo home">
           <MuscleLogo size={26} />
