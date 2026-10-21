@@ -74,23 +74,37 @@ def _import_junit(
     _append_run_log(log_path, lines)
 
 
-def _ensure_behavex_html(stage_root: Path, *, log_path: Path) -> str | None:
-    """Post-stage hook: render BehaveX's HTML report when it only wrote ``report.json``.
+def _finish_behavex_reports(stage_root: Path, results_dir: Path, *, log_path: Path) -> str | None:
+    """Post-stage hook: export BehaveX's ``report.json`` to Allure, and make sure ``report.html`` exists.
 
-    Best-effort like :func:`_import_junit`, but the failure is returned so the
-    caller can put it on ``StageResult.error`` (exit code unchanged).
+    The adapter runs BehaveX without ``--formatter`` so it writes its HTML report;
+    the Allure results come from ``report.json`` here. The HTML fallback only does
+    work when a stage passed its own ``--formatter`` (BehaveX then skips the HTML).
+    Best-effort like :func:`_import_junit`, but the first failure is returned so
+    the caller can put it on ``StageResult.error`` (exit code unchanged).
     """
+    from testo_core.reporting.behavex_allure import export_behavex_allure_results
     from testo_core.reporting.native_reports import ensure_behavex_report_html
 
+    errors: list[str] = []
+    try:
+        exported = export_behavex_allure_results(stage_root / "behave_reports", results_dir)
+        if exported is not None:
+            _append_run_log(
+                log_path, [f"[testo] behavex: exported {exported} scenario(s) to Allure"]
+            )
+    except Exception as exc:  # noqa: BLE001 — BehaveX's formatter raises arbitrary types
+        logger.warning("BehaveX Allure export failed in %s", stage_root, exc_info=True)
+        errors.append(f"BehaveX Allure export failed: {exc}")
     try:
         ensure_behavex_report_html(stage_root, raise_errors=True)
     except Exception as exc:  # noqa: BLE001 — BehaveX's generator raises arbitrary types
         # native_reports already logged the traceback; here it only becomes stage evidence.
         logger.debug("BehaveX HTML report generation failed in %s", stage_root, exc_info=True)
-        message = f"BehaveX HTML report generation failed: {exc}"
-        _append_run_log(log_path, [f"[testo] {message}"])
-        return message
-    return None
+        errors.append(f"BehaveX HTML report generation failed: {exc}")
+    if errors:
+        _append_run_log(log_path, [f"[testo] {message}" for message in errors])
+    return errors[0] if errors else None
 
 
 def _append_run_log(log_path: Path, lines: list[str]) -> None:
@@ -248,7 +262,7 @@ def _run_resolved_stage(
         output_tail = buffer.tail(max_lines=tail_lines)
 
     if stage.framework == "behavex":
-        report_error = _ensure_behavex_html(stage_root, log_path=log_path)
+        report_error = _finish_behavex_reports(stage_root, results_dir, log_path=log_path)
         # A timeout/launch error is the more important message; keep it.
         error = error or report_error
 

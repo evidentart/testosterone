@@ -1,4 +1,9 @@
-"""BehaveX adapter — parallel Behave plus its Allure formatter wrapper."""
+"""BehaveX adapter — parallel Behave with BehaveX's own HTML report.
+
+No ``--formatter`` is added: BehaveX skips ``report.html`` whenever one is set.
+The executor turns ``report.json`` into Allure results after the stage instead
+(:mod:`testo_core.reporting.behavex_allure`).
+"""
 
 from __future__ import annotations
 
@@ -37,15 +42,6 @@ class BehaveXAdapter:
             argv.extend(["--parallel-processes", str(max(1, int(workers)))])
         if not _contains(argv, "--parallel-scheme"):
             argv.extend(["--parallel-scheme", "feature"])
-
-        if not _has_formatter(argv):
-            argv.extend(
-                [
-                    "--formatter=behavex.outputs.formatters.allure_behavex_formatter:AllureBehaveXFormatter",
-                    "--formatter-outdir",
-                    str(results_dir.resolve()),
-                ]
-            )
         return argv
 
     def extra_env(self) -> dict[str, str]:
@@ -76,7 +72,3 @@ def _strip_output_folder_flags(args: Sequence[str]) -> list[str]:
 
 def _contains(argv: list[str], flag: str) -> bool:
     return any(arg == flag or arg.startswith(f"{flag}=") for arg in argv)
-
-
-def _has_formatter(argv: list[str]) -> bool:
-    return any(arg in ("-f", "--formatter") or arg.startswith("--formatter=") for arg in argv)

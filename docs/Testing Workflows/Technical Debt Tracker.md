@@ -2,7 +2,7 @@
 type: tracker
 status: current
 created: 2026-06-25
-updated: 2026-10-08
+updated: 2026-10-21
 ---
 
 # Technical Debt Tracker
@@ -49,7 +49,7 @@ Stages run one at a time (`engine/orchestrator.py`); parallelism today is framew
 - MinIO, the pre-v1.1 snapshot reads and the Docker-stack record shape in `history/` were removed in v1.1.
 - `mypy testo_core testo_api` reports 0 errors and blocks CI, as does `ruff format --check`.
 - Silent-error audit: I/O paths (ReportPortal, Extent, metrics and Allure readers, doctor checks, persistence) catch specific exceptions (`OSError`, `ValueError`, `requests.RequestException`, `jinja2.TemplateError`, `SQLAlchemyError`) and log with `exc_info` instead of passing silently.
-- BehaveX HTML generation failures are logged, appended to `run.log` and set `StageResult.error` (exit code unchanged), so the stage panel and `stage_finished` NDJSON show them.
+- BehaveX runs without `--formatter`, so it writes its own HTML report again; Allure results come from its `report.json` after the stage. Export and HTML failures are logged, appended to `run.log` and set `StageResult.error` (exit code unchanged), so the stage panel and `stage_finished` NDJSON show them.
 - A failed Git trigger evaluation logs a warning and prefixes the snapshot fallback's `reason` with the Git error, so the trigger panel and `cycle_trigger` NDJSON event show it.
 
 ## Refreshing this note

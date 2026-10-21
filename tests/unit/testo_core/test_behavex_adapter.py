@@ -50,3 +50,26 @@ def test_extra_env_pins_tmpdir_to_system_temp() -> None:
     import tempfile
 
     assert BehaveXAdapter().extra_env() == {"TMPDIR": tempfile.gettempdir()}
+
+
+def test_build_argv_adds_no_formatter(tmp_path: Path) -> None:
+    """BehaveX skips ``report.html`` whenever a formatter is set; Allure comes from ``report.json``."""
+    argv = BehaveXAdapter().build_argv(
+        target_repo=tmp_path,
+        results_dir=tmp_path / "stage" / "allure-results" / "behavex",
+        stage_args=("features/smoke.feature",),
+        workers=2,
+    )
+
+    assert not any(arg in ("-f", "--formatter") or arg.startswith("--formatter") for arg in argv)
+
+
+def test_build_argv_keeps_a_formatter_from_stage_args(tmp_path: Path) -> None:
+    argv = BehaveXAdapter().build_argv(
+        target_repo=tmp_path,
+        results_dir=tmp_path / "stage" / "allure-results" / "behavex",
+        stage_args=("features/smoke.feature", "--formatter=my.module:Formatter"),
+        workers=1,
+    )
+
+    assert argv.count("--formatter=my.module:Formatter") == 1

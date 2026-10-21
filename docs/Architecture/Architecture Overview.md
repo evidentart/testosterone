@@ -2,7 +2,7 @@
 type: architecture
 status: current
 created: 2026-06-25
-updated: 2026-10-20
+updated: 2026-10-21
 ---
 
 # Architecture Overview
@@ -86,7 +86,7 @@ Each **equipment** name maps to an adapter implementing `FrameworkAdapter`:
 
 - `pytest` → `PytestAdapter`
 - `behave` → `BehaveAdapter`
-- `behavex` → `BehaveXAdapter`
+- `behavex` → `BehaveXAdapter`: `behavex -o <stage>/behave_reports <args>` with `--parallel-processes N --parallel-scheme feature`. BehaveX's `report.html` is the native report; the executor turns its `report.json` into Allure results after the stage ([BehaveX Reports - 2026-10-21](../Specs%20&%20ADRs/BehaveX%20Reports%20-%202026-10-21.md)).
 - `playwright` → `PlaywrightAdapter`: `npx playwright test <args>` in the target repo, which must have `@playwright/test` installed. Adds `--reporter=list,junit,html` and `--workers=N` unless `args` set them; the JUnit file (`test-results/testo-junit.xml`) is imported like a `command` stage's `junit_xml`, and Playwright's HTML report is kept as the run's native report. Default tier `e2e`.
 - `command` → `CommandAdapter`: any other runner (Jest, Maestro, `go test`, ...). `args` is the whole argv. The stage's `junit_xml` globs are converted into Allure results after it exits (`testo_core/reporting/junit_import.py`), so the stage counts in summaries, health % and every reporter. See [Command Adapter and JUnit Import - 2026-09-25](../Specs%20&%20ADRs/Command%20Adapter%20and%20JUnit%20Import%20-%202026-09-25.md).
 

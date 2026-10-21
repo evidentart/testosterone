@@ -2,7 +2,7 @@
 type: log
 status: current
 created: 2026-10-07
-updated: 2026-10-19
+updated: 2026-10-21
 ---
 
 # Vault log
@@ -56,3 +56,7 @@ Added [Playwright Adapter - 2026-10-19](Specs%20&%20ADRs/Playwright%20Adapter%20
 ## 2026-10-19: UI restyle
 
 Added [UI Restyle - 2026-10-19](Specs%20&%20ADRs/UI%20Restyle%20-%202026-10-19.md) to Specs & ADRs and pointed the Phase 5 note at it for the sidebar and the navy tokens.
+
+## 2026-10-21: BehaveX reports
+
+Added [BehaveX Reports - 2026-10-21](Specs%20&%20ADRs/BehaveX%20Reports%20-%202026-10-21.md) to Specs & ADRs.

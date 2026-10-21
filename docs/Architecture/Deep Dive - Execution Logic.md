@@ -2,7 +2,7 @@
 type: architecture
 status: current
 created: 2026-06-25
-updated: 2026-10-19
+updated: 2026-10-21
 ---
 
 # Deep Dive — Execution Logic
@@ -237,7 +237,7 @@ subprocess.Popen(argv, cwd=target_repo, stdout=PIPE, stderr=STDOUT)
 
 ### Post-stage hook
 
-For `behavex`, `ensure_behavex_report_html(stage_root)` runs best-effort: a failure is logged, appended to `run.log` and set as the stage's `error` (unless a timeout or launch error is already there). The exit code is unchanged.
+For `behavex`, `_finish_behavex_reports` runs best-effort. The adapter starts BehaveX without `--formatter` (BehaveX skips `report.html` whenever one is set), so BehaveX writes its own HTML report and `report.json` to `behave_reports/`. The hook then converts `report.json` into Allure results in `allure-results/behavex/` with BehaveX's own Allure formatter (`testo_core/reporting/behavex_allure.py`), and calls `ensure_behavex_report_html`, which renders `report.html` only if a stage passed its own `--formatter`. A failure in either step is logged, appended to `run.log` and set as the stage's `error` (unless a timeout or launch error is already there). The exit code is unchanged. See [BehaveX Reports - 2026-10-21](../Specs%20&%20ADRs/BehaveX%20Reports%20-%202026-10-21.md).
 
 For any stage with `junit_xml` globs (typically `equipment: command`), `_import_junit` converts the matching JUnit XML (only files inside `target_repo`, only files written since the stage started) into one Allure `*-result.json` per `<testcase>` in `allure-results/<framework>/`: `<failure>` → failed, `<error>` → broken, `<skipped>` → skipped, otherwise passed. It is best-effort, like the BehaveX hook. The process exit code still decides the stage result, and the import outcome (count, or malformed files skipped) is appended to `run.log` as `[testo] junit_xml: ...`.
 
