@@ -2,7 +2,7 @@
 type: reference
 status: current
 created: 2026-06-25
-updated: 2026-10-20
+updated: 2026-10-21
 ---
 
 # Command Reference
@@ -142,7 +142,7 @@ Config errors print `[fail]config error: …` and exit **2**.
 | Subcommand | Description |
 |------------|-------------|
 | `testo config validate` | Load YAML; optional `--check-executables` for pytest/behave/behavex (and `npx` for playwright) on PATH |
-| `testo config init` | Write starter `testosterone.yaml` (`--path`, `--force`) |
+| `testo config init` | Write starter `testosterone.yaml` with one active `smoke-test` cycle running `pytest -q tests` and commented-out marker/BehaveX examples (`--path`, `--force`) |
 | `testo config db` | Set `database.url` (PostgreSQL prompts or `--url`) |
 
 ```bash

@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-10-19
-updated: 2026-10-20
+updated: 2026-10-21
 ---
 
 # Getting Started
@@ -43,7 +43,7 @@ testo config validate    # ok — version=1 cycles=1 ...
 testo doctor             # config, runners on PATH, database
 ```
 
-`testo config init` writes a bigger starter file instead, but its `smoke-test` cycle selects `-m smoke` tests, so edit its `args` to match your suite.
+`testo config init` writes a starter file with a `smoke-test` cycle that runs `pytest -q tests`, plus commented-out marker-based pytest and BehaveX examples. Edit its `args` if your tests live outside `tests/`.
 
 ## 3. Run it
 

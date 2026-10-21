@@ -58,8 +58,8 @@ Install the CLI from PyPI and point it at your own tests:
 
 ```bash
 pip install testo-core            # the `testo` CLI; add [api] for the REST API, [db] for Postgres
-testo config init                 # writes a starter testosterone.yaml; edit its stages
-testo run --cycle smoke-test      # run a cycle from it
+testo config init                 # writes a starter testosterone.yaml for pytest
+testo run --cycle smoke-test      # runs pytest -q tests; edit args for a different test directory
 ```
 
 [Getting Started](docs/Getting%20Started.md) goes further in about five minutes: a regression

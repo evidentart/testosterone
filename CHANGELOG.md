@@ -25,6 +25,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `move-major-tag.yml` keeps the moving `v1` tag on the latest stable release (and can be run by hand for an existing tag)
 
 ### Fixed
+- `testo config init` generates a `smoke-test` cycle that runs ordinary pytest tests in `tests/` without a marker filter. Marker-based pytest and BehaveX configurations remain as commented-out examples, so a new pytest project does not require smoke markers or BDD features (#100)
 - BehaveX stages get BehaveX's own HTML report again. The adapter passed BehaveX's Allure `--formatter`, and BehaveX skips `report.html` whenever a formatter is set, so the report Testo showed was re-rendered afterwards without scenario logs. BehaveX now runs plain and the executor converts its `report.json` to Allure results after the stage (`testo_core/reporting/behavex_allure.py`). A `--formatter` in a stage's `args` is still passed through
 - New run-history records include the repository used by a run when its attempted stages have one resolved target; runs using multiple repositories leave it unknown.
 
