@@ -7,12 +7,14 @@ from pathlib import Path
 
 import typer
 
+from testo_core.config.json_schema import SCHEMA_ID
 from testo_core.engine.exit_codes import EngineExitCode
 
 app = typer.Typer(help="Validate or scaffold a testosterone.yaml.", no_args_is_help=True)
 
 
-_STARTER_YAML = """\
+_STARTER_YAML = f"""\
+# yaml-language-server: $schema={SCHEMA_ID}
 version: 1
 
 defaults:

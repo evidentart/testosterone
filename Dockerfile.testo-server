@@ -1,0 +1,59 @@
+# Testosterone team server: the API, the web UI and the run history in one image.
+# CI jobs upload JUnit XML with `testo ingest --server`; everyone browses the
+# same history. Run it with deploy/server/docker-compose.yml (adds Postgres).
+ARG TESTO_SERVER_BASE=python:3.11-slim-bookworm
+
+# The UI, built to call the API on its own origin.
+FROM node:22-bookworm-slim AS ui
+WORKDIR /ui
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY frontend/ ./
+RUN VITE_API_BASE_URL="" npm run build
+
+FROM ${TESTO_SERVER_BASE} AS builder
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1
+WORKDIR /build
+COPY pyproject.toml README.md ./
+COPY testo_core ./testo_core
+COPY testo_api ./testo_api
+RUN python -m pip install --upgrade pip build && \
+    python -m build --wheel --outdir /dist
+
+FROM ${TESTO_SERVER_BASE} AS runtime
+
+ARG TESTO_VERSION=dev
+ARG TESTO_COMMIT_SHA=unknown
+ARG TESTO_CREATED=unknown
+
+LABEL org.opencontainers.image.title="testo-server" \
+      org.opencontainers.image.description="Testosterone team server: API, web UI and shared run history." \
+      org.opencontainers.image.version="${TESTO_VERSION}" \
+      org.opencontainers.image.revision="${TESTO_COMMIT_SHA}" \
+      org.opencontainers.image.created="${TESTO_CREATED}"
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TESTO_HOME=/data \
+    TESTO_UI_DIR=/app/ui \
+    TESTO_API_HOST=0.0.0.0 \
+    TESTO_API_PORT=8000
+
+COPY --from=builder /dist/*.whl /tmp/
+RUN WHEEL="$(ls /tmp/*.whl)" && python -m pip install "${WHEEL}[api,db]" && rm -f /tmp/*.whl && \
+    useradd --create-home --uid 10001 testo && \
+    mkdir -p /data && chown testo:testo /data
+COPY --from=ui /ui/dist /app/ui
+
+USER testo
+WORKDIR /data
+VOLUME ["/data"]
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/live', timeout=4)"
+
+ENTRYPOINT ["testo-api"]

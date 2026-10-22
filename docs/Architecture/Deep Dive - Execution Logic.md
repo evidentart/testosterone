@@ -2,7 +2,7 @@
 type: architecture
 status: current
 created: 2026-06-25
-updated: 2026-10-21
+updated: 2026-10-22
 ---
 
 # Deep Dive — Execution Logic
@@ -144,7 +144,7 @@ For each stage in order:
 1. Emit `StageStarted` (renderer + NDJSON `stage_started`).
 2. Call `run_stage()` inside a broad `try/except` — unexpected exceptions become `StageResult` with `returncode=4` and `error="internal error: ..."`.
 3. Append `StageResult`; emit `StageFinished`.
-4. Write NDJSON `stage_finished` (includes `returncode`, `timed_out`, `error`, `log_path`).
+4. Write NDJSON `stage_finished` (includes `returncode`, `timed_out`, `error`, `log_path`, `quarantined`, `waived_returncode`).
 5. If `--fail-fast` and `returncode != 0`, write `plan_aborted` and break.
 
 ### Aggregation
@@ -215,7 +215,7 @@ artifacts/<cycle>/<stage>/
 
 Steps:
 
-1. `get_adapter(stage.framework)` → `PytestAdapter` | `BehaveAdapter` | `BehaveXAdapter` | `PlaywrightAdapter` | `CommandAdapter` (argv = `stage.args` verbatim), or a `testo.frameworks` plugin adapter
+1. `get_adapter(stage.framework)` → `PytestAdapter` | `BehaveAdapter` | `BehaveXAdapter` | `PlaywrightAdapter` | `CommandAdapter` (argv = `stage.args` verbatim) | `JunitAdapter` (no process, see the post-stage hook below), or a `testo.frameworks` plugin adapter
 2. `adapter.build_argv(target_repo, results_dir, stage_args, workers)`
 3. `merged_env(parent_env, stage.extra_env)` plus injected vars:
    - `TESTO_SHARED_ALLURE_RESULTS_DIR` → Allure output dir
@@ -239,7 +239,11 @@ subprocess.Popen(argv, cwd=target_repo, stdout=PIPE, stderr=STDOUT)
 
 For `behavex`, `_finish_behavex_reports` runs best-effort. The adapter starts BehaveX without `--formatter` (BehaveX skips `report.html` whenever one is set), so BehaveX writes its own HTML report and `report.json` to `behave_reports/`. The hook then converts `report.json` into Allure results in `allure-results/behavex/` with BehaveX's own Allure formatter (`testo_core/reporting/behavex_allure.py`), and calls `ensure_behavex_report_html`, which renders `report.html` only if a stage passed its own `--formatter`. A failure in either step is logged, appended to `run.log` and set as the stage's `error` (unless a timeout or launch error is already there). The exit code is unchanged. See [BehaveX Reports - 2026-10-21](../Specs%20&%20ADRs/BehaveX%20Reports%20-%202026-10-21.md).
 
+A `junit` stage skips the subprocess entirely: `_record_junit_stage` imports its `junit_xml` reports without the age filter (they predate the stage by definition), sets the returncode to 1 when a case failed or broke or no file matched (0 otherwise), uses the reports' summed test time as the stage duration, and writes what it read to `run.log` as `[testo] junit: ...`. The plan's `duration_s` is the larger of the wall clock and the summed stage durations, so an ingested run shows its test time rather than the milliseconds the import took.
+
 For any stage with `junit_xml` globs (typically `equipment: command`), `_import_junit` converts the matching JUnit XML (only files inside `target_repo`, only files written since the stage started) into one Allure `*-result.json` per `<testcase>` in `allure-results/<framework>/`: `<failure>` → failed, `<error>` → broken, `<skipped>` → skipped, otherwise passed. It is best-effort, like the BehaveX hook. The process exit code still decides the stage result, and the import outcome (count, or malformed files skipped) is appended to `run.log` as `[testo] junit_xml: ...`.
+
+Last, when the plan has `quarantine:` rules and the process exited `1`, `testo_core/engine/quarantine.py` reads the stage's Allure results. If every failed or broken test matches a rule, the stage's `returncode` becomes `0` and the original goes to `waived_returncode`; the matched names go to `StageResult.quarantined` either way and to `run.log` as `[testo] quarantine: ...`. The result files are not changed, so the failures still count in health, reports and Compare. See [Flaky Test Quarantine - 2026-10-22](../Specs%20&%20ADRs/Flaky%20Test%20Quarantine%20-%202026-10-22.md).
 
 ---
 

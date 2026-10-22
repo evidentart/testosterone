@@ -7,6 +7,52 @@ import { Badge, Button, Card, KeyValue, PageHeader, Spinner, StatusPill, TestPyr
 import { formatRunLabel } from "../../lib/format";
 import { AI_SUMMARY_SNAPSHOT_MESSAGE, IS_STATIC_BUILD } from "../../lib/static-backend";
 
+// Error codes that the user fixes on the AI settings page.
+const AI_SETTINGS_ERROR_CODES = new Set(["ai_feature_disabled", "provider_misconfigured", "unsupported_provider_model"]);
+
+const AI_SUMMARY_ERROR_MESSAGES: Record<string, string> = {
+  summary_not_available: "No summary has been generated for this run yet.",
+  ai_feature_disabled: "AI failure summaries are switched off.",
+  provider_misconfigured: "No summary generated: the AI provider has no API key, or rejected it.",
+  unsupported_provider_model: "No summary generated: the configured model is not available for this API key.",
+  provider_timeout: "No summary generated: the AI provider timed out. Try again.",
+  provider_rate_limited: "No summary generated: the AI provider rate-limited the request. Try again shortly."
+};
+
+function describeAiSummaryError(code: string | null | undefined, limitations: string[] = []): string {
+  // Limitation codes are snake_case; a provider failure is recorded as a sentence.
+  const providerError = limitations.find((item) => item.includes(" "));
+  if (code === "summary_not_available" && providerError) {
+    return `No summary generated: ${providerError}`;
+  }
+  return AI_SUMMARY_ERROR_MESSAGES[code ?? ""] ?? `No summary generated (${code ?? "not_available"}).`;
+}
+
+// The labels the summary prompt asks for (testo_core/services/failure_context_builder.py).
+const AI_SUMMARY_LABEL = /^(What failed|Likely cause|Next steps):\s*(.*)$/;
+
+function AiSummaryText({ text }: { text: string }) {
+  return (
+    <div className="space-y-1 text-sm text-ink-100">
+      {text
+        .split("\n")
+        .filter((line) => line.trim())
+        .map((line, index) => {
+          const labelled = AI_SUMMARY_LABEL.exec(line);
+          return labelled ? (
+            <p key={index} className="pt-1">
+              <span className="font-semibold text-ink-50">{labelled[1]}:</span> {labelled[2]}
+            </p>
+          ) : (
+            <p key={index} className="whitespace-pre-wrap">
+              {line}
+            </p>
+          );
+        })}
+    </div>
+  );
+}
+
 export function RunDetailPage() {
   const params = useParams();
   const runId = params.runId ?? "";
@@ -171,7 +217,7 @@ export function RunDetailPage() {
           <p className="text-sm text-danger-400">Failed to load AI summary.</p>
         ) : aiSummaryQuery.data.status === "available" ? (
           <article className="space-y-1">
-            <p className="text-sm text-ink-100">{aiSummaryQuery.data.summary_text}</p>
+            <AiSummaryText text={aiSummaryQuery.data.summary_text ?? ""} />
             <p className="text-xs text-ink-400">
               Confidence: {aiSummaryQuery.data.confidence ?? "unknown"} | Model: {aiSummaryQuery.data.model ?? "unknown"}
               {IS_STATIC_BUILD ? " | Generated when this snapshot was built" : ""}
@@ -185,7 +231,15 @@ export function RunDetailPage() {
           </p>
         ) : (
           <p className="text-sm text-ink-400">
-            No summary generated ({aiSummaryQuery.data.error_code ?? "not_available"}).
+            {describeAiSummaryError(aiSummaryQuery.data.error_code, aiSummaryQuery.data.limitations)}
+            {AI_SETTINGS_ERROR_CODES.has(aiSummaryQuery.data.error_code ?? "") ? (
+              <>
+                {" "}
+                <Link className="text-brand-300 underline" to="/settings/ai">
+                  Open AI settings
+                </Link>
+              </>
+            ) : null}
           </p>
         )}
         <Button

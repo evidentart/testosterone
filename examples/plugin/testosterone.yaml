@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../schema/testosterone.schema.json
 version: 1
 cycles:
   unit:

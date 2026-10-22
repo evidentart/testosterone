@@ -112,6 +112,17 @@
             "title": "Api Key Source",
             "type": "string"
           },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
           "configured": {
             "title": "Configured",
             "type": "boolean"
@@ -146,7 +157,8 @@
           "provider": {
             "enum": [
               "openai",
-              "anthropic"
+              "anthropic",
+              "openai_compatible"
             ],
             "title": "Provider",
             "type": "string"
@@ -171,7 +183,8 @@
           "timeout_s",
           "retry_count",
           "max_input_chars",
-          "max_output_tokens"
+          "max_output_tokens",
+          "base_url"
         ],
         "title": "AiConfigStatusResponse",
         "type": "object"
@@ -209,6 +222,17 @@
             "title": "Api Key Source",
             "type": "string"
           },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
           "enabled": {
             "default": false,
             "title": "Enabled",
@@ -233,7 +257,8 @@
             "default": "openai",
             "enum": [
               "openai",
-              "anthropic"
+              "anthropic",
+              "openai_compatible"
             ],
             "title": "Provider",
             "type": "string"
@@ -364,6 +389,104 @@
           "error_code"
         ],
         "title": "AiSummaryResponse",
+        "type": "object"
+      },
+      "Body_ingest_reports_api_v1_ingest_post": {
+        "properties": {
+          "ci_commit_sha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Commit Sha"
+          },
+          "ci_job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Job Id"
+          },
+          "ci_pipeline_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Pipeline Id"
+          },
+          "ci_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Provider"
+          },
+          "ci_ref_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Ref Name"
+          },
+          "cycle": {
+            "title": "Cycle",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "contentMediaType": "application/octet-stream",
+              "type": "string"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "repository": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repository"
+          },
+          "stage": {
+            "default": "junit",
+            "title": "Stage",
+            "type": "string"
+          },
+          "tier": {
+            "default": "unit",
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "files",
+          "cycle"
+        ],
+        "title": "Body_ingest_reports_api_v1_ingest_post",
         "type": "object"
       },
       "CycleDetailResponse": {
@@ -1775,6 +1898,69 @@
         "title": "HealthReadyResponse",
         "type": "object"
       },
+      "IngestResponse": {
+        "description": "A recorded upload (``POST /api/v1/ingest``, what ``testo ingest --server`` sends).",
+        "properties": {
+          "cycle": {
+            "title": "Cycle",
+            "type": "string"
+          },
+          "exit_code": {
+            "title": "Exit Code",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "integer"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "run_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Url"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "tests": {
+            "title": "Tests",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "cycle",
+          "exit_code",
+          "tests",
+          "passed",
+          "failed",
+          "skipped",
+          "run_url"
+        ],
+        "title": "IngestResponse",
+        "type": "object"
+      },
       "ReadinessCheck": {
         "properties": {
           "detail": {
@@ -3109,6 +3295,48 @@
         "summary": "Ready",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/api/v1/ingest": {
+      "post": {
+        "description": "Record JUnit XML files as one run of *cycle*. Nothing in the upload is executed.\n\n``exit_code`` follows ``testo run``: 0 when every test passed or was skipped,\n1 when one failed. Needs ``Authorization: Bearer <TESTO_API_TOKEN>`` when the\nserver has a token set, like every other write.",
+        "operationId": "ingest_reports_api_v1_ingest_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_ingest_reports_api_v1_ingest_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ingest Reports",
+        "tags": [
+          "ingest"
         ]
       }
     },

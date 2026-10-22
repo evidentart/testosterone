@@ -451,3 +451,51 @@ def report_markdown(
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text, encoding="utf-8")
     raise typer.Exit(code=0)
+
+
+@report_app.command(
+    "annotations",
+    help="Failing tests as GitHub Actions ::error lines, shown inline on the pull request diff.",
+)
+def report_annotations(
+    cycle: str | None = typer.Option(None, "--cycle", help="Latest run of this cycle."),
+    run_id: str | None = typer.Option(None, "--run-id", help="A specific run (run-history id)."),
+    workspace: Path = typer.Option(
+        Path("."),
+        "--workspace",
+        help="Repository root; annotation paths are relative to it (in Actions: the checkout).",
+    ),
+    limit: int = typer.Option(
+        10, "--limit", min=1, help="Most annotations to print (GitHub shows 10 errors per step)."
+    ),
+    config: Path | None = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="testosterone.yaml whose stage target_repo folders help find failing files.",
+    ),
+) -> None:
+    from testo_core.config.errors import ConfigError
+    from testo_core.config.loader import discover_and_load
+    from testo_core.services.run_annotations import load_failures, workflow_commands
+    from testo_core.services.run_summary_markdown import load_run_summary
+
+    summary = load_run_summary(cycle=cycle.strip() if cycle else None, run_id=run_id)
+    if summary is None:
+        typer.echo("no recorded run found", err=True)
+        raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT))
+    run = summary.run
+
+    # Test frameworks print paths relative to the stage's target_repo, not the repository root.
+    roots: list[Path] = []
+    try:
+        plan = discover_and_load(config_path=config).cycles.get(run.cycle or "")
+        if plan is not None:
+            roots = [Path(s.target_repo) for s in plan.stages]
+    except ConfigError:
+        pass
+
+    failures = load_failures(run, workspace=workspace, roots=roots)
+    for line in workflow_commands(failures, cycle=run.cycle, limit=limit):
+        typer.echo(line)
+    raise typer.Exit(code=0)

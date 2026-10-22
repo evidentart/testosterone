@@ -11,7 +11,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/testo-runner
 
 permissions:
   contents: read
@@ -19,12 +18,28 @@ permissions:
 
 jobs:
   build-and-push:
-    name: Build and push multi-arch image
+    name: Build and push ${{ matrix.image }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The CI runner image (`testo run` in a container).
+          - image: testo-runner
+            dockerfile: Dockerfile.testo-runner
+            verify: testo-runner:scan run --help
+          # The team server: API + web UI (deploy/server/docker-compose.yml).
+          - image: testo-server
+            dockerfile: Dockerfile.testo-server
+            # The API and its routes import, and the built UI is in place.
+            verify: >-
+              --entrypoint python testo-server:scan -c
+              "import testo_api.main, pathlib; assert pathlib.Path('/app/ui/index.html').is_file()"
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      IMAGE_NAME: ${{ github.repository_owner }}/${{ matrix.image }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check the tag matches the package version
         run: |
@@ -35,13 +50,13 @@ jobs:
           fi
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -49,7 +64,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -63,43 +78,43 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: config
-          scan-ref: Dockerfile.testo-runner
+          scan-ref: ${{ matrix.dockerfile }}
           exit-code: 1
           severity: CRITICAL,HIGH
 
       # Build and check the amd64 image locally first, so an image that fails
       # the scan or doesn't start is never pushed.
       - name: Build image for scanning
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile.testo-runner
+          file: ${{ matrix.dockerfile }}
           load: true
           platforms: linux/amd64
-          tags: testo-runner:scan
+          tags: ${{ matrix.image }}:scan
           build-args: |
             TESTO_VERSION=${{ env.TAG }}
             TESTO_COMMIT_SHA=${{ github.sha }}
             TESTO_CREATED=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: testo-runner:scan
+          image-ref: ${{ matrix.image }}:scan
           exit-code: 1
           severity: CRITICAL
           ignore-unfixed: true
 
       - name: Verify image
-        run: docker run --rm testo-runner:scan run --help
+        run: docker run --rm ${{ matrix.verify }}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile.testo-runner
+          file: ${{ matrix.dockerfile }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
@@ -108,5 +123,5 @@ jobs:
             TESTO_VERSION=${{ env.TAG }}
             TESTO_COMMIT_SHA=${{ github.sha }}
             TESTO_CREATED=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}

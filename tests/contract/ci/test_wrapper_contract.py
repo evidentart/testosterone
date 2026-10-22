@@ -28,6 +28,11 @@ def test_action_contract_has_required_inputs_outputs() -> None:
         "package",
         "job-summary",
         "comment-on-pr",
+        "annotations",
+        "slack-webhook",
+        "teams-webhook",
+        "notify-when",
+        "flaky-issues",
         "github-token",
     }
     assert set(payload["outputs"].keys()) == {"exit_code", "summary_json", "summary_path", "status"}

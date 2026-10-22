@@ -1,0 +1,51 @@
+# Testosterone team server: one place every CI job records into.
+#
+#   export TESTO_API_TOKEN="$(openssl rand -hex 32)"   # keep it; CI needs it too
+#   docker compose up -d                                # from a clone: add --build
+#
+# Then open http://localhost:8000 and, in each CI job after the tests:
+#
+#   pip install testo-core
+#   testo ingest 'reports/**/*.xml' --cycle web-unit \
+#     --server https://testo.example.com --token "$TESTO_API_TOKEN"
+#
+# Put it behind HTTPS (a reverse proxy) before exposing it beyond your network.
+# Guide: docs/Processes & Guides/Team Server.md
+services:
+  server:
+    image: ghcr.io/taltal-beep/testo-server:${TESTO_SERVER_TAG:-1}
+    build:
+      context: ../..
+      dockerfile: Dockerfile.testo-server
+    environment:
+      # Required: every write (uploads, starting runs, AI settings) needs it.
+      TESTO_API_TOKEN: ${TESTO_API_TOKEN:?set TESTO_API_TOKEN (e.g. openssl rand -hex 32)}
+      DATABASE_URL: postgresql+psycopg://testo:${POSTGRES_PASSWORD:-testo}@postgres:5432/testo
+    ports:
+      - "${TESTO_SERVER_PORT:-8000}:8000"
+    volumes:
+      # Per-run artifacts and report snapshots (static/history/<run_id>/).
+      - testo_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: testo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-testo}
+      POSTGRES_DB: testo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testo -d testo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  testo_data:
+  postgres_data:

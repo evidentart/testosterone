@@ -71,6 +71,10 @@ def get_adapter(framework: str) -> FrameworkAdapter:
         from testo_core.frameworks.command_adapter import CommandAdapter
 
         return CommandAdapter()
+    if framework == "junit":
+        from testo_core.frameworks.junit_adapter import JunitAdapter
+
+        return JunitAdapter()
     if framework == "playwright":
         from testo_core.frameworks.playwright_adapter import PlaywrightAdapter
 

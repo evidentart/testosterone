@@ -2,7 +2,7 @@
 type: reference
 status: current
 created: 2026-06-25
-updated: 2026-10-07
+updated: 2026-10-22
 ---
 
 # Troubleshooting and Error Codes
@@ -43,6 +43,7 @@ Stage timeouts emit `returncode=124` and `timed_out=true`. Engine internal failu
 | Command | Uses `EngineExitCode` |
 |---------|------------------------|
 | `testo run` | Yes — engine result |
+| `testo ingest` | Yes — engine result locally; with `--server`, the server's result, or **3** when the upload fails (unreachable, wrong token) |
 | `testo report` | Yes — missing artifacts, Allure failure, I/O errors |
 | `testo doctor` | **2** on hard FAIL; **0** on pass |
 | `testo config validate` | **2** on failure (literal in some handlers) |
@@ -285,7 +286,7 @@ cat artifacts/<cycle>/<stage>/run.log
 
 **Fix**
 
-- Install framework in active venv: `pip install pytest` / `behave` / `behavex`
+- Install framework in active venv: `pip install pytest`; for `behave` / `behavex` stages, `pip install 'testo-core[bdd]'` (since 1.2 a plain `pip install testo-core` leaves them out, and the stage error says so)
 - Ensure CI image activates the same venv before `testo run`
 
 ---

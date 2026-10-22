@@ -122,3 +122,24 @@ def test_runs_without_a_snapshot_are_skipped(monkeypatch, tmp_path: Path) -> Non
     monkeypatch.setattr(flaky_service, "list_recent_runs", lambda *, limit: runs)
     report = flaky_service.find_flaky_tests(cycle="unit")
     assert (report.runs_analyzed, report.flaky) == (0, ())
+
+
+def test_newly_flaky_tests_are_the_ones_this_run_made_flaky(monkeypatch, tmp_path: Path) -> None:  # noqa: ANN001
+    runs = [_run(f"r{i}", created_at=i) for i in range(4, 0, -1)]  # newest first
+    history = {  # oldest → newest
+        "test_new": ["passed", "failed", "passed", "failed"],  # flaky since r3
+        "test_old": ["failed", "passed", "failed", "failed"],  # flaky since r3
+        "test_now": ["passed", "passed", "failed", "passed"],  # flaky from r4 on
+    }
+    for i, run in enumerate(reversed(runs)):
+        _write_results(tmp_path, run, {name: statuses[i] for name, statuses in history.items()})
+    monkeypatch.setattr(flaky_service.paths, "ORCHESTRATOR_ROOT", tmp_path)
+    monkeypatch.setattr(flaky_service, "list_recent_runs", lambda *, limit: runs)
+
+    assert [t.name for t in flaky_service.newly_flaky_tests(cycle="unit")] == ["test_now"]
+    # As of r3, test_new and test_old had just made their second flip.
+    assert sorted(t.name for t in flaky_service.newly_flaky_tests(cycle="unit", run_id="r3")) == [
+        "test_new",
+        "test_old",
+    ]
+    assert flaky_service.newly_flaky_tests(cycle="unit", run_id="missing") == ()

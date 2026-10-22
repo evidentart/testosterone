@@ -15,6 +15,9 @@ from typing import Any
 
 import pytest
 
+# Tests must not read or overwrite a developer's saved AI settings (artifacts/ai_settings.json).
+os.environ.setdefault("TESTO_AI_SETTINGS_PATH", "")
+
 # Project root is parent of ``tests/``; ``pythonpath = .`` in pytest.ini also applies.
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:

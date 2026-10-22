@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Supported frameworks. Add new ones in :mod:`testo_core.frameworks` and append here.
 SUPPORTED_FRAMEWORKS: frozenset[str] = frozenset(
-    {"pytest", "behave", "behavex", "command", "playwright"}
+    {"pytest", "behave", "behavex", "command", "junit", "playwright"}
 )
 
 # Frameworks that act on a stage's ``workers``: BehaveX always (``--parallel-processes``),
@@ -33,11 +33,13 @@ DEFAULT_TIER_BY_FRAMEWORK: dict[str, str] = {
     # Any other runner (Jest, Playwright, Maestro, go test, ...): the stage's
     # ``args`` are the whole argv; results come in through ``junit_xml``.
     "command": "unit",
+    # Runs nothing: records the JUnit XML its ``junit_xml`` globs match (``testo ingest``).
+    "junit": "unit",
 }
 
 # Supported post-run reporters. Add new ones in :mod:`testo_core.reporting.reporters` and append here.
 SUPPORTED_REPORTER_TYPES: frozenset[str] = frozenset(
-    {"allure", "extent", "reportportal", "testbeats"}
+    {"allure", "extent", "reportportal", "slack", "teams", "testbeats"}
 )
 
 
@@ -96,6 +98,20 @@ class ReporterSpec:
 
 
 @dataclass(frozen=True)
+class QuarantineRule:
+    """One ``quarantine:`` entry: a test whose failures don't fail its stage.
+
+    ``test`` is an ``fnmatch`` glob matched against each failed test's name and
+    full name. Quarantined tests still run and are still reported; see
+    :mod:`testo_core.engine.quarantine`.
+    """
+
+    test: str
+    reason: str | None = None
+    owner: str | None = None
+
+
+@dataclass(frozen=True)
 class Plan:
     """A named sequence of stages executed in order by ``testo run --cycle <name>``."""
 
@@ -103,6 +119,8 @@ class Plan:
     description: str | None
     stages: tuple[Stage, ...]
     trigger: CycleTrigger | None = None
+    # Top-level ``quarantine:`` entries followed by the cycle's own.
+    quarantine: tuple[QuarantineRule, ...] = ()
 
 
 @dataclass(frozen=True)

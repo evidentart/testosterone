@@ -93,6 +93,7 @@ nav:
       - Command Reference: CLI Commands/Command Reference.md
       - Troubleshooting and Error Codes: CLI Commands/Troubleshooting and Error Codes.md
       - CI-CD Pipeline Setup: Processes & Guides/CI-CD Pipeline Setup.md
+      - Team Server: Processes & Guides/Team Server.md
       - Setup Prompts: Prompts & Snippets/Setup Prompts.md
   - Architecture:
       - System Diagram: Architecture/System Diagram.md
@@ -109,13 +110,18 @@ nav:
       - Changelog Policy: changelog_automation_policy.md
   - Decisions:
       - Specs & ADRs: Specs & ADRs/README.md
+      - Ingest and Team Server: Specs & ADRs/Ingest and Team Server - 2026-10-22.md
       - UI Restyle: Specs & ADRs/UI Restyle - 2026-10-19.md
       - Open Source Features: Specs & ADRs/Open Source Features - 2026-10-19.md
       - GitHub Action PR Comment: Specs & ADRs/GitHub Action PR Comment - 2026-10-19.md
       - Docs Site: Specs & ADRs/Docs Site - 2026-10-19.md
       - Plugin API: Specs & ADRs/Plugin API - 2026-10-19.md
       - Playwright Adapter: Specs & ADRs/Playwright Adapter - 2026-10-19.md
+      - Playwright JSON Import: Specs & ADRs/Playwright JSON Import - 2026-10-22.md
       - BehaveX Reports: Specs & ADRs/BehaveX Reports - 2026-10-21.md
+      - Config JSON Schema: Specs & ADRs/Config JSON Schema - 2026-10-22.md
+      - Flaky Test Quarantine: Specs & ADRs/Flaky Test Quarantine - 2026-10-22.md
+      - Alerts Where Developers Look: Specs & ADRs/Alerts Where Developers Look - 2026-10-22.md
       - Docs Vault and Wiki Sync: Specs & ADRs/Docs Vault and Wiki Sync - 2026-10-07.md
       - Interview Readiness Fixes: Specs & ADRs/Interview Readiness Fixes - 2026-10-07.md
       - Architecture Consolidation: Specs & ADRs/Architecture Consolidation - 2026-10-06.md

@@ -1,6 +1,6 @@
 # Testosterone
 
-**One YAML file to run your whole test cycle (pytest, Behave, BehaveX or any JUnit-writing command), then see what changed since the last run.**
+**See what broke, what's flaky and what got slower on every run.** Test history, run-to-run diffs and flaky detection for pytest, Playwright, Jest, `go test` or any runner that writes JUnit XML: on your laptop, in CI, or on one shared server for the whole team.
 
 [![CI](https://github.com/taltal-beep/testosterone/actions/workflows/ci.yml/badge.svg)](https://github.com/taltal-beep/testosterone/actions/workflows/ci.yml)
 [![Pages demo](https://github.com/taltal-beep/testosterone/actions/workflows/pages-demo.yml/badge.svg)](https://github.com/taltal-beep/testosterone/actions/workflows/pages-demo.yml)
@@ -10,37 +10,82 @@
 
 **Live demo: <https://taltal-beep.github.io/testosterone/>** · **Docs: <https://taltal-beep.github.io/testosterone/docs/>**
 
-[![Dashboard: health, pass count and duration trends for the latest run, with the recent self-test and fake-api runs](docs/assets/screenshots/dashboard.png)](https://taltal-beep.github.io/testosterone/)
+[![Dashboard: health, failed, pass count and duration cards with trends for the latest run, rollups, quick links and the recent self-test and fake-api runs](docs/assets/screenshots/dashboard.png)](https://taltal-beep.github.io/testosterone/)
 
 | Run detail (failed fake-api run) | Compare (two fake-api runs) |
 |---|---|
-| [![Run detail of a failed fake-api run: summary, test pyramid and per-stage health](docs/assets/screenshots/run-detail-failed-fake-api.png)](docs/assets/screenshots/run-detail-failed-fake-api.png) | [![Compare view: outcome mix, reliability and performance deltas, and per-stage health between two fake-api runs](docs/assets/screenshots/compare-fake-api-runs.png)](docs/assets/screenshots/compare-fake-api-runs.png) |
-| **Cycles** | **Dashboard on a phone** |
-| [![Cycles page listing the self-test and fake-api cycles with their stages and frameworks](docs/assets/screenshots/cycles.png)](docs/assets/screenshots/cycles.png) | <a href="docs/assets/screenshots/dashboard-phone.png"><img src="docs/assets/screenshots/dashboard-phone.png" width="200" alt="Dashboard at phone width: stacked health, failed, pass count and duration cards"></a> |
+| [![Run detail of a failed fake-api run: summary, report links, test pyramid and per-stage health](docs/assets/screenshots/run-detail-failed-fake-api.png)](docs/assets/screenshots/run-detail-failed-fake-api.png) | [![Compare view: regressions and improvements, outcome mix, and reliability and performance deltas between two fake-api runs](docs/assets/screenshots/compare-fake-api-runs.png)](docs/assets/screenshots/compare-fake-api-runs.png) |
+| **Cycle page with its flaky tests** | **Dashboard on a phone** |
+| [![fake-api cycle page: run the cycle from the browser, the flaky test it found with its pass and fail history, and the cycle's stages](docs/assets/screenshots/cycle-detail-fake-api.png)](docs/assets/screenshots/cycle-detail-fake-api.png) | <a href="docs/assets/screenshots/dashboard-phone.png"><img src="docs/assets/screenshots/dashboard-phone.png" width="200" alt="Dashboard at phone width: top bar with menu and stacked health, failed, pass count and duration cards"></a> |
 
 What you're looking at: Testosterone testing itself (its own test suite) and `fake-api`, a
 small app whose routes fail on purpose. CI runs both cycles and publishes the real results as a
 read-only static site.
 
 <details>
-<summary><strong>Watch a walkthrough of the UI</strong> (animated, about 1 minute)</summary>
+<summary><strong>Watch a walkthrough of the UI</strong> (animated, under a minute)</summary>
 
-![Walkthrough of the web UI: starting the fake-api cycle from the browser with live stage status and event stream, then browsing the results](docs/assets/demo/ui-walkthrough.gif)
+![Walkthrough of the web UI: the dashboard, the fake-api cycle page with its flaky test, starting the cycle from the browser with live stage status and event stream, then the recorded run, its detail page and a comparison with the previous run](docs/assets/demo/ui-walkthrough.gif)
 
 </details>
 
+## What's new
+
+Added since v1.1.1:
+
+- **`testo ingest`: bring any runner.** Keep your CI as it is and add one step after the tests:
+  `testo ingest 'reports/**/*.xml' --cycle web`. JUnit XML from Jest, Vitest, `go test`, JUnit5
+  or anything else becomes a recorded run with history, Compare, `testo flaky` and the PR
+  comment. No `testosterone.yaml` needed.
+- **Team server.** `docker compose up` in [deploy/server/](deploy/server/) starts the API, the
+  web UI and Postgres in one place; CI jobs upload with `testo ingest --server URL --token ...`
+  so the whole team shares one history. Guide: [Team Server](docs/Processes%20&%20Guides/Team%20Server.md).
+- **Lighter install.** `pip install testo-core` no longer pulls in Behave, BehaveX and Allure-Behave.
+  Behave users add the extra: `pip install 'testo-core[bdd]'`.
+- **Flaky test detection.** `testo flaky --cycle <name>` lists tests that keep flipping between
+  pass and fail across a cycle's recent runs (`--fail-on-flaky` to gate CI), and the cycle page
+  in the UI shows them too.
+- **Pull request comments.** The GitHub Action writes the run, its failing tests and what changed
+  since the previous run to the job summary, and with `comment-on-pr: "true"` keeps one comment
+  per cycle on the pull request. The text comes from `testo report markdown`.
+- **Plugins.** Add your own test runner or reporter from any package through the
+  `testo.frameworks` / `testo.reporters` entry points; `testo plugins` lists what is installed.
+  [examples/plugin/](examples/plugin/) is a complete one.
+- **Playwright.** `equipment: playwright` runs `npx playwright test` with its JUnit and HTML
+  reporters wired in, so its tests count in summaries, diffs and the UI with no extra setup.
+- **A restyled web UI** (navy glass cards, a sidebar on desktop) and a
+  [docs site](https://taltal-beep.github.io/testosterone/docs/) with a
+  [Getting Started](docs/Getting%20Started.md) guide.
+- **Fixes:** a `pip install`ed `testo-core` keeps its run data in `./.testo/` (or `$TESTO_HOME`)
+  instead of `site-packages`, and BehaveX stages keep BehaveX's own full HTML report.
+
+<details>
+<summary><strong>See the new commands</strong>: <code>testo flaky</code>, <code>testo report markdown</code> and <code>testo plugins</code> on the fake-api cycle</summary>
+
+![Terminal recording: testo flaky finds the flaky fake-api test with its pass and fail history, testo report markdown prints the run as a pull request comment, and testo plugins lists the built-in frameworks and reporters](docs/assets/demo/cli-whats-new.gif)
+
+</details>
+
+Full list in [CHANGELOG.md](CHANGELOG.md).
+
 ## Why
 
-Most projects run several test frameworks, each with its own command, report format and CI
-glue. Testosterone puts them in one `testosterone.yaml` as a **cycle** of stages, runs it, records
-every run, and answers the question you actually have after a red build: *what changed?* You get
-run-to-run deltas, a test pyramid, and an optional AI summary of the failures. The same engine
-runs the cycle whether you start it from the CLI, from CI, or from the web UI.
+After a red build the question is never just "what failed?". It's *what changed since the last
+green run, is this test flaky, and did anything get slower?* CI logs and one-off HTML reports
+can't answer that, because they forget every run as soon as it ends. Testosterone records every
+run and answers it: per-test regressions and fixes between runs, flaky tests, durations over
+time, a test pyramid and an optional AI summary of the failures.
 
-**How it compares.** Allure and ReportPortal display the results of a run someone else
-started. Testosterone starts the run: it orchestrates the stages, keeps the history and diffs
-runs against each other, then hands results to Allure, ReportPortal, Extent or TestBeats as
-reporters. It sits upstream of those tools rather than replacing them.
+There are two ways in. **`testo ingest`** records JUnit XML that your existing CI already writes,
+so adoption is one extra step. **`testo run`** goes further: it runs several frameworks as one
+**cycle** of stages from a `testosterone.yaml` (pytest, Playwright, Behave, any command), the
+same way from the CLI, CI or the web UI. Point either at a shared
+[team server](docs/Processes%20&%20Guides/Team%20Server.md) and every CI job lands in one history.
+
+**How it compares.** Allure renders one run; ReportPortal is a large server to operate.
+Testosterone is a `pip install` that keeps the history and diffs runs against each other, works
+with whatever runner you have, and can still hand results to Allure, ReportPortal, Extent or
+TestBeats as reporters.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/testosterone-architecture-detailed-dark.png">
@@ -56,11 +101,25 @@ backend (`testo_api`, `/api/v1`, live runs over server-sent events), a React fro
 
 Install the CLI from PyPI and point it at your own tests:
 
+Already have tests that write JUnit XML? Record them, no config needed:
+
 ```bash
-pip install testo-core            # the `testo` CLI; add [api] for the REST API, [db] for Postgres
+pip install testo-core
+npx jest --ci --reporters=default --reporters=jest-junit   # or pytest --junitxml, go test, ...
+testo ingest 'junit*.xml' --cycle web                      # recorded; run again to see the diff
+testo summary --cycle web
+```
+
+Or let Testosterone run the tests as a cycle:
+
+```bash
+pip install testo-core            # the `testo` CLI; add [api] for the REST API, [db] for Postgres,
+                                  # [bdd] for Behave and BehaveX
 testo config init                 # writes a starter testosterone.yaml for pytest
 testo run --cycle smoke-test      # runs pytest -q tests; edit args for a different test directory
 ```
+
+An installed `testo` keeps per-run report copies in `./.testo/` (set `TESTO_HOME` to move them).
 
 [Getting Started](docs/Getting%20Started.md) goes further in about five minutes: a regression
 between two runs, then the same cycle in GitHub Actions.
@@ -98,7 +157,7 @@ npm --prefix frontend install
 npm --prefix frontend run dev          # React on http://localhost:5173
 ```
 
-Pages: Dashboard, Cycles (run any cycle and watch its stages live), Runs and Run Detail
+Pages: Dashboard, Cycles (run any cycle and watch its stages live, see its flaky tests), Runs and Run Detail
 (reports, test pyramid, AI summary), Compare (delta between two runs), Quick Run (run one
 framework against a repo without defining a cycle) and AI settings.
 
@@ -124,11 +183,18 @@ cycles:
       - name: flows
         equipment: behave
         args: [features/smoke.feature]   # always target Behave features explicitly
+      - name: browser
+        equipment: playwright            # npx playwright test, JUnit + HTML report wired in
+        args: [tests/e2e]
       - name: web
         equipment: command               # any runner; results come from JUnit XML
         args: [npx, jest, --ci]
         junit_xml: ["reports/junit/*.xml"]
 ```
+
+Built-in `equipment`: `pytest`, `behave`, `behavex`, `playwright`, `command` and `junit` (records
+JUnit XML another step wrote; what `testo ingest` uses). `behave` and `behavex` need
+`pip install 'testo-core[bdd]'`. A package can add more (see [Plugins](#optional-integrations)).
 
 `testo config validate` checks the file; `testo init` writes one interactively. The full
 schema and every flag are in [Command Reference](docs/CLI%20Commands/Command%20Reference.md).
@@ -138,10 +204,14 @@ schema and every flag are in [Command Reference](docs/CLI%20Commands/Command%20R
 | Command | What it does |
 |---------|--------------|
 | `testo run --cycle <name>` | Run a cycle (`--ci` NDJSON, `--stream` live output, `--force` ignore triggers, `--no-persist`) |
+| `testo ingest <files> --cycle <name>` | Record JUnit XML from any runner as a run (`--server`/`--token` upload to a team server) |
 | `testo report …` | Generate, list, open and export reports (`testo diff` compares two archived runs) |
+| `testo report markdown --cycle <name>` | The latest run as Markdown: results, failing tests, changes since the previous run (job summary or PR comment) |
+| `testo summary` | Rich diff of the two most recent runs (`--cycle` to pick one) |
 | `testo cycles list/show` | Inspect configured cycles |
 | `testo watch --cycle <name>` | Re-run a cycle when files change |
 | `testo flaky --cycle <name>` | Tests that keep flipping between pass and fail across recent runs (`--fail-on-flaky` for CI) |
+| `testo plugins` | Built-in and installed frameworks and reporters (`--check` imports them, `--json`) |
 | `testo doctor` | Check config, database and tools on PATH |
 
 Exit codes: `0` success (or trigger-skipped), `1` tests failed, `2` invalid input,
@@ -154,6 +224,7 @@ Details: [Troubleshooting and Error Codes](docs/CLI%20Commands/Troubleshooting%2
 |------|-----------------------|
 | Cycles | `GET /cycles`, `GET /cycles/{cycle}` |
 | Executions | `POST /cycles/{cycle}/executions`, `POST /adhoc-executions`, `GET /cycle-executions/{id}`, `GET /cycle-executions/{id}/events` (SSE) |
+| Ingest | `POST /ingest` (JUnit XML upload from `testo ingest --server`) |
 | Runs | `GET /runs`, `GET /runs/{id}`, `GET /runs/{id}/reports`, `GET /runs/{id}/pyramid` |
 | Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /analytics/flaky`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
 | AI (bring your own key) | `GET /ai/config/status`, `PUT /ai/config`, `GET /runs/{id}/ai-summary`, `POST /runs/{id}/ai-summary:generate` |
@@ -183,7 +254,9 @@ variables:
 ```
 
 Both run `testo run --ci`, keep the NDJSON event stream, and expose the final `plan_finished`
-event (exit code, per-stage results). Run records written in CI carry the provider, pipeline,
+event (exit code, per-stage results). The GitHub Action also writes the run to the job summary
+(`job-summary`, on by default) and, with `comment-on-pr`, keeps one up-to-date comment per cycle
+on the pull request: results per stage, failing tests and per-test changes since the last run. Run records written in CI carry the provider, pipeline,
 job, commit and branch. Inputs and outputs: [integrations/github-action/README.md](integrations/github-action/README.md).
 
 ## Optional integrations
@@ -193,7 +266,11 @@ job, commit and branch. Inputs and outputs: [integrations/github-action/README.m
   Pushgateway when `PROMETHEUS_PUSHGATEWAY_URL` is set (`PROMETHEUS_JOB_NAME` defaults to `testo`).
   Pushes are best-effort and never change the run result.
 - **Reporters:** `allure`, `extent`, `reportportal`, `testbeats` under `reporters:`.
-- **AI failure summaries:** opt in on the AI settings page with an OpenAI or Anthropic key.
+- **Plugins:** a package adds a test runner or a reporter through the `testo.frameworks` /
+  `testo.reporters` entry point groups, with no change to Testosterone; `testo plugins` lists and
+  checks them. [examples/plugin/](examples/plugin/) adds a `unittest` runner and a
+  `json-summary` reporter.
+- **AI failure summaries:** opt in on the AI settings page with an OpenAI or Anthropic key, or point it at any OpenAI-compatible endpoint (a free tier such as Groq or Gemini, or a local Ollama).
   Failed runs store their failing cases, first traceback and log tail (redacted), which is
   what the summary is built from.
 

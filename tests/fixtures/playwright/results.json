@@ -1,0 +1,417 @@
+{
+ "config": {
+  "version": "1.64.1",
+  "rootDir": "/ci/work/app"
+ },
+ "suites": [
+  {
+   "title": "tests/demo.spec.ts",
+   "file": "tests/demo.spec.ts",
+   "column": 0,
+   "line": 0,
+   "specs": [
+    {
+     "title": "skipped one",
+     "ok": true,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [
+        {
+         "type": "skip",
+         "description": "not today",
+         "location": {
+          "file": "/ci/work/app/tests/demo.spec.ts",
+          "line": 11,
+          "column": 40
+         }
+        }
+       ],
+       "expectedStatus": "skipped",
+       "projectId": "api",
+       "projectName": "api",
+       "results": [
+        {
+         "workerIndex": 3,
+         "parallelIndex": 0,
+         "status": "skipped",
+         "duration": 4,
+         "errors": [],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-22T06:07:03.356Z",
+         "annotations": [
+          {
+           "type": "skip",
+           "description": "not today",
+           "location": {
+            "file": "/ci/work/app/tests/demo.spec.ts",
+            "line": 11,
+            "column": 40
+           }
+          }
+         ],
+         "attachments": []
+        }
+       ],
+       "status": "skipped"
+      }
+     ],
+     "id": "6e41cf56b172236aab98-cab3c7b179fd807b3a18",
+     "file": "tests/demo.spec.ts",
+     "line": 11,
+     "column": 5
+    },
+    {
+     "title": "slow",
+     "ok": false,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 200,
+       "annotations": [],
+       "expectedStatus": "passed",
+       "projectId": "api",
+       "projectName": "api",
+       "results": [
+        {
+         "workerIndex": 3,
+         "parallelIndex": 0,
+         "status": "timedOut",
+         "duration": 202,
+         "error": {
+          "message": "\u001b[31mTest timeout of 200ms exceeded.\u001b[39m",
+          "stack": "\u001b[31mTest timeout of 200ms exceeded.\u001b[39m"
+         },
+         "errors": [
+          {
+           "message": "\u001b[31mTest timeout of 200ms exceeded.\u001b[39m"
+          }
+         ],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-22T06:07:03.411Z",
+         "annotations": [],
+         "attachments": [
+          {
+           "name": "error-context",
+           "contentType": "text/markdown",
+           "path": "/ci/work/app/test-results/tests-demo-slow-api/error-context.md"
+          },
+          {
+           "name": "trace",
+           "contentType": "application/zip",
+           "path": "/ci/work/app/test-results/tests-demo-slow-api/trace.zip"
+          }
+         ]
+        },
+        {
+         "workerIndex": 4,
+         "parallelIndex": 0,
+         "status": "timedOut",
+         "duration": 201,
+         "error": {
+          "message": "\u001b[31mTest timeout of 200ms exceeded.\u001b[39m",
+          "stack": "\u001b[31mTest timeout of 200ms exceeded.\u001b[39m"
+         },
+         "errors": [
+          {
+           "message": "\u001b[31mTest timeout of 200ms exceeded.\u001b[39m"
+          }
+         ],
+         "stdout": [],
+         "stderr": [],
+         "retry": 1,
+         "startTime": "2026-10-22T06:07:04.139Z",
+         "annotations": [],
+         "attachments": [
+          {
+           "name": "error-context",
+           "contentType": "text/markdown",
+           "path": "/ci/work/app/test-results/tests-demo-slow-api-retry1/error-context.md"
+          },
+          {
+           "name": "trace",
+           "contentType": "application/zip",
+           "path": "/ci/work/app/test-results/tests-demo-slow-api-retry1/trace.zip"
+          }
+         ]
+        }
+       ],
+       "status": "unexpected"
+      }
+     ],
+     "id": "6e41cf56b172236aab98-2be044dd9fae8d01d797",
+     "file": "tests/demo.spec.ts",
+     "line": 12,
+     "column": 5
+    }
+   ],
+   "suites": [
+    {
+     "title": "checkout",
+     "file": "tests/demo.spec.ts",
+     "line": 3,
+     "column": 6,
+     "specs": [
+      {
+       "title": "passes",
+       "ok": true,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "api",
+         "projectName": "api",
+         "results": [
+          {
+           "workerIndex": 0,
+           "parallelIndex": 0,
+           "status": "passed",
+           "duration": 16,
+           "errors": [],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-22T06:07:01.481Z",
+           "annotations": [],
+           "attachments": []
+          }
+         ],
+         "status": "expected"
+        }
+       ],
+       "id": "6e41cf56b172236aab98-514c8eb6fb0339def488",
+       "file": "tests/demo.spec.ts",
+       "line": 4,
+       "column": 7
+      },
+      {
+       "title": "flaky once",
+       "ok": true,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "api",
+         "projectName": "api",
+         "results": [
+          {
+           "workerIndex": 0,
+           "parallelIndex": 0,
+           "status": "failed",
+           "duration": 6,
+           "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m2\u001b[39m",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m2\u001b[39m\n    at /ci/work/app/tests/demo.spec.ts:5:76",
+            "location": {
+             "file": "/ci/work/app/tests/demo.spec.ts",
+             "column": 76,
+             "line": 5
+            },
+            "snippet": "  3 | test.describe('checkout', () => {\n  4 |   test('passes', async () => { expect(1).toBe(1); });\n> 5 |   test('flaky once', async ({}, info) => { if (info.retry === 0) expect(2).toBe(3); });\n    |                                                                            ^\n  6 |   test('always fails', async ({}, info) => {\n  7 |     await info.attach('note', { body: 'hello', contentType: 'text/plain' });\n  8 |     expect('a').toBe('b');"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/ci/work/app/tests/demo.spec.ts",
+              "column": 76,
+              "line": 5
+             },
+             "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m3\u001b[39m\nReceived: \u001b[31m2\u001b[39m\n\n  3 | test.describe('checkout', () => {\n  4 |   test('passes', async () => { expect(1).toBe(1); });\n> 5 |   test('flaky once', async ({}, info) => { if (info.retry === 0) expect(2).toBe(3); });\n    |                                                                            ^\n  6 |   test('always fails', async ({}, info) => {\n  7 |     await info.attach('note', { body: 'hello', contentType: 'text/plain' });\n  8 |     expect('a').toBe('b');\n    at /ci/work/app/tests/demo.spec.ts:5:76"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-22T06:07:01.624Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/ci/work/app/test-results/tests-demo-checkout-flaky-once-api/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/ci/work/app/test-results/tests-demo-checkout-flaky-once-api/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/ci/work/app/tests/demo.spec.ts",
+            "column": 76,
+            "line": 5
+           }
+          },
+          {
+           "workerIndex": 1,
+           "parallelIndex": 0,
+           "status": "passed",
+           "duration": 3,
+           "errors": [],
+           "stdout": [],
+           "stderr": [],
+           "retry": 1,
+           "startTime": "2026-10-22T06:07:02.201Z",
+           "annotations": [],
+           "attachments": []
+          }
+         ],
+         "status": "flaky"
+        }
+       ],
+       "id": "6e41cf56b172236aab98-ea9e719cecb7b349c4bf",
+       "file": "tests/demo.spec.ts",
+       "line": 5,
+       "column": 7
+      },
+      {
+       "title": "always fails",
+       "ok": false,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "api",
+         "projectName": "api",
+         "results": [
+          {
+           "workerIndex": 1,
+           "parallelIndex": 0,
+           "status": "failed",
+           "duration": 10,
+           "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"b\"\u001b[39m\nReceived: \u001b[31m\"a\"\u001b[39m",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"b\"\u001b[39m\nReceived: \u001b[31m\"a\"\u001b[39m\n    at /ci/work/app/tests/demo.spec.ts:8:17",
+            "location": {
+             "file": "/ci/work/app/tests/demo.spec.ts",
+             "column": 17,
+             "line": 8
+            },
+            "snippet": "   6 |   test('always fails', async ({}, info) => {\n   7 |     await info.attach('note', { body: 'hello', contentType: 'text/plain' });\n>  8 |     expect('a').toBe('b');\n     |                 ^\n   9 |   });\n  10 | });\n  11 | test('skipped one', async () => { test.skip(true, 'not today'); });"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/ci/work/app/tests/demo.spec.ts",
+              "column": 17,
+              "line": 8
+             },
+             "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"b\"\u001b[39m\nReceived: \u001b[31m\"a\"\u001b[39m\n\n   6 |   test('always fails', async ({}, info) => {\n   7 |     await info.attach('note', { body: 'hello', contentType: 'text/plain' });\n>  8 |     expect('a').toBe('b');\n     |                 ^\n   9 |   });\n  10 | });\n  11 | test('skipped one', async () => { test.skip(true, 'not today'); });\n    at /ci/work/app/tests/demo.spec.ts:8:17"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-22T06:07:02.260Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "note",
+             "contentType": "text/plain",
+             "body": "aGVsbG8="
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/ci/work/app/test-results/tests-demo-checkout-always-fails-api/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/ci/work/app/test-results/tests-demo-checkout-always-fails-api/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/ci/work/app/tests/demo.spec.ts",
+            "column": 17,
+            "line": 8
+           }
+          },
+          {
+           "workerIndex": 2,
+           "parallelIndex": 0,
+           "status": "failed",
+           "duration": 22,
+           "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"b\"\u001b[39m\nReceived: \u001b[31m\"a\"\u001b[39m",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"b\"\u001b[39m\nReceived: \u001b[31m\"a\"\u001b[39m\n    at /ci/work/app/tests/demo.spec.ts:8:17",
+            "location": {
+             "file": "/ci/work/app/tests/demo.spec.ts",
+             "column": 17,
+             "line": 8
+            },
+            "snippet": "   6 |   test('always fails', async ({}, info) => {\n   7 |     await info.attach('note', { body: 'hello', contentType: 'text/plain' });\n>  8 |     expect('a').toBe('b');\n     |                 ^\n   9 |   });\n  10 | });\n  11 | test('skipped one', async () => { test.skip(true, 'not today'); });"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/ci/work/app/tests/demo.spec.ts",
+              "column": 17,
+              "line": 8
+             },
+             "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"b\"\u001b[39m\nReceived: \u001b[31m\"a\"\u001b[39m\n\n   6 |   test('always fails', async ({}, info) => {\n   7 |     await info.attach('note', { body: 'hello', contentType: 'text/plain' });\n>  8 |     expect('a').toBe('b');\n     |                 ^\n   9 |   });\n  10 | });\n  11 | test('skipped one', async () => { test.skip(true, 'not today'); });\n    at /ci/work/app/tests/demo.spec.ts:8:17"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 1,
+           "startTime": "2026-10-22T06:07:02.779Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "note",
+             "contentType": "text/plain",
+             "body": "aGVsbG8="
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/ci/work/app/test-results/tests-demo-checkout-always-fails-api-retry1/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/ci/work/app/test-results/tests-demo-checkout-always-fails-api-retry1/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/ci/work/app/tests/demo.spec.ts",
+            "column": 17,
+            "line": 8
+           }
+          }
+         ],
+         "status": "unexpected"
+        }
+       ],
+       "id": "6e41cf56b172236aab98-1d558ed79a63f79f1c4f",
+       "file": "tests/demo.spec.ts",
+       "line": 6,
+       "column": 7
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "stats": {
+  "startTime": "2026-10-22T06:07:00.572Z",
+  "duration": 3848.3199999999997,
+  "expected": 1,
+  "skipped": 1,
+  "unexpected": 2,
+  "flaky": 1
+ }
+}

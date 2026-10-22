@@ -145,6 +145,8 @@ def render_markdown(summary: RunSummary, *, run_url: str | None = None) -> str:
         for s in run.stage_health:
             failed = (s.get("failed") or 0) + (s.get("broken") or 0)
             result = "✅ pass" if s.get("returncode") == 0 else "❌ fail"
+            if s.get("quarantined"):
+                result += f" · {len(s['quarantined'])} quarantined"
             duration = s.get("duration_s")
             lines.append(
                 f"| {_escape(str(s.get('name', '?')))} | {s.get('framework', '')} | {result} "
@@ -157,7 +159,11 @@ def render_markdown(summary: RunSummary, *, run_url: str | None = None) -> str:
         lines.append(f"<details{' open' if len(summary.failing) <= 5 else ''}>")
         lines.append(f"<summary><b>Failing tests ({len(summary.failing)})</b></summary>")
         lines.append("")
-        lines += [f"- `{_escape(n)}`" for n in summary.failing[:MAX_ROWS]]
+        quarantined = {str(n) for s in run.stage_health for n in (s.get("quarantined") or []) if n}
+        lines += [
+            f"- `{_escape(n)}`" + (" _(quarantined)_" if n in quarantined else "")
+            for n in summary.failing[:MAX_ROWS]
+        ]
         if len(summary.failing) > MAX_ROWS:
             lines.append(f"- … and {len(summary.failing) - MAX_ROWS} more")
         lines += ["", "</details>", ""]

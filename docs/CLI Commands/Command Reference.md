@@ -2,7 +2,7 @@
 type: reference
 status: current
 created: 2026-06-25
-updated: 2026-10-21
+updated: 2026-10-22
 ---
 
 # Command Reference
@@ -16,6 +16,8 @@ testo --help
 ```
 
 Help is grouped into panels: **Run and report**, **Config**, **Diagnostics**, **Maintenance**, **About**.
+
+Extras: `pip install testo-core` is the CLI with pytest, Playwright, `command` and `junit` stages. Add `[bdd]` for `behave` and `behavex` stages (Behave, BehaveX and Allure-Behave), `[api]` for the REST API and UI backend, `[db]` for Postgres or MySQL, `[metrics]` for InfluxDB. A `behave` stage without the extra fails with exit `3` and `executable not found: behave (... pip install 'testo-core[bdd]')`.
 
 ---
 
@@ -70,6 +72,35 @@ See [Architecture Overview § Exit code contract](../Architecture/Architecture%2
 
 ---
 
+## `testo ingest`
+
+Record JUnit XML that another step already wrote (any runner, any language) as a run of a cycle. Nothing is executed: the files are parsed into the same run history as `testo run`, so Compare, trends, `testo flaky`, reporters and the PR comment work on them.
+
+```bash
+testo ingest 'reports/**/*.xml' --cycle web-unit          # record locally
+testo ingest junit.xml --cycle api --tier integration --ci
+testo ingest test-results/results.json --cycle web-e2e --stage e2e --tier e2e   # Playwright JSON
+testo ingest 'reports/*.xml' --cycle web-unit \
+  --server https://testo.example.com --token "$TESTO_API_TOKEN"   # team server
+```
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `REPORTS...` | required | Files or quoted globs, relative to `--repo` (absolute paths must be inside it). A `.json` file is read as a Playwright JSON report (`--reporter=json`), keeping retries, flaky tests and attachments |
+| `--cycle` | required | Cycle name the run is recorded under: letters, digits, `.`, `_`, `-`. Reuse it so runs build a history |
+| `--stage` | `junit` | Stage name the tests are grouped under |
+| `--tier` | `unit` | Test-pyramid tier: `unit`, `integration`, `e2e` |
+| `--repo` | `.` | Directory the report paths are relative to |
+| `--config` / `-c` | discovered | `testosterone.yaml` for `reporters:` and paths; not required |
+| `--ci` | off | NDJSON events on stdout, as `testo run --ci` (with `--server`: one `ingest_uploaded` event) |
+| `--no-persist` | off | Parse only, record nothing |
+| `--server` | `$TESTO_SERVER_URL` | Upload to a [team server](../Processes%20&%20Guides/Team%20Server.md) instead of recording locally |
+| `--token` | `$TESTO_API_TOKEN` | The server's API token |
+
+Exit codes follow `testo run`: **0** every test passed or was skipped, **1** a test failed or broke, **2** bad arguments or no file matched, **3** the server could not be reached or refused the upload (wrong token). With `--server`, the job's CI provenance (provider, pipeline, job, commit, branch, repository) is sent with the files. Under the hood this is a one-stage cycle with `equipment: junit` run through `CycleRunService`; see [Ingest and Team Server - 2026-10-22](../Specs%20&%20ADRs/Ingest%20and%20Team%20Server%20-%202026-10-22.md). For Playwright JSON (each retry as a step, flaky tests flagged, traces and screenshots copied from inside `--repo` as Allure attachments) see [Playwright JSON Import - 2026-10-22](../Specs%20&%20ADRs/Playwright%20JSON%20Import%20-%202026-10-22.md).
+
+---
+
 ## `testo report`
 
 Build unified Allure reports from artifacts; subcommands for archives and native framework HTML.
@@ -115,6 +146,7 @@ testo report pyramid <run-id>
 | `testo report compare` | Rich diff + Allure comparison (optional baseline/current UUIDs) |
 | `testo report native [ROUTINE]` | List or open BehaveX/pytest native HTML under stage dirs |
 | `testo report markdown [--cycle NAME \| --run-id ID] [--out FILE] [--run-url URL]` | The cycle's latest run (or one run) as GitHub-flavored Markdown: headline counts, per-stage table, failing tests, and per-test changes since the cycle's previous run. The first line is a hidden `<!-- testo-summary:<cycle> -->` marker. Exit `2` when no run is recorded. The GitHub Action uses it for the job summary and the PR comment |
+| `testo report annotations [--cycle NAME \| --run-id ID] [--workspace DIR] [--limit N] [-c CONFIG]` | The run's failing tests as GitHub Actions `::error file=…,line=…` workflow commands, so each failure shows on its line in the pull request's "Files changed". The location is the first stack-trace frame inside `--workspace` (default `.`), tried relative to the workspace, each stage's `target_repo` from the config, and the run's target repo. At most `--limit` (default `10`, GitHub's per-step cap) lines, then a `::notice` with the rest. Exit `2` when no run is recorded. The GitHub Action prints it by default. See [Alerts Where Developers Look - 2026-10-22](../Specs%20&%20ADRs/Alerts%20Where%20Developers%20Look%20-%202026-10-22.md) |
 | `testo report pyramid RUN_ID [-c CONFIG]` | ASCII unit/integration/e2e test pyramid for a completed run (`run_id`, not the archive UUID); stage→tier is the stage's `tier:` (default inferred from `equipment`: pytest→unit, behave→integration, behavex→e2e, playwright→e2e) as recorded in the run when it executed; `-c` is only read for older runs that predate recorded tiers. See [Architecture Overview § Test pyramid](../Architecture/Architecture%20Overview.md#test-pyramid). |
 
 ---
@@ -160,6 +192,16 @@ ok — version=1 cycles=6 reporters=4 defaults_target=.
 
 **Deprecated:** `testo config-db` → use `testo config db`.
 
+### Editor autocomplete
+
+`schema/testosterone.schema.json` is a JSON Schema for `testosterone.yaml`. Editors with a YAML language server (VS Code with the Red Hat YAML extension, JetBrains IDEs, Neovim) then suggest keys and built-in equipment, and underline typos as you type. `testo config init` and `testo init` add this line at the top of the file; add it yourself to an existing config:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/taltal-beep/testosterone/main/schema/testosterone.schema.json
+```
+
+`testo config validate` is still the final word. The schema describes the `cycles:` layout only, and accepts plugin equipment and reporter names. Why and how it is generated: [Config JSON Schema](../Specs%20&%20ADRs/Config%20JSON%20Schema%20-%202026-10-22.md).
+
 ---
 
 ## `testo diff` / `testo summary`
@@ -186,17 +228,46 @@ Tests whose outcome keeps flipping across a cycle's recent runs.
 ```bash
 testo flaky --cycle fake-api               # last 20 runs
 testo flaky --cycle fake-api --window 50 --json
-testo flaky --cycle nightly --fail-on-flaky  # exit 1 when any test is flaky (CI gate)
+testo flaky --cycle nightly --fail-on-flaky  # exit 1 when any test is flaky and not quarantined (CI gate)
+testo flaky --cycle nightly --new --json     # only tests the latest run made flaky
 ```
 
 | Flag | Default | Meaning |
 |------|---------|---------|
 | `--cycle` | required | Cycle whose run history to read |
 | `--window` | `20` | How many of the cycle's most recent runs to look at (min 2) |
+| `--new` | off | Only tests the cycle's latest run made flaky: flaky in the window ending at that run, not in the window ending at the run before. Used for alerts and the action's `flaky-issues` |
 | `--json` | off | Print the report as JSON |
-| `--fail-on-flaky` | off | Exit `1` when any flaky test is found |
+| `--fail-on-flaky` | off | Exit `1` when any flaky test that isn't quarantined is found |
+| `--config` | discovery | `testosterone.yaml` whose `quarantine:` rules mark tests; without a config found, nothing is marked. Exit `2` if the given file is missing or invalid |
 
 A test is flaky when, within the window, it both passed and failed and its outcome changed at least twice (skipped runs are ignored). One change is a regression or a fix, which `testo summary` shows. Exit `2` when fewer than two runs with per-test results exist. Reads run-history records (`run_id`s) and each run's artifact snapshot, the same data as `GET /api/v1/analytics/flaky?cycle=<name>` and the Flaky tests card on the cycle page. See [Open Source Features - 2026-10-19](../Specs%20&%20ADRs/Open%20Source%20Features%20-%202026-10-19.md).
+
+The table's Quarantined column (and `"quarantined"` in `--json`) shows which flaky tests match the cycle's [`quarantine:` rules](../Testing%20Workflows/QA%20Strategies.md#defining-work-in-testosteroneyaml); for the others it prints a `quarantine:` snippet to paste. A quarantined test's failures don't fail `testo run`; see [Flaky Test Quarantine - 2026-10-22](../Specs%20&%20ADRs/Flaky%20Test%20Quarantine%20-%202026-10-22.md).
+
+---
+
+## `testo notify`
+
+Send a recorded run to Slack and/or Microsoft Teams: pass/fail counts, then new regressions, newly flaky tests, failing tests and fixed tests (10 names per list).
+
+```bash
+export TESTO_SLACK_WEBHOOK_URL=...         # from a secret, never on the command line
+testo notify --to slack --cycle nightly                      # only when it needs attention
+testo notify --to slack --to teams --cycle nightly --when change --run-url "$CI_JOB_URL"
+testo notify --to teams --cycle nightly --dry-run            # print the payload, send nothing
+```
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--to` | required | `slack` or `teams`; repeat for both. URLs come from `TESTO_SLACK_WEBHOOK_URL` and `TESTO_TEAMS_WEBHOOK_URL` |
+| `--cycle` / `--run-id` | latest run | Which recorded run to send |
+| `--when` | `failure` | `failure`: the run failed or made a test flaky. `change`: the run's result flipped, or a test regressed, got fixed or became flaky. `always`: every run |
+| `--title` | cycle name | Name in the message |
+| `--run-url` | none | "View run" link |
+| `--dry-run` | off | Print the JSON payloads instead of posting |
+
+Exit `0` when sent or when there is nothing to report, `2` for a bad flag, a missing webhook variable or no recorded run, `3` when a webhook rejects the message or can't be reached (the error never includes the URL). The `slack` and `teams` [reporters](#reporter-types-reporters----reporter) send the same message right after `testo run`. See [Alerts Where Developers Look - 2026-10-22](../Specs%20&%20ADRs/Alerts%20Where%20Developers%20Look%20-%202026-10-22.md).
 
 ---
 
@@ -296,13 +367,27 @@ The v1.0 `uqo` command (including its `uqo run --config` headless format with `-
 | `TESTO_HOME` | Where per-run report copies (`static/`, `static_reports/`) are written. Default: `./.testo` for a `pip install`, the repository root for a source checkout ([Architecture Overview § Artifact layout](../Architecture/Architecture%20Overview.md#artifact-layout)) |
 | `INFLUXDB_URL`, `INFLUXDB_TOKEN`, `INFLUXDB_ORG`, `INFLUXDB_BUCKET` | Push run KPIs to InfluxDB after each run |
 | `PROMETHEUS_PUSHGATEWAY_URL`, `PROMETHEUS_JOB_NAME` | Push run KPIs to a Prometheus Pushgateway after each run |
+| `TESTO_SLACK_WEBHOOK_URL`, `TESTO_TEAMS_WEBHOOK_URL` | Webhooks for `testo notify` and the `slack` / `teams` reporters |
 | Reporter tokens | e.g. `REPORTPORTAL_TOKEN`, `SLACK_WEBHOOK` via `${env:…}` in YAML |
 
 ---
 
 ## Reporter types (`reporters:` / `--reporter`)
 
-Supported: `allure`, `extent`, `reportportal`, `testbeats`, plus any installed [reporter plugin](#plugins). Configured in root `testosterone.yaml`; outputs often under `reports/` (see repo `testosterone.yaml` for examples).
+Supported: `allure`, `extent`, `reportportal`, `slack`, `teams`, `testbeats`, plus any installed [reporter plugin](#plugins). Configured in root `testosterone.yaml`; outputs often under `reports/` (see repo `testosterone.yaml` for examples).
+
+`slack` and `teams` post the [`testo notify`](#testo-notify) message for the run that just finished. They need a recorded run (not `--no-persist`):
+
+```yaml
+reporters:
+  - type: slack
+    webhook: ${env:SLACK_WEBHOOK_URL}   # default: $TESTO_SLACK_WEBHOOK_URL
+    when: failure                        # failure | change | always
+    title: Nightly API tests             # default: the cycle name
+    report_url: ${env:CI_JOB_URL}        # optional "View run" link
+```
+
+`testbeats` posts counts only, to the `slack_webhook` / `teams_webhook` options.
 
 After `testo run`, terminal hints may point to `./reports/allure`, `./reports/extent`, etc.
 

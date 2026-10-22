@@ -35,6 +35,7 @@ from testo_core.config.schema import (
     CycleTrigger,
     Defaults,
     Plan,
+    QuarantineRule,
     ReporterSpec,
     Stage,
     TestosteroneConfig,
@@ -75,6 +76,21 @@ def discover_and_load(
     raise ConfigDiscoveryError(
         f"no testosterone.yaml / testosterone.yml / pyproject.toml [tool.testosterone] found under {cwd}"
     )
+
+
+def load_config_or_defaults(*, config_path: Path | None = None) -> TestosteroneConfig:
+    """The given or discovered config; built-in defaults when none is found.
+
+    For ``testo ingest`` and the ingest endpoint, which need no cycles from the
+    file, only its reporters and paths when there is one. An explicit
+    *config_path* that doesn't exist still raises.
+    """
+    if config_path is not None:
+        return discover_and_load(config_path=config_path)
+    try:
+        return discover_and_load()
+    except ConfigDiscoveryError:
+        return TestosteroneConfig(version=1, defaults=Defaults())
 
 
 def load_config(path: Path) -> TestosteroneConfig:
@@ -146,6 +162,7 @@ def _build_cycle_config(
         cycles_raw = raw.get("plans")
     if not isinstance(cycles_raw, dict) or not cycles_raw:
         raise ConfigValidationError("'cycles:' must be a non-empty mapping.")
+    shared_quarantine = _parse_quarantine(raw.get("quarantine"), where="top-level")
     cycles: dict[str, Plan] = {}
     for cycle_name, cycle_raw in cycles_raw.items():
         name_key = str(cycle_name)
@@ -160,6 +177,7 @@ def _build_cycle_config(
             cycle_raw=cycle_raw or {},
             defaults=defaults,
             config_dir=config_dir,
+            shared_quarantine=shared_quarantine,
         )
         cycles[cycle.name] = cycle
     reporters = _parse_reporters(raw.get("reporters"), config_dir=config_dir)
@@ -209,6 +227,7 @@ def _build_legacy_runs_config(
         description="Legacy 'runs:' shim.",
         stages=tuple(stages),
         trigger=None,
+        quarantine=_parse_quarantine(raw.get("quarantine"), where="top-level"),
     )
     reporters = _parse_reporters(raw.get("reporters"), config_dir=config_dir)
     return TestosteroneConfig(
@@ -238,7 +257,12 @@ def _parse_defaults(raw: Any, *, config_dir: Path) -> Defaults:
 
 
 def _parse_cycle(
-    *, cycle_name: str, cycle_raw: dict[str, Any], defaults: Defaults, config_dir: Path
+    *,
+    cycle_name: str,
+    cycle_raw: dict[str, Any],
+    defaults: Defaults,
+    config_dir: Path,
+    shared_quarantine: tuple[QuarantineRule, ...] = (),
 ) -> Plan:
     if not isinstance(cycle_raw, dict):
         raise ConfigValidationError(f"cycle {cycle_name!r} must be a mapping.")
@@ -251,7 +275,53 @@ def _parse_cycle(
         for item in stages_raw
     )
     trigger = _parse_trigger(cycle_raw.get("trigger"), cycle_name=cycle_name)
-    return Plan(name=cycle_name, description=description, stages=stages, trigger=trigger)
+    quarantine = shared_quarantine + _parse_quarantine(
+        cycle_raw.get("quarantine"), where=f"cycle {cycle_name!r}"
+    )
+    return Plan(
+        name=cycle_name,
+        description=description,
+        stages=stages,
+        trigger=trigger,
+        quarantine=quarantine,
+    )
+
+
+_QUARANTINE_KEYS: frozenset[str] = frozenset({"test", "reason", "owner"})
+
+
+def _parse_quarantine(raw: Any, *, where: str) -> tuple[QuarantineRule, ...]:
+    """``quarantine:`` entries: a test name glob, or ``{test, reason?, owner?}``."""
+    if raw is None:
+        return ()
+    if not isinstance(raw, list):
+        raise ConfigValidationError(f"{where}: 'quarantine' must be a list.")
+    rules: list[QuarantineRule] = []
+    for i, item in enumerate(raw):
+        label = f"{where}: quarantine[{i}]"
+        if isinstance(item, str):
+            item = {"test": item}
+        if not isinstance(item, dict):
+            raise ConfigValidationError(f"{label} must be a test name or a mapping with 'test'.")
+        unknown = sorted(str(k) for k in item if k not in _QUARANTINE_KEYS)
+        if unknown:
+            raise ConfigValidationError(
+                f"{label} has unknown key(s) {unknown}; allowed: {sorted(_QUARANTINE_KEYS)}"
+            )
+        test = item.get("test")
+        if not isinstance(test, str) or not test.strip():
+            raise ConfigValidationError(f"{label}: 'test' must be a non-empty string.")
+        for key in ("reason", "owner"):
+            if item.get(key) is not None and not isinstance(item[key], str):
+                raise ConfigValidationError(f"{label}: '{key}' must be a string.")
+        rules.append(
+            QuarantineRule(
+                test=test.strip(),
+                reason=(item.get("reason") or "").strip() or None,
+                owner=(item.get("owner") or "").strip() or None,
+            )
+        )
+    return tuple(rules)
 
 
 def _parse_trigger(raw: Any, *, cycle_name: str) -> CycleTrigger | None:
@@ -416,6 +486,10 @@ def _parse_stage(*, stage_raw: Mapping[str, Any], defaults: Defaults, config_dir
     if framework == "command" and not args:
         raise ConfigValidationError(
             f"stage {name!r}: framework 'command' needs 'args' (the full command to run)."
+        )
+    if framework == "junit" and not junit_xml:
+        raise ConfigValidationError(
+            f"stage {name!r}: framework 'junit' needs 'junit_xml' (the reports to record)."
         )
 
     return Stage(

@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-10-19
-updated: 2026-10-21
+updated: 2026-10-22
 ---
 
 # Getting Started
@@ -42,6 +42,8 @@ Check it:
 testo config validate    # ok — version=1 cycles=1 ...
 testo doctor             # config, runners on PATH, database
 ```
+
+For autocomplete in VS Code and other editors, put the [`$schema` line](CLI%20Commands/Command%20Reference.md#editor-autocomplete) at the top of the file.
 
 `testo config init` writes a starter file with a `smoke-test` cycle that runs `pytest -q tests`, plus commented-out marker-based pytest and BehaveX examples. Edit its `args` if your tests live outside `tests/`.
 
@@ -110,14 +112,27 @@ Add stages to the same cycle; they run in order.
         args: [-q, tests]
       - name: flows
         equipment: behave
-        args: [features/smoke.feature]     # always name the feature files
+        args: [features/smoke.feature]     # always name the feature files; needs testo-core[bdd]
       - name: web
         equipment: command                 # any runner that writes JUnit XML
         args: [npx, jest, --ci]
         junit_xml: ["reports/junit/*.xml"]
 ```
 
+`behave` and `behavex` stages need the `bdd` extra: `pip install 'testo-core[bdd]'` (in the GitHub Action, `package: "testo-core[bdd]"`).
+
 Every key (timeouts, workers, triggers on changed paths, reporters such as Allure) is in [Command Reference](CLI%20Commands/Command%20Reference.md). A runner or reporter that isn't built in can come from a [plugin](CLI%20Commands/Command%20Reference.md#plugins) package.
+
+## Already have CI? Record its results instead
+
+If your tests already run somewhere and write JUnit XML (Jest, Vitest, `go test`, JUnit5, pytest's `--junitxml`, ...), skip the YAML and add one step after them:
+
+```bash
+pip install testo-core
+testo ingest 'reports/**/*.xml' --cycle web-unit
+```
+
+The run gets the same history, `testo summary`, `testo flaky` and Compare as a `testo run`. For one history across every CI job and teammate, run the [Team Server](Processes%20&%20Guides/Team%20Server.md) and add `--server https://your-server --token "$TESTO_API_TOKEN"`. Details: [Command Reference § testo ingest](CLI%20Commands/Command%20Reference.md#testo-ingest).
 
 ## Next
 

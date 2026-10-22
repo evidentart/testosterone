@@ -72,6 +72,7 @@ def _load_cases(plan_root: Path) -> dict[str, dict[str, Any]]:
         st = str(data.get("status") or "unknown").lower()
         out[key] = {
             "name": str(data.get("name") or data.get("fullName") or key)[:120],
+            "full_name": str(data.get("fullName") or ""),
             "group": _case_group(data),
             "status": st,
             "duration_ms": _case_duration_ms(data),

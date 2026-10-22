@@ -55,7 +55,9 @@ def _register_commands() -> None:
     from testo_core.cli.commands import diff_cli as diff_cli_mod
     from testo_core.cli.commands import doctor as doctor_mod
     from testo_core.cli.commands import flaky as flaky_mod
+    from testo_core.cli.commands import ingest as ingest_mod
     from testo_core.cli.commands import init_cmd as init_cmd_mod
+    from testo_core.cli.commands import notify as notify_mod
     from testo_core.cli.commands import plans as cycles_cmd
     from testo_core.cli.commands import plugins as plugins_mod
     from testo_core.cli.commands import report as report_cmd
@@ -68,6 +70,16 @@ def _register_commands() -> None:
         help="Execute a cycle defined in testosterone.yaml.",
         rich_help_panel="Run and report",
     )(run_cmd.run)
+    app.command(
+        name="ingest",
+        help="Record JUnit XML (Jest, Go, JUnit5, ...) or Playwright JSON as a run of a cycle.",
+        rich_help_panel="Run and report",
+    )(ingest_mod.ingest)
+    app.command(
+        name="notify",
+        help="Send a recorded run to Slack or Teams (webhook URLs from the environment).",
+        rich_help_panel="Run and report",
+    )(notify_mod.notify)
     app.command(
         name="config-db",
         help="Set database.url in testosterone.yaml (or pyproject [tool.testosterone]).",

@@ -386,7 +386,7 @@ class HealthReadyResponse(ApiModel):
 
 class AiConfigUpdateRequest(ApiModel):
     enabled: bool = False
-    provider: Literal["openai", "anthropic"] = "openai"
+    provider: Literal["openai", "anthropic", "openai_compatible"] = "openai"
     model: str = "gpt-4o-mini"
     api_key_source: Literal["env", "runtime_input"] = "env"
     api_key_env_var: str | None = None
@@ -395,12 +395,13 @@ class AiConfigUpdateRequest(ApiModel):
     retry_count: int = 1
     max_input_chars: int = 16000
     max_output_tokens: int = 300
+    base_url: str | None = None
 
 
 class AiConfigStatusResponse(ApiModel):
     enabled: bool
     configured: bool
-    provider: Literal["openai", "anthropic"]
+    provider: Literal["openai", "anthropic", "openai_compatible"]
     model: str
     api_key_source: Literal["env", "runtime_input"]
     api_key_env_var: str | None = None
@@ -409,6 +410,7 @@ class AiConfigStatusResponse(ApiModel):
     retry_count: int
     max_input_chars: int
     max_output_tokens: int
+    base_url: str | None = None
 
 
 class AiSummaryResponse(ApiModel):
@@ -427,3 +429,16 @@ class AiSummaryResponse(ApiModel):
 
 class GenerateAiSummaryRequest(ApiModel):
     force_refresh: bool = False
+
+
+class IngestResponse(ApiModel):
+    """A recorded upload (``POST /api/v1/ingest``, what ``testo ingest --server`` sends)."""
+
+    run_id: str | None = None
+    cycle: str
+    exit_code: int
+    tests: int
+    passed: int
+    failed: int
+    skipped: int
+    run_url: str | None = None

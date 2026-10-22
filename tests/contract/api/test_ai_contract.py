@@ -54,6 +54,7 @@ class _FakeSettingsStore:
             "retry_count": 1,
             "max_input_chars": 16000,
             "max_output_tokens": 300,
+            "base_url": None,
         }
 
     def get(self):  # noqa: ANN001
@@ -106,6 +107,7 @@ def test_get_ai_config_status_contract() -> None:
         "retry_count",
         "max_input_chars",
         "max_output_tokens",
+        "base_url",
     }
 
 
@@ -116,3 +118,25 @@ def test_generate_run_ai_summary_contract() -> None:
     assert payload["schema_version"] == "v1"
     assert payload["status"] == "available"
     assert payload["provider"] == "openai"
+
+
+def test_openai_compatible_config_needs_a_base_url_but_no_key() -> None:
+    from testo_api.dependencies import get_ai_settings_store
+    from testo_core.services.ai.integration_settings import InMemoryAiSettingsStore
+
+    app = create_app()
+    store = InMemoryAiSettingsStore()
+    app.dependency_overrides[get_ai_settings_store] = lambda: store
+    client = TestClient(app)
+    body = {"enabled": True, "provider": "openai_compatible", "model": "llama3.2"}
+
+    assert client.put("/api/v1/ai/config", json=body).status_code == 400
+
+    resp = client.put(
+        "/api/v1/ai/config", json={**body, "base_url": " http://localhost:11434/v1/ "}
+    )
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert payload["base_url"] == "http://localhost:11434/v1"
+    assert payload["configured"] is True
+    assert payload["key_present"] is False

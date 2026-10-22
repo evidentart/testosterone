@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../schema/testosterone.schema.json
 # The config from docs/Getting Started.md. CI runs it through the GitHub Action
 # (.github/workflows/ci.yml, job getting-started) so the guide stays true.
 version: 1

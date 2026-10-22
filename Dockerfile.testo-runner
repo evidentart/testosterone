@@ -34,7 +34,7 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
 
 WORKDIR /workspace
 COPY --from=builder /dist/*.whl /tmp/
-RUN python -m pip install /tmp/*.whl && rm -rf /tmp/*.whl && \
+RUN WHEEL="$(ls /tmp/*.whl)" && python -m pip install "${WHEEL}[bdd]" && rm -rf /tmp/*.whl && \
     useradd --create-home --uid 10001 testo && \
     chown testo:testo /workspace
 
