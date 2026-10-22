@@ -63,6 +63,37 @@ def test_too_few_runs_is_invalid_input(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "at least two" in result.stdout
 
 
+def test_quarantined_flaky_tests_are_marked_and_dont_fail_the_gate(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    cfg = tmp_path / "testosterone.yaml"
+    cfg.write_text(
+        "version: 1\ncycles:\n  x:\n    quarantine: [test_flaky_*]\n"
+        "    stages:\n      - {name: unit, framework: pytest}\n",
+        encoding="utf-8",
+    )
+    other = FlakyTest(**{**_FLAKY.__dict__, "key": "k2", "name": "test_other"})
+    _patch(monkeypatch, runs=3, flaky=(_FLAKY,))
+    args = ["flaky", "--cycle", "x", "--config", str(cfg)]
+    assert CliRunner().invoke(app, [*args, "--fail-on-flaky"]).exit_code == 0
+    payload = json.loads(CliRunner().invoke(app, [*args, "--json"]).stdout)
+    assert payload["flaky"][0]["quarantined"] is True
+
+    _patch(monkeypatch, runs=3, flaky=(_FLAKY, other))
+    result = CliRunner().invoke(app, args)
+    assert "yes" in result.stdout
+    assert '- test: "test_other"' in result.stdout
+    assert '- test: "test_flaky_route"' not in result.stdout
+    assert CliRunner().invoke(app, [*args, "--fail-on-flaky"]).exit_code == 1
+
+
+def test_bad_config_is_invalid_input(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    _patch(monkeypatch, runs=3, flaky=(_FLAKY,))
+    missing = tmp_path / "nope.yaml"
+    result = CliRunner().invoke(app, ["flaky", "--cycle", "x", "--config", str(missing)])
+    assert result.exit_code == 2
+
+
 def test_new_keeps_only_tests_the_latest_run_made_flaky(monkeypatch: pytest.MonkeyPatch) -> None:
     _patch(monkeypatch, runs=3, flaky=(_FLAKY,))
     monkeypatch.setattr(

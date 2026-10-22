@@ -107,6 +107,8 @@ class DbBackend:
                             "tier": s.tier,
                             "returncode": s.returncode,
                             "duration_s": s.duration_s,
+                            "quarantined": list(s.quarantined),
+                            "waived_returncode": s.waived_returncode,
                             **{
                                 k: v
                                 for k, v in stage_health_by_name.get(s.stage_name, {}).items()

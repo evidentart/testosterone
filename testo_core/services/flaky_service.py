@@ -45,6 +45,9 @@ class FlakyTest:
     # Oldest first, one of "passed" / "failed" / "broken" / "skipped" / "unknown"
     # per run the test appeared in.
     history: tuple[str, ...]
+    full_name: str = ""
+    # Matches a ``quarantine:`` rule of the cycle (set by callers that load the config).
+    quarantined: bool = False
 
 
 @dataclass(frozen=True)
@@ -82,6 +85,7 @@ def classify(key: str, observations: list[dict[str, Any]]) -> FlakyTest | None:
         flip_rate=round(flips / (len(outcomes) - 1), 3),
         last_status=statuses[-1],
         history=tuple(statuses),
+        full_name=str(latest.get("full_name") or ""),
     )
 
 

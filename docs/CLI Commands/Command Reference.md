@@ -218,7 +218,7 @@ Tests whose outcome keeps flipping across a cycle's recent runs.
 ```bash
 testo flaky --cycle fake-api               # last 20 runs
 testo flaky --cycle fake-api --window 50 --json
-testo flaky --cycle nightly --fail-on-flaky  # exit 1 when any test is flaky (CI gate)
+testo flaky --cycle nightly --fail-on-flaky  # exit 1 when any test is flaky and not quarantined (CI gate)
 testo flaky --cycle nightly --new --json     # only tests the latest run made flaky
 ```
 
@@ -228,9 +228,12 @@ testo flaky --cycle nightly --new --json     # only tests the latest run made fl
 | `--window` | `20` | How many of the cycle's most recent runs to look at (min 2) |
 | `--new` | off | Only tests the cycle's latest run made flaky: flaky in the window ending at that run, not in the window ending at the run before. Used for alerts and the action's `flaky-issues` |
 | `--json` | off | Print the report as JSON |
-| `--fail-on-flaky` | off | Exit `1` when any flaky test is found |
+| `--fail-on-flaky` | off | Exit `1` when any flaky test that isn't quarantined is found |
+| `--config` | discovery | `testosterone.yaml` whose `quarantine:` rules mark tests; without a config found, nothing is marked. Exit `2` if the given file is missing or invalid |
 
 A test is flaky when, within the window, it both passed and failed and its outcome changed at least twice (skipped runs are ignored). One change is a regression or a fix, which `testo summary` shows. Exit `2` when fewer than two runs with per-test results exist. Reads run-history records (`run_id`s) and each run's artifact snapshot, the same data as `GET /api/v1/analytics/flaky?cycle=<name>` and the Flaky tests card on the cycle page. See [Open Source Features - 2026-10-19](../Specs%20&%20ADRs/Open%20Source%20Features%20-%202026-10-19.md).
+
+The table's Quarantined column (and `"quarantined"` in `--json`) shows which flaky tests match the cycle's [`quarantine:` rules](../Testing%20Workflows/QA%20Strategies.md#defining-work-in-testosteroneyaml); for the others it prints a `quarantine:` snippet to paste. A quarantined test's failures don't fail `testo run`; see [Flaky Test Quarantine - 2026-10-22](../Specs%20&%20ADRs/Flaky%20Test%20Quarantine%20-%202026-10-22.md).
 
 ---
 

@@ -98,6 +98,20 @@ class ReporterSpec:
 
 
 @dataclass(frozen=True)
+class QuarantineRule:
+    """One ``quarantine:`` entry: a test whose failures don't fail its stage.
+
+    ``test`` is an ``fnmatch`` glob matched against each failed test's name and
+    full name. Quarantined tests still run and are still reported; see
+    :mod:`testo_core.engine.quarantine`.
+    """
+
+    test: str
+    reason: str | None = None
+    owner: str | None = None
+
+
+@dataclass(frozen=True)
 class Plan:
     """A named sequence of stages executed in order by ``testo run --cycle <name>``."""
 
@@ -105,6 +119,8 @@ class Plan:
     description: str | None
     stages: tuple[Stage, ...]
     trigger: CycleTrigger | None = None
+    # Top-level ``quarantine:`` entries followed by the cycle's own.
+    quarantine: tuple[QuarantineRule, ...] = ()
 
 
 @dataclass(frozen=True)

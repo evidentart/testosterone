@@ -48,6 +48,8 @@ class JsonBackend:
                         "log_path": str(s.log_path) if s.log_path else None,
                         "timed_out": s.timed_out,
                         "error": s.error,
+                        "quarantined": list(s.quarantined),
+                        "waived_returncode": s.waived_returncode,
                         **{
                             k: v
                             for k, v in stage_health_by_name.get(s.stage_name, {}).items()

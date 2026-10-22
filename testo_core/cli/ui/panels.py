@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from rich.console import Console, Group, RenderableType
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -29,21 +30,35 @@ class StagePanelData:
     results_dir: str | None = None
     command: str | None = None
     error: str | None = None
+    # Failed tests a ``quarantine:`` rule matched (they don't fail the stage on their own).
+    quarantined: tuple[str, ...] = ()
+
+
+def _status_markup(data: StagePanelData) -> str:
+    status = "[ok]PASS[/]" if data.returncode == 0 else f"[fail]FAIL ({data.returncode})[/]"
+    if data.quarantined:
+        status += f" [warn]({len(data.quarantined)} quarantined)[/]"
+    return status
 
 
 def render_stage_panel(console: Console, data: StagePanelData, *, tail_max_lines: int = 80) -> None:
     """Render a single stage panel to ``console``."""
-    status_label = "PASS" if data.returncode == 0 else f"FAIL ({data.returncode})"
     style = "ok" if data.returncode == 0 else "fail"
 
     equipment = _format_equipment(data.framework)
-    title = Text.from_markup(f"[{style}]{data.name}[/] {equipment} [{style}]{status_label}[/]")
+    title = Text.from_markup(f"[{style}]{data.name}[/] {equipment} {_status_markup(data)}")
 
     rows: list[RenderableType] = []
     rows.append(Text.from_markup(f"[muted]duration:[/] {data.duration_s:.2f}s"))
     if data.command:
         rows.append(Text.from_markup(f"[muted]command:[/]  {data.command}"))
     rows.append(Text.from_markup(f"[muted]log:[/]      {data.log_path or '<buffered>'}"))
+    if data.quarantined:
+        rows.append(
+            Text.from_markup(
+                "[muted]quarantined failures:[/] " + ", ".join(escape(n) for n in data.quarantined)
+            )
+        )
     if data.error:
         rows.append(Text.from_markup("[fail]error:[/]    ").append(data.error))
 
@@ -79,9 +94,11 @@ def render_plan_summary(
     table.add_column("Status")
     table.add_column("Duration", justify="right")
     for stage in stage_results:
-        status = "[ok]PASS[/]" if stage.returncode == 0 else f"[fail]FAIL ({stage.returncode})[/]"
         table.add_row(
-            stage.name, _equipment_cell(stage.framework), status, f"{stage.duration_s:.2f}s"
+            stage.name,
+            _equipment_cell(stage.framework),
+            _status_markup(stage),
+            f"{stage.duration_s:.2f}s",
         )
     console.print(table)
 

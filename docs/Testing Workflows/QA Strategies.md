@@ -68,6 +68,21 @@ cycles:
 
 Validation: a `command` stage needs `args`, and `junit_xml` patterns must be relative and stay inside `target_repo`. `junit_xml` also works on pytest/Behave stages.
 
+**Quarantine** (top-level and/or per cycle): failures of the listed tests don't fail their stage. The tests still run and still show as failed in results, reports, Compare and the PR comment.
+
+```yaml
+quarantine:                       # every cycle
+  - test_upload_retries           # fnmatch glob on the test's name or full name
+cycles:
+  fake-api:
+    quarantine:                   # added to the top-level list for this cycle
+      - test: "test_flaky_route*"
+        reason: races the slow endpoint
+        owner: "@taltal"
+```
+
+A stage that exits `1` passes when every failed test matches a rule; one unquarantined failure, or any other exit code (timeout, crash, collection error), still fails it. The same goes for `equipment: junit` stages, whose exit code comes from the recorded results. `testo flaky` marks quarantined tests and prints a snippet for the rest. See [Flaky Test Quarantine - 2026-10-22](../Specs%20&%20ADRs/Flaky%20Test%20Quarantine%20-%202026-10-22.md).
+
 **Results an earlier step wrote (`equipment: junit`):** no command runs; the stage records the JUnit XML its `junit_xml` globs match (files of any age) and fails when a test failed or nothing matched. `testo ingest` builds exactly this stage on the fly ([Command Reference § testo ingest](../CLI%20Commands/Command%20Reference.md#testo-ingest)).
 
 ```yaml

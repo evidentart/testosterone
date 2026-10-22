@@ -144,7 +144,7 @@ For each stage in order:
 1. Emit `StageStarted` (renderer + NDJSON `stage_started`).
 2. Call `run_stage()` inside a broad `try/except` — unexpected exceptions become `StageResult` with `returncode=4` and `error="internal error: ..."`.
 3. Append `StageResult`; emit `StageFinished`.
-4. Write NDJSON `stage_finished` (includes `returncode`, `timed_out`, `error`, `log_path`).
+4. Write NDJSON `stage_finished` (includes `returncode`, `timed_out`, `error`, `log_path`, `quarantined`, `waived_returncode`).
 5. If `--fail-fast` and `returncode != 0`, write `plan_aborted` and break.
 
 ### Aggregation
@@ -242,6 +242,8 @@ For `behavex`, `_finish_behavex_reports` runs best-effort. The adapter starts Be
 A `junit` stage skips the subprocess entirely: `_record_junit_stage` imports its `junit_xml` reports without the age filter (they predate the stage by definition), sets the returncode to 1 when a case failed or broke or no file matched (0 otherwise), uses the reports' summed test time as the stage duration, and writes what it read to `run.log` as `[testo] junit: ...`. The plan's `duration_s` is the larger of the wall clock and the summed stage durations, so an ingested run shows its test time rather than the milliseconds the import took.
 
 For any stage with `junit_xml` globs (typically `equipment: command`), `_import_junit` converts the matching JUnit XML (only files inside `target_repo`, only files written since the stage started) into one Allure `*-result.json` per `<testcase>` in `allure-results/<framework>/`: `<failure>` → failed, `<error>` → broken, `<skipped>` → skipped, otherwise passed. It is best-effort, like the BehaveX hook. The process exit code still decides the stage result, and the import outcome (count, or malformed files skipped) is appended to `run.log` as `[testo] junit_xml: ...`.
+
+Last, when the plan has `quarantine:` rules and the process exited `1`, `testo_core/engine/quarantine.py` reads the stage's Allure results. If every failed or broken test matches a rule, the stage's `returncode` becomes `0` and the original goes to `waived_returncode`; the matched names go to `StageResult.quarantined` either way and to `run.log` as `[testo] quarantine: ...`. The result files are not changed, so the failures still count in health, reports and Compare. See [Flaky Test Quarantine - 2026-10-22](../Specs%20&%20ADRs/Flaky%20Test%20Quarantine%20-%202026-10-22.md).
 
 ---
 

@@ -102,6 +102,7 @@ def run_plan(
                     artifacts_root=artifacts_root,
                     parent_env=parent_env,
                     on_chunk=on_chunk(stage.name),
+                    quarantine=plan.quarantine,
                 )
             except Exception as exc:
                 # Broad on purpose: an engine bug becomes an internal-failure result (exit 4)
@@ -122,6 +123,8 @@ def run_plan(
                     "timed_out": stage_result.timed_out,
                     "error": stage_result.error,
                     "internal_failure": stage_result.internal_failure,
+                    "quarantined": list(stage_result.quarantined),
+                    "waived_returncode": stage_result.waived_returncode,
                 }
             )
 

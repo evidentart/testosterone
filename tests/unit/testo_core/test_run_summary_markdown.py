@@ -134,3 +134,14 @@ def test_cli_prints_and_writes(two_runs: list[CompletedRunView], tmp_path: Path)
 def test_cli_without_runs_is_invalid_input(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(md, "list_recent_runs", lambda *, limit: [])
     assert CliRunner().invoke(app, ["report", "markdown", "--cycle", "nope"]).exit_code == 2
+
+
+def test_quarantined_failures_are_labelled(two_runs: list[CompletedRunView]) -> None:
+    summary = md.load_run_summary(cycle="unit")
+    assert summary is not None
+    stage = {**summary.run.stage_health[0], "returncode": 0, "quarantined": ["test_a"]}
+    text = md.render_markdown(
+        replace(summary, run=replace(summary.run, returncode=0, stage_health=[stage]))
+    )
+    assert "| unit | pytest | ✅ pass · 1 quarantined |" in text
+    assert "- `test_a` _(quarantined)_" in text

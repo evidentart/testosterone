@@ -138,6 +138,8 @@ class CIRenderer:
                 "duration_s": float(event.result.duration_s),
                 "log_path": str(event.result.log_path) if event.result.log_path else None,
                 "timed_out": bool(event.result.timed_out),
+                "quarantined": list(event.result.quarantined),
+                "waived_returncode": event.result.waived_returncode,
             }
             self._stages.append(stage_payload)
             emit_ndjson({"event": "stage_finished", **stage_payload})
@@ -175,5 +177,6 @@ def _panel_from_result(result) -> StagePanelData:  # type: ignore[no-untyped-def
         output_tail=result.output_tail,
         results_dir=results_dir,
         command=" ".join(result.command),
+        quarantined=tuple(getattr(result, "quarantined", ())),
         error=getattr(result, "error", None),
     )

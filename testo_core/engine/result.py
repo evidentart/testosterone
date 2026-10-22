@@ -34,6 +34,10 @@ class StageResult:
     # run record so `/runs/{id}/pyramid` doesn't depend on today's YAML.
     tier: str | None = None
     target_repo: Path | None = None
+    # Failed tests that matched a ``quarantine:`` rule (testo_core/engine/quarantine.py).
+    quarantined: tuple[str, ...] = ()
+    # The process's own returncode when quarantine waived it (``returncode`` is then 0).
+    waived_returncode: int | None = None
 
 
 @dataclass(frozen=True)

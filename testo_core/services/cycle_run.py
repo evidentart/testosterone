@@ -300,9 +300,7 @@ def apply_workers_override(
     """Return *plan* with only the resolved *stages*, each forced to *workers_override* when set."""
     if workers_override is not None:
         stages = [dataclasses.replace(s, workers=int(workers_override)) for s in stages]
-    return Plan(
-        name=plan.name, description=plan.description, stages=tuple(stages), trigger=plan.trigger
-    )
+    return dataclasses.replace(plan, stages=tuple(stages))
 
 
 def run_configured_reporters_for_cycle(
