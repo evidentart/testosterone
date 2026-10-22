@@ -23,6 +23,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Runner image: `Dockerfile.testo-runner` uses the floating `python:3.11-slim-bookworm` base (the `3.11.9` pin carried 9 fixable CRITICAL Debian CVEs that failed the v1.1.1 image scan), and `docker-publish.yml` scans and smoke-runs the image before pushing it and can be run by hand for an existing release tag
 - Setup prompts install `testo-core` from PyPI instead of the GitHub zip
 - `move-major-tag.yml` keeps the moving `v1` tag on the latest stable release (and can be run by hand for an existing tag)
+- README: a "What's new" section for the changes since 1.1.1, new screenshots and UI walkthrough of the restyled UI on real self-test and fake-api runs (including the flaky tests card), a terminal recording of `testo flaky`, `testo report markdown` and `testo plugins`, and the Playwright equipment, plugins, `testo report markdown`, `testo summary` and PR comments in the reference sections
 
 ### Fixed
 - BehaveX stages get BehaveX's own HTML report again. The adapter passed BehaveX's Allure `--formatter`, and BehaveX skips `report.html` whenever a formatter is set, so the report Testo showed was re-rendered afterwards without scenario logs. BehaveX now runs plain and the executor converts its `report.json` to Allure results after the stage (`testo_core/reporting/behavex_allure.py`). A `--formatter` in a stage's `args` is still passed through
