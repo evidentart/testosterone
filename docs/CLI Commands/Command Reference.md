@@ -145,6 +145,7 @@ testo report pyramid <run-id>
 | `testo report compare` | Rich diff + Allure comparison (optional baseline/current UUIDs) |
 | `testo report native [ROUTINE]` | List or open BehaveX/pytest native HTML under stage dirs |
 | `testo report markdown [--cycle NAME \| --run-id ID] [--out FILE] [--run-url URL]` | The cycle's latest run (or one run) as GitHub-flavored Markdown: headline counts, per-stage table, failing tests, and per-test changes since the cycle's previous run. The first line is a hidden `<!-- testo-summary:<cycle> -->` marker. Exit `2` when no run is recorded. The GitHub Action uses it for the job summary and the PR comment |
+| `testo report annotations [--cycle NAME \| --run-id ID] [--workspace DIR] [--limit N] [-c CONFIG]` | The run's failing tests as GitHub Actions `::error file=…,line=…` workflow commands, so each failure shows on its line in the pull request's "Files changed". The location is the first stack-trace frame inside `--workspace` (default `.`), tried relative to the workspace, each stage's `target_repo` from the config, and the run's target repo. At most `--limit` (default `10`, GitHub's per-step cap) lines, then a `::notice` with the rest. Exit `2` when no run is recorded. The GitHub Action prints it by default. See [Alerts Where Developers Look - 2026-10-22](../Specs%20&%20ADRs/Alerts%20Where%20Developers%20Look%20-%202026-10-22.md) |
 | `testo report pyramid RUN_ID [-c CONFIG]` | ASCII unit/integration/e2e test pyramid for a completed run (`run_id`, not the archive UUID); stage→tier is the stage's `tier:` (default inferred from `equipment`: pytest→unit, behave→integration, behavex→e2e, playwright→e2e) as recorded in the run when it executed; `-c` is only read for older runs that predate recorded tiers. See [Architecture Overview § Test pyramid](../Architecture/Architecture%20Overview.md#test-pyramid). |
 
 ---
@@ -217,16 +218,42 @@ Tests whose outcome keeps flipping across a cycle's recent runs.
 testo flaky --cycle fake-api               # last 20 runs
 testo flaky --cycle fake-api --window 50 --json
 testo flaky --cycle nightly --fail-on-flaky  # exit 1 when any test is flaky (CI gate)
+testo flaky --cycle nightly --new --json     # only tests the latest run made flaky
 ```
 
 | Flag | Default | Meaning |
 |------|---------|---------|
 | `--cycle` | required | Cycle whose run history to read |
 | `--window` | `20` | How many of the cycle's most recent runs to look at (min 2) |
+| `--new` | off | Only tests the cycle's latest run made flaky: flaky in the window ending at that run, not in the window ending at the run before. Used for alerts and the action's `flaky-issues` |
 | `--json` | off | Print the report as JSON |
 | `--fail-on-flaky` | off | Exit `1` when any flaky test is found |
 
 A test is flaky when, within the window, it both passed and failed and its outcome changed at least twice (skipped runs are ignored). One change is a regression or a fix, which `testo summary` shows. Exit `2` when fewer than two runs with per-test results exist. Reads run-history records (`run_id`s) and each run's artifact snapshot, the same data as `GET /api/v1/analytics/flaky?cycle=<name>` and the Flaky tests card on the cycle page. See [Open Source Features - 2026-10-19](../Specs%20&%20ADRs/Open%20Source%20Features%20-%202026-10-19.md).
+
+---
+
+## `testo notify`
+
+Send a recorded run to Slack and/or Microsoft Teams: pass/fail counts, then new regressions, newly flaky tests, failing tests and fixed tests (10 names per list).
+
+```bash
+export TESTO_SLACK_WEBHOOK_URL=...         # from a secret, never on the command line
+testo notify --to slack --cycle nightly                      # only when it needs attention
+testo notify --to slack --to teams --cycle nightly --when change --run-url "$CI_JOB_URL"
+testo notify --to teams --cycle nightly --dry-run            # print the payload, send nothing
+```
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--to` | required | `slack` or `teams`; repeat for both. URLs come from `TESTO_SLACK_WEBHOOK_URL` and `TESTO_TEAMS_WEBHOOK_URL` |
+| `--cycle` / `--run-id` | latest run | Which recorded run to send |
+| `--when` | `failure` | `failure`: the run failed or made a test flaky. `change`: the run's result flipped, or a test regressed, got fixed or became flaky. `always`: every run |
+| `--title` | cycle name | Name in the message |
+| `--run-url` | none | "View run" link |
+| `--dry-run` | off | Print the JSON payloads instead of posting |
+
+Exit `0` when sent or when there is nothing to report, `2` for a bad flag, a missing webhook variable or no recorded run, `3` when a webhook rejects the message or can't be reached (the error never includes the URL). The `slack` and `teams` [reporters](#reporter-types-reporters----reporter) send the same message right after `testo run`. See [Alerts Where Developers Look - 2026-10-22](../Specs%20&%20ADRs/Alerts%20Where%20Developers%20Look%20-%202026-10-22.md).
 
 ---
 
@@ -326,13 +353,27 @@ The v1.0 `uqo` command (including its `uqo run --config` headless format with `-
 | `TESTO_HOME` | Where per-run report copies (`static/`, `static_reports/`) are written. Default: `./.testo` for a `pip install`, the repository root for a source checkout ([Architecture Overview § Artifact layout](../Architecture/Architecture%20Overview.md#artifact-layout)) |
 | `INFLUXDB_URL`, `INFLUXDB_TOKEN`, `INFLUXDB_ORG`, `INFLUXDB_BUCKET` | Push run KPIs to InfluxDB after each run |
 | `PROMETHEUS_PUSHGATEWAY_URL`, `PROMETHEUS_JOB_NAME` | Push run KPIs to a Prometheus Pushgateway after each run |
+| `TESTO_SLACK_WEBHOOK_URL`, `TESTO_TEAMS_WEBHOOK_URL` | Webhooks for `testo notify` and the `slack` / `teams` reporters |
 | Reporter tokens | e.g. `REPORTPORTAL_TOKEN`, `SLACK_WEBHOOK` via `${env:…}` in YAML |
 
 ---
 
 ## Reporter types (`reporters:` / `--reporter`)
 
-Supported: `allure`, `extent`, `reportportal`, `testbeats`, plus any installed [reporter plugin](#plugins). Configured in root `testosterone.yaml`; outputs often under `reports/` (see repo `testosterone.yaml` for examples).
+Supported: `allure`, `extent`, `reportportal`, `slack`, `teams`, `testbeats`, plus any installed [reporter plugin](#plugins). Configured in root `testosterone.yaml`; outputs often under `reports/` (see repo `testosterone.yaml` for examples).
+
+`slack` and `teams` post the [`testo notify`](#testo-notify) message for the run that just finished. They need a recorded run (not `--no-persist`):
+
+```yaml
+reporters:
+  - type: slack
+    webhook: ${env:SLACK_WEBHOOK_URL}   # default: $TESTO_SLACK_WEBHOOK_URL
+    when: failure                        # failure | change | always
+    title: Nightly API tests             # default: the cycle name
+    report_url: ${env:CI_JOB_URL}        # optional "View run" link
+```
+
+`testbeats` posts counts only, to the `slack_webhook` / `teams_webhook` options.
 
 After `testo run`, terminal hints may point to `./reports/allure`, `./reports/extent`, etc.
 

@@ -6,8 +6,11 @@ Runs one cycle, echoes the NDJSON event stream, and turns the final
 
 With the run persisted, it also renders the run as Markdown
 (``testo report markdown``) for the job summary and, when asked, for one
-pull request comment per cycle that later runs edit in place. Both are
-best-effort: a failure there is a warning, never a changed exit code.
+pull request comment per cycle that later runs edit in place; prints failing
+tests as annotations on the diff (``testo report annotations``); sends a Slack
+or Teams alert when a webhook secret is given (``testo notify``); and, when
+asked, opens one issue per newly flaky test (``testo flaky --new``). All of
+it is best-effort: a failure there is a warning, never a changed exit code.
 """
 
 from __future__ import annotations
@@ -174,6 +177,108 @@ def publish_summary(*, cycle: str, job_summary: bool, comment: bool, env: dict[s
         _warn(f"could not comment on pull request #{number} ({exc}); it needs pull-requests: write")
 
 
+def _testo(cmd: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(  # noqa: S603
+        ["testo", *cmd], check=False, capture_output=True, text=True, env=env
+    )
+
+
+def _run_url(env: dict[str, str]) -> str | None:
+    server, repo, run_id = (
+        env.get(k) for k in ("GITHUB_SERVER_URL", "GITHUB_REPOSITORY", "GITHUB_RUN_ID")
+    )
+    return f"{server}/{repo}/actions/runs/{run_id}" if server and repo and run_id else None
+
+
+def annotate(*, cycle: str, config_path: str, env: dict[str, str]) -> None:
+    """Print ``testo report annotations`` so GitHub puts failing tests on the diff."""
+    cmd = ["report", "annotations", "--cycle", cycle]
+    if env.get("GITHUB_WORKSPACE"):
+        cmd += ["--workspace", env["GITHUB_WORKSPACE"]]
+    if config_path:
+        cmd += ["--config", config_path]
+    proc = _testo(cmd, env)
+    if proc.returncode != 0:
+        _warn(f"could not annotate failing tests: {proc.stderr.strip() or proc.returncode}")
+        return
+    sys.stdout.write(proc.stdout)
+
+
+def notify(*, cycle: str, when: str, env: dict[str, str]) -> None:
+    """``testo notify`` to every chat whose webhook secret was passed in."""
+    channels = [
+        c for c in ("slack", "teams") if env.get(f"TESTO_{c.upper()}_WEBHOOK_URL", "").strip()
+    ]
+    if not channels:
+        return
+    cmd = ["notify", "--cycle", cycle, "--when", when or "failure"]
+    for channel in channels:
+        cmd += ["--to", channel]
+    run_url = _run_url(env)
+    if run_url:
+        cmd += ["--run-url", run_url]
+    proc = _testo(cmd, env)
+    if proc.returncode != 0:
+        _warn(f"could not send the chat alert: {proc.stderr.strip() or proc.returncode}")
+
+
+FLAKY_LABEL = "flaky-test"
+
+
+def flaky_issue_title(*, name: str, cycle: str) -> str:
+    return f"Flaky test: {name} ({cycle})"
+
+
+def _flaky_issue_body(test: dict[str, Any], *, cycle: str, run_url: str | None) -> str:
+    marks = {"passed": "✅", "failed": "❌", "broken": "❌"}
+    history = "".join(marks.get(str(s), "·") for s in test.get("history") or [])
+    lines = [
+        f"`{test.get('name')}` in cycle `{cycle}` started flipping between passing and failing.",
+        "",
+        f"- Last {test.get('runs')} runs: {test.get('passed')} passed, {test.get('failed')} failed,"
+        f" {test.get('flips')} flips",
+        f"- History, oldest to newest: {history}",
+    ]
+    if run_url:
+        lines.append(f"- Found by [this workflow run]({run_url})")
+    lines += [
+        "",
+        f"Check it locally with `testo flaky --cycle {cycle}`. Close this issue once it is fixed.",
+        "",
+        "<sub>Opened by [Testosterone](https://github.com/taltal-beep/testosterone)</sub>",
+    ]
+    return "\n".join(lines)
+
+
+def open_flaky_issues(*, cycle: str, token: str, env: dict[str, str]) -> None:
+    """One issue per test the latest run made flaky, unless an open issue already has its title."""
+    proc = _testo(["flaky", "--cycle", cycle, "--new", "--json"], env)
+    if proc.returncode != 0:
+        _warn(f"could not check for flaky tests: {proc.stderr.strip() or proc.returncode}")
+        return
+    tests = json.loads(proc.stdout or "{}").get("flaky") or []
+    if not tests or not token:
+        return
+    api = env.get("GITHUB_API_URL", "https://api.github.com").rstrip("/")
+    base = f"{api}/repos/{env['GITHUB_REPOSITORY']}/issues"
+    try:
+        existing: set[str] = set()
+        for page in range(1, 11):
+            issues = _github("GET", f"{base}?state=open&per_page=100&page={page}", token)
+            existing |= {str(i.get("title")) for i in issues}
+            if len(issues) < 100:
+                break
+        for test in tests:
+            title = flaky_issue_title(name=str(test.get("name")), cycle=cycle)
+            if title in existing:
+                continue
+            body = _flaky_issue_body(test, cycle=cycle, run_url=_run_url(env))
+            _github("POST", base, token, {"title": title, "body": body, "labels": [FLAKY_LABEL]})
+            existing.add(title)
+    except (urllib.error.URLError, OSError, ValueError, KeyError) as exc:
+        _warn(f"could not open flaky test issues ({exc}); it needs issues: write")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run a Testosterone cycle in GitHub Actions.")
     parser.add_argument("--config-path", default="")
@@ -183,6 +288,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--summary-path", default="")
     parser.add_argument("--job-summary", default="true")
     parser.add_argument("--comment-on-pr", default="false")
+    parser.add_argument("--annotations", default="true")
+    parser.add_argument("--notify-when", default="failure")
+    parser.add_argument("--flaky-issues", default="false")
     args = parser.parse_args(argv)
 
     persist = _parse_bool(args.persist, default=True)
@@ -221,14 +329,24 @@ def main(argv: list[str] | None = None) -> int:
     if github_output:
         _write_github_outputs(Path(github_output), values=outputs)
 
-    # The summary is read back from the run history, which --no-persist skips.
+    # Everything below reads the run back from the run history, which --no-persist skips.
     if persist:
+        env = os.environ.copy()
         publish_summary(
             cycle=str(args.cycle or "").strip(),
             job_summary=_parse_bool(args.job_summary, default=True),
             comment=_parse_bool(args.comment_on_pr, default=False),
-            env=os.environ.copy(),
+            env=env,
         )
+        cycle = str(args.cycle or "").strip()
+        if not cycle or cycle == "all":
+            cycle = str(summary.get("plan") or "")
+        if cycle:
+            if _parse_bool(args.annotations, default=True):
+                annotate(cycle=cycle, config_path=str(args.config_path or "").strip(), env=env)
+            notify(cycle=cycle, when=str(args.notify_when or "").strip(), env=env)
+            if _parse_bool(args.flaky_issues, default=False):
+                open_flaky_issues(cycle=cycle, token=env.get("TESTO_GITHUB_TOKEN", ""), env=env)
 
     return int(proc.returncode)
 

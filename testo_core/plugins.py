@@ -7,9 +7,9 @@ declaring an entry point in its ``pyproject.toml``::
     cargo = "testo_cargo:CargoAdapter"        # a FrameworkAdapter class or factory
 
     [project.entry-points."testo.reporters"]
-    slack = "testo_slack:SlackReporter"       # a BaseReporter subclass
+    discord = "testo_discord:DiscordReporter" # a BaseReporter subclass
 
-Once it is installed, ``equipment: cargo`` and ``reporters: [{type: slack}]``
+Once it is installed, ``equipment: cargo`` and ``reporters: [{type: discord}]``
 work in ``testosterone.yaml`` and ``testo plugins`` lists them. Built-in names
 always win: a plugin that reuses one is ignored with a warning.
 

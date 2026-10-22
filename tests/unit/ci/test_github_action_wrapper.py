@@ -82,7 +82,18 @@ def test_main_writes_outputs_and_summary_file(tmp_path: Path, monkeypatch) -> No
     monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
 
     code = module.main(
-        ["--cycle", "smoke", "--ci-mode", "true", "--persist", "true", "--job-summary", "false"]
+        [
+            "--cycle",
+            "smoke",
+            "--ci-mode",
+            "true",
+            "--persist",
+            "true",
+            "--job-summary",
+            "false",
+            "--annotations",
+            "false",
+        ]
     )
     assert code == 1
     assert captured_cmd == ["testo", "run", "--cycle", "smoke", "--ci"]
@@ -203,3 +214,84 @@ def test_publish_summary_writes_job_summary_and_survives_a_comment_error(
 
     assert (tmp_path / "summary.md").read_text(encoding="utf-8") == "<!-- m -->\nbody\n"
     assert "could not comment on pull request #7" in capsys.readouterr().err
+
+
+def _fake_testo(module, monkeypatch, *, stdout: str = "") -> list[list[str]]:  # noqa: ANN001
+    seen: list[list[str]] = []
+
+    def fake_run(cmd, **_kwargs):  # noqa: ANN001
+        seen.append(cmd)
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=stdout, stderr="")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    return seen
+
+
+def test_annotate_prints_the_error_lines(tmp_path: Path, monkeypatch, capsys) -> None:  # noqa: ANN001
+    module = _load_wrapper_module()
+    seen = _fake_testo(module, monkeypatch, stdout="::error title=t::boom\n")
+    env = {**_github_env(tmp_path), "GITHUB_WORKSPACE": "/w"}
+    module.annotate(cycle="smoke", config_path="", env=env)
+    assert seen[0] == ["testo", "report", "annotations", "--cycle", "smoke", "--workspace", "/w"]
+    assert capsys.readouterr().out == "::error title=t::boom\n"
+
+
+def test_notify_sends_only_to_chats_with_a_webhook(tmp_path: Path, monkeypatch) -> None:  # noqa: ANN001
+    module = _load_wrapper_module()
+    seen = _fake_testo(module, monkeypatch)
+    module.notify(cycle="smoke", when="failure", env=_github_env(tmp_path))
+    assert seen == []
+
+    env = {**_github_env(tmp_path), "TESTO_TEAMS_WEBHOOK_URL": "https://teams.example/hook"}
+    module.notify(cycle="smoke", when="change", env=env)
+    assert seen[0] == [
+        "testo",
+        "notify",
+        "--cycle",
+        "smoke",
+        "--when",
+        "change",
+        "--to",
+        "teams",
+        "--run-url",
+        "https://github.example/o/r/actions/runs/99",
+    ]
+
+
+def test_flaky_issues_skip_tests_that_already_have_an_open_issue(
+    tmp_path: Path,
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    module = _load_wrapper_module()
+    flaky = {
+        "flaky": [
+            {
+                "name": "test_a",
+                "runs": 3,
+                "passed": 2,
+                "failed": 1,
+                "flips": 2,
+                "history": ["passed", "failed", "passed"],
+            },
+            {"name": "test_b", "runs": 3, "passed": 2, "failed": 1, "flips": 2, "history": []},
+        ]
+    }
+    seen = _fake_testo(module, monkeypatch, stdout=json.dumps(flaky))
+    calls: list[tuple[str, str, object]] = []
+
+    def fake_github(method, url, token, body=None):  # noqa: ANN001
+        calls.append((method, url, body))
+        return [{"title": "Flaky test: test_a (smoke)"}] if method == "GET" else {}
+
+    monkeypatch.setattr(module, "_github", fake_github)
+    module.open_flaky_issues(cycle="smoke", token="t", env=_github_env(tmp_path))
+
+    assert seen[0] == ["testo", "flaky", "--cycle", "smoke", "--new", "--json"]
+    posts = [c for c in calls if c[0] == "POST"]
+    assert len(posts) == 1
+    _, url, body = posts[0]
+    assert url == "https://api.example/repos/o/r/issues"
+    assert isinstance(body, dict)
+    assert body["title"] == "Flaky test: test_b (smoke)"
+    assert body["labels"] == ["flaky-test"]
+    assert "testo flaky --cycle smoke" in body["body"]

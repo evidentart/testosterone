@@ -91,15 +91,16 @@ def _cases_for_run(run: CompletedRunView) -> dict[str, dict[str, Any]]:
     return _load_cases(paths.ORCHESTRATOR_ROOT / run.snapshot_dir)
 
 
-def find_flaky_tests(*, cycle: str, window: int = DEFAULT_WINDOW) -> FlakyReport:
-    """Flaky tests across the last ``window`` runs of ``cycle``, most flips first."""
-    window = max(2, int(window))
-    runs = [r for r in list_recent_runs(limit=_SCAN_LIMIT) if r.cycle == cycle][:window]
-    runs.reverse()  # oldest first, so flips are counted in order
+def _cycle_runs(cycle: str) -> list[CompletedRunView]:
+    """``cycle``'s recorded runs, newest first."""
+    return [r for r in list_recent_runs(limit=_SCAN_LIMIT) if r.cycle == cycle]
 
+
+def _report(cycle: str, runs: list[CompletedRunView], window: int) -> FlakyReport:
+    """Score the tests in ``runs`` (newest first, already cut to the window)."""
     per_test: dict[str, list[dict[str, Any]]] = {}
     analyzed = 0
-    for run in runs:
+    for run in reversed(runs):  # oldest first, so flips are counted in order
         cases = _cases_for_run(run)
         if not cases:
             continue
@@ -116,3 +117,30 @@ def find_flaky_tests(*, cycle: str, window: int = DEFAULT_WINDOW) -> FlakyReport
         tests_analyzed=len(per_test),
         flaky=tuple(flaky),
     )
+
+
+def find_flaky_tests(*, cycle: str, window: int = DEFAULT_WINDOW) -> FlakyReport:
+    """Flaky tests across the last ``window`` runs of ``cycle``, most flips first."""
+    window = max(2, int(window))
+    return _report(cycle, _cycle_runs(cycle)[:window], window)
+
+
+def newly_flaky_tests(
+    *, cycle: str, run_id: str | None = None, window: int = DEFAULT_WINDOW
+) -> tuple[FlakyTest, ...]:
+    """Tests that ``run_id`` (default: the cycle's latest run) made flaky.
+
+    Flaky in the ``window`` runs ending at that run, and not in the ``window``
+    runs ending at the run before it. Alerts and ``testo flaky --new`` use this
+    so a test is announced once, when it starts flipping, not on every run.
+    """
+    window = max(2, int(window))
+    runs = _cycle_runs(cycle)
+    start = next((i for i, r in enumerate(runs) if r.run_id == run_id), None) if run_id else 0
+    if start is None:
+        return ()
+    now = _report(cycle, runs[start : start + window], window).flaky
+    if not now:
+        return ()
+    before = {t.key for t in _report(cycle, runs[start + 1 : start + 1 + window], window).flaky}
+    return tuple(t for t in now if t.key not in before)

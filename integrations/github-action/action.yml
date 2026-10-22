@@ -33,8 +33,28 @@ inputs:
     description: "On pull_request events, keep one comment per cycle on the pull request with the same summary. Needs `permissions: pull-requests: write`."
     required: false
     default: "false"
+  annotations:
+    description: Print failing tests as annotations, shown inline on the pull request diff. Needs no permission.
+    required: false
+    default: "true"
+  slack-webhook:
+    description: "Slack incoming-webhook URL. Pass a repository secret (secrets.SLACK_WEBHOOK_URL); empty = no Slack alert."
+    required: false
+    default: ""
+  teams-webhook:
+    description: "Microsoft Teams Workflows webhook URL. Pass a secret; empty = no Teams alert."
+    required: false
+    default: ""
+  notify-when:
+    description: "When to send the chat alert: `failure` (red run or newly flaky test), `change` (differs from the previous run) or `always`."
+    required: false
+    default: failure
+  flaky-issues:
+    description: "Open one issue per test that this run made flaky (skipped if an open issue has the same title). Needs `permissions: issues: write`."
+    required: false
+    default: "false"
   github-token:
-    description: Token used for the pull request comment.
+    description: Token used for the pull request comment and flaky test issues.
     required: false
     default: ${{ github.token }}
 outputs:
@@ -67,6 +87,8 @@ runs:
       shell: bash
       env:
         TESTO_GITHUB_TOKEN: ${{ inputs.github-token }}
+        TESTO_SLACK_WEBHOOK_URL: ${{ inputs.slack-webhook }}
+        TESTO_TEAMS_WEBHOOK_URL: ${{ inputs.teams-webhook }}
       run: |
         python "${{ github.action_path }}/run_testo_action.py" \
           --config-path "${{ inputs.config-path }}" \
@@ -74,4 +96,7 @@ runs:
           --ci-mode "${{ inputs.ci-mode }}" \
           --persist "${{ inputs.persist }}" \
           --job-summary "${{ inputs.job-summary }}" \
-          --comment-on-pr "${{ inputs.comment-on-pr }}"
+          --comment-on-pr "${{ inputs.comment-on-pr }}" \
+          --annotations "${{ inputs.annotations }}" \
+          --notify-when "${{ inputs.notify-when }}" \
+          --flaky-issues "${{ inputs.flaky-issues }}"

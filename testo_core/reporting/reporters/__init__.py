@@ -1,4 +1,4 @@
-"""Pluggable post-run reporters (Allure, Extent, ReportPortal, TestBeats)."""
+"""Pluggable post-run reporters (Allure, Extent, ReportPortal, Slack, Teams, TestBeats)."""
 
 from testo_core.reporting.reporters.base import BaseReporter, ReportContext, ReporterResult
 from testo_core.reporting.reporters.factory import ReporterFactory, resolve_active_reporter_specs

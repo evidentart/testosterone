@@ -20,7 +20,16 @@ job log, and exposes the final `plan_finished` event as step outputs.
 - `comment-on-pr` (optional, default `false`): on `pull_request` events, keep one comment per
   cycle on the pull request with the same summary (edited on later pushes, not re-posted).
   Needs `permissions: pull-requests: write`; with a read-only token (fork PRs) it warns and moves on
-- `github-token` (optional, default `${{ github.token }}`): token for the comment
+- `annotations` (optional, default `true`): print failing tests as `::error` annotations
+  (`testo report annotations`), shown on the failing line in the pull request's "Files changed".
+  Needs no permission
+- `slack-webhook`, `teams-webhook` (optional, default empty): incoming-webhook URLs for a chat
+  alert (`testo notify`). Pass secrets, e.g. `${{ secrets.SLACK_WEBHOOK_URL }}`; empty sends nothing
+- `notify-when` (optional, default `failure`): `failure` (red run or a newly flaky test),
+  `change` (differs from the previous run) or `always`
+- `flaky-issues` (optional, default `false`): open one issue (label `flaky-test`) for each test
+  this run made flaky, unless an open issue already has its title. Needs `permissions: issues: write`
+- `github-token` (optional, default `${{ github.token }}`): token for the comment and issues
 
 The summary is `testo report markdown`: pass/fail counts, a per-stage table, failing tests and
 the tests that changed outcome since the cycle's previous run. "Previous run" needs run history
@@ -46,9 +55,11 @@ jobs:
         with:
           cycle: sample-pytests
           comment-on-pr: "true"
+          slack-webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
 ```
 
-with `permissions: { contents: read, pull-requests: write }` on the job for the comment.
+with `permissions: { contents: read, pull-requests: write }` on the job for the comment
+(add `issues: write` for `flaky-issues`).
 
 ## Migrating from the v1.0 `uqo` action
 

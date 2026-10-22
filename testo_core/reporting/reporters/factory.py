@@ -11,6 +11,7 @@ from testo_core import plugins
 from testo_core.config.resolver import _interpolate
 from testo_core.config.schema import ReporterSpec
 from testo_core.reporting.collector import CollectedResults
+from testo_core.reporting.reporters.alert_reporter import SlackReporter, TeamsReporter
 from testo_core.reporting.reporters.allure_reporter import AllureReporter
 from testo_core.reporting.reporters.base import BaseReporter, ReportContext, ReporterResult
 from testo_core.reporting.reporters.extent_reporter import ExtentReporter
@@ -26,6 +27,8 @@ _REPORTER_REGISTRY: dict[str, type[BaseReporter]] = {
     "allure": AllureReporter,
     "extent": ExtentReporter,
     "reportportal": ReportPortalReporter,
+    "slack": SlackReporter,
+    "teams": TeamsReporter,
     "testbeats": TestBeatsReporter,
 }
 
