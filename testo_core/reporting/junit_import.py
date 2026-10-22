@@ -15,6 +15,10 @@ Status mapping (JUnit has no "broken" of its own):
     <skipped>            -> skipped
     none of the above    -> passed
 
+A ``.json`` file among the matches is read as a Playwright JSON report by
+:mod:`testo_core.reporting.playwright_import` instead, which keeps retries,
+flakiness and attachments (traces, screenshots) that JUnit loses.
+
 A ``junit`` stage (``testo ingest``) runs no command at all: the executor calls
 this without ``not_before`` and derives the stage's returncode from ``failed``.
 
@@ -46,6 +50,9 @@ class JunitImportResult:
     failed: int = 0
     # Sum of the per-case ``time`` attributes, in seconds.
     duration_s: float = 0.0
+    # Playwright JSON only: tests that passed on a retry, and attachments copied.
+    flaky: int = 0
+    attachments: int = 0
 
 
 def _suite_start_ms(suite: ET.Element, fallback_ms: int) -> int:
@@ -131,8 +138,15 @@ def import_junit_reports(
     results_dir: Path,
     tool: str = "command",
     not_before: float | None = None,
+    first_match_only: bool = False,
 ) -> JunitImportResult:
-    """Convert every JUnit XML matching ``patterns`` into Allure results.
+    """Convert every JUnit XML (or Playwright JSON) matching ``patterns`` into Allure results.
+
+    ``first_match_only`` reads only the files of the first pattern that
+    matches anything, for adapters that list one report in several formats
+    (Playwright: its JSON report, else its JUnit report) and must not count
+    the same tests twice. Attachments a Playwright report points to are copied
+    only from inside ``target_repo``.
 
     ``not_before`` (epoch seconds, the stage start) skips files older than the
     stage, so a stale report left by an earlier run is never counted as this
@@ -151,17 +165,32 @@ def import_junit_reports(
                 continue
             if resolved not in files:
                 files.append(resolved)
+        if first_match_only and files:
+            break
 
     tests = 0
     failed = 0
     duration_ms = 0
+    flaky = 0
+    attachments = 0
     errors: list[str] = []
     for path in files:
         try:
-            results = _results_for_file(
-                path, tool=tool, fallback_ms=int(path.stat().st_mtime * 1000)
-            )
-        except (ET.ParseError, OSError) as exc:
+            if path.suffix.lower() == ".json":
+                from testo_core.reporting.playwright_import import playwright_results_for_file
+
+                parsed = playwright_results_for_file(
+                    path, tool=tool, results_dir=results_dir, attachments_root=repo
+                )
+                results = parsed.results
+                flaky += parsed.flaky
+                attachments += parsed.attachments
+                errors += [f"{path.name}: {note}" for note in parsed.notes]
+            else:
+                results = _results_for_file(
+                    path, tool=tool, fallback_ms=int(path.stat().st_mtime * 1000)
+                )
+        except (ET.ParseError, OSError, ValueError) as exc:
             errors.append(f"{path.name}: {exc}")
             continue
         for result in results:
@@ -177,4 +206,6 @@ def import_junit_reports(
         errors=tuple(errors),
         failed=failed,
         duration_s=duration_ms / 1000,
+        flaky=flaky,
+        attachments=attachments,
     )

@@ -126,7 +126,7 @@ def execute_ingest_command(
         )
         files = matching_reports(patterns, repo=repo_dir)
         if not files:
-            raise ConfigError(f"no JUnit XML file matches {list(patterns)} in {repo_dir}.")
+            raise ConfigError(f"no report file matches {list(patterns)} in {repo_dir}.")
     except ConfigError as exc:
         _emit_config_error(console=console, exc=exc, ci=ci)
         return int(EngineExitCode.INVALID_INPUT)

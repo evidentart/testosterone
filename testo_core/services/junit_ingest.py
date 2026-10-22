@@ -1,4 +1,4 @@
-"""Record uploaded JUnit XML as a run: the server side of ``testo ingest --server``.
+"""Record uploaded JUnit XML (or Playwright JSON) as a run: the server side of ``testo ingest --server``.
 
 CI jobs anywhere upload their JUnit XML to one Testosterone server
 (``POST /api/v1/ingest``), so the whole team's runs land in one history. The
@@ -109,11 +109,17 @@ def ingest_uploaded_reports(
         reports_dir.mkdir()
         for index, (name, content) in enumerate(reports):
             # Client file names are only a label; the index keeps them unique.
-            label = _UNSAFE_FILENAME.sub("_", Path(name or "report").name)[:80] or "report"
-            (reports_dir / f"{index:03d}-{label}.xml").write_bytes(content)
+            label = _UNSAFE_FILENAME.sub("_", Path(name or "report").stem)[:80] or "report"
+            # .json is a Playwright JSON report, anything else JUnit XML (junit_import decides by suffix).
+            suffix = ".json" if (name or "").lower().endswith(".json") else ".xml"
+            (reports_dir / f"{index:03d}-{label}{suffix}").write_bytes(content)
 
         plan = junit_ingest_plan(
-            cycle=cycle, reports=["reports/*.xml"], target_repo=root, stage_name=stage, tier=tier
+            cycle=cycle,
+            reports=["reports/*.xml", "reports/*.json"],
+            target_repo=root,
+            stage_name=stage,
+            tier=tier,
         )
         # The scratch path means nothing after this call; record the client's repository instead.
         metadata: dict[str, str | None] = {**(run_metadata or {})}

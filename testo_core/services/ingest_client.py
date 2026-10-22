@@ -1,4 +1,4 @@
-"""Client side of ``testo ingest --server``: upload JUnit XML to a Testosterone server.
+"""Client side of ``testo ingest --server``: upload JUnit XML or Playwright JSON to a Testosterone server.
 
 Sends the files plus this job's CI provenance (provider, commit, branch, job)
 to ``POST /api/v1/ingest``, where :mod:`testo_core.services.junit_ingest`
@@ -56,7 +56,7 @@ def upload_reports(
     data = {"cycle": cycle, "stage": stage, "tier": tier, **dict(metadata or {})}
     with ExitStack() as stack:
         parts = [
-            ("files", (path.name, stack.enter_context(path.open("rb")), "application/xml"))
+            ("files", (path.name, stack.enter_context(path.open("rb")), _content_type(path)))
             for path in files
         ]
         try:
@@ -75,6 +75,10 @@ def upload_reports(
     if not isinstance(body, dict):
         raise IngestUploadError(f"{url} answered with unexpected JSON.")
     return body
+
+
+def _content_type(path: Path) -> str:
+    return "application/json" if path.suffix.lower() == ".json" else "application/xml"
 
 
 def _error_message(resp: Any) -> str:

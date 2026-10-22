@@ -27,6 +27,7 @@ Design decisions that still describe the code. The code is the source of truth; 
 | Getting Started guide and the MkDocs docs site | [Docs Site - 2026-10-19](Docs%20Site%20-%202026-10-19.md) |
 | Third-party frameworks and reporters through entry points | [Plugin API - 2026-10-19](Plugin%20API%20-%202026-10-19.md) |
 | Playwright as its own equipment | [Playwright Adapter - 2026-10-19](Playwright%20Adapter%20-%202026-10-19.md) |
+| Playwright JSON reports: retries, flaky tests, traces | [Playwright JSON Import - 2026-10-22](Playwright%20JSON%20Import%20-%202026-10-22.md) |
 | Slack and Teams alerts, failure annotations on the diff, flaky test issues | [Alerts Where Developers Look - 2026-10-22](Alerts%20Where%20Developers%20Look%20-%202026-10-22.md) |
 | BehaveX HTML report plus Allure results | [BehaveX Reports - 2026-10-21](BehaveX%20Reports%20-%202026-10-21.md) |
 | Record results from any CI (`testo ingest`) and a shared team server | [Ingest and Team Server - 2026-10-22](Ingest%20and%20Team%20Server%20-%202026-10-22.md) |

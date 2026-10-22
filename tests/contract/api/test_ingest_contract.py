@@ -64,6 +64,23 @@ def test_upload_is_recorded_as_a_run_with_the_clients_provenance() -> None:
     assert "not_a_field" not in meta
 
 
+def test_playwright_json_upload_is_recorded_next_to_junit() -> None:
+    report = Path(__file__).resolve().parents[2] / "fixtures" / "playwright" / "results.json"
+    resp = TestClient(create_app()).post(
+        "/api/v1/ingest",
+        data={"cycle": "web-e2e", "tier": "e2e"},
+        files=[
+            ("files", ("results.json", report.read_bytes(), "application/json")),
+            *_files(("ok.xml", PASSING)),
+        ],
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    # 5 Playwright tests (2 failed, 1 flaky counted as passed, 1 skipped) + 2 JUnit cases.
+    assert (body["tests"], body["passed"], body["failed"], body["skipped"]) == (7, 3, 2, 2)
+    assert body["exit_code"] == 1
+
+
 def test_upload_needs_the_token_when_one_is_set(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TESTO_API_TOKEN", "s3cret")
     client = TestClient(create_app())

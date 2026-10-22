@@ -79,13 +79,14 @@ Record JUnit XML that another step already wrote (any runner, any language) as a
 ```bash
 testo ingest 'reports/**/*.xml' --cycle web-unit          # record locally
 testo ingest junit.xml --cycle api --tier integration --ci
+testo ingest test-results/results.json --cycle web-e2e --stage e2e --tier e2e   # Playwright JSON
 testo ingest 'reports/*.xml' --cycle web-unit \
   --server https://testo.example.com --token "$TESTO_API_TOKEN"   # team server
 ```
 
 | Flag | Default | Meaning |
 |------|---------|---------|
-| `REPORTS...` | required | Files or quoted globs, relative to `--repo` (absolute paths must be inside it) |
+| `REPORTS...` | required | Files or quoted globs, relative to `--repo` (absolute paths must be inside it). A `.json` file is read as a Playwright JSON report (`--reporter=json`), keeping retries, flaky tests and attachments |
 | `--cycle` | required | Cycle name the run is recorded under: letters, digits, `.`, `_`, `-`. Reuse it so runs build a history |
 | `--stage` | `junit` | Stage name the tests are grouped under |
 | `--tier` | `unit` | Test-pyramid tier: `unit`, `integration`, `e2e` |
@@ -96,7 +97,7 @@ testo ingest 'reports/*.xml' --cycle web-unit \
 | `--server` | `$TESTO_SERVER_URL` | Upload to a [team server](../Processes%20&%20Guides/Team%20Server.md) instead of recording locally |
 | `--token` | `$TESTO_API_TOKEN` | The server's API token |
 
-Exit codes follow `testo run`: **0** every test passed or was skipped, **1** a test failed or broke, **2** bad arguments or no file matched, **3** the server could not be reached or refused the upload (wrong token). With `--server`, the job's CI provenance (provider, pipeline, job, commit, branch, repository) is sent with the files. Under the hood this is a one-stage cycle with `equipment: junit` run through `CycleRunService`; see [Ingest and Team Server - 2026-10-22](../Specs%20&%20ADRs/Ingest%20and%20Team%20Server%20-%202026-10-22.md).
+Exit codes follow `testo run`: **0** every test passed or was skipped, **1** a test failed or broke, **2** bad arguments or no file matched, **3** the server could not be reached or refused the upload (wrong token). With `--server`, the job's CI provenance (provider, pipeline, job, commit, branch, repository) is sent with the files. Under the hood this is a one-stage cycle with `equipment: junit` run through `CycleRunService`; see [Ingest and Team Server - 2026-10-22](../Specs%20&%20ADRs/Ingest%20and%20Team%20Server%20-%202026-10-22.md). For Playwright JSON (each retry as a step, flaky tests flagged, traces and screenshots copied from inside `--repo` as Allure attachments) see [Playwright JSON Import - 2026-10-22](../Specs%20&%20ADRs/Playwright%20JSON%20Import%20-%202026-10-22.md).
 
 ---
 

@@ -225,7 +225,7 @@ def test_cli_ingest_exit_code_follows_the_results(in_tmp: Path) -> None:
 def test_cli_ingest_without_matches_is_invalid_input(in_tmp: Path) -> None:
     result = CliRunner().invoke(app, ["ingest", "nope/*.xml", "--cycle", "web", "--no-persist"])
     assert result.exit_code == 2
-    assert "no JUnit XML file matches" in result.output
+    assert "no report file matches" in result.output
 
 
 def test_cli_ingest_rejects_unsafe_cycle_name(in_tmp: Path) -> None:

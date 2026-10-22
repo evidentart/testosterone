@@ -1,5 +1,7 @@
 """``playwright`` framework: argv, config defaults, and a real stage run against
-a stand-in ``npx`` that writes what Playwright's junit and html reporters write."""
+a stand-in ``npx`` that writes what Playwright's junit and html reporters write
+(a stage with its own ``--reporter=junit``; the JSON report is covered in
+``test_playwright_import.py``)."""
 
 from __future__ import annotations
 
@@ -35,7 +37,7 @@ def test_argv_adds_reporters_and_workers() -> None:
         "test",
         "tests/login.spec.ts",
         "--project=chromium",
-        "--reporter=list,junit,html",
+        "--reporter=list,json,html",
         "--workers=4",
     ]
 
@@ -57,6 +59,9 @@ def test_stage_env_and_native_report(tmp_path: Path) -> None:
         target_repo=tmp_path, results_dir=stage_dir / "allure-results" / "playwright"
     )
 
+    assert env["PLAYWRIGHT_JSON_OUTPUT_FILE"] == str(
+        tmp_path.resolve() / "test-results" / "testo-results.json"
+    )
     assert env["PLAYWRIGHT_JUNIT_OUTPUT_FILE"] == str(
         tmp_path.resolve() / "test-results" / "testo-junit.xml"
     )
@@ -119,7 +124,7 @@ def test_stage_imports_playwright_junit(tmp_path: Path, monkeypatch: pytest.Monk
     assert result.returncode == 1
     stage_dir = tmp_path / "artifacts" / "app" / "web"
     log = (stage_dir / "run.log").read_text(encoding="utf-8")
-    assert "argv: playwright test --reporter=list,junit,html --workers=2" in log
+    assert "argv: playwright test --reporter=list,json,html --workers=2" in log
     assert "imported 2 test(s) from 1 file(s)" in log
     statuses = sorted(
         json.loads(p.read_text(encoding="utf-8"))["status"]

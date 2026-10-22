@@ -1,9 +1,11 @@
-"""``testo ingest`` — record JUnit XML that another step already wrote, as a run of a cycle.
+"""``testo ingest`` — record test results that another step already wrote, as a run of a cycle.
 
 The low-effort way in: keep your CI as it is, add one step after the tests,
 and every run lands in Testosterone's history (Compare, trends, ``testo flaky``,
 reporters, PR comment). Works for any runner that writes JUnit XML: pytest,
-Jest, Vitest, Playwright, ``go test``, JUnit5, Maestro, ...
+Jest, Vitest, Playwright, ``go test``, JUnit5, Maestro, ... A ``.json`` file is
+read as a Playwright JSON report, which also keeps retries, flaky tests and
+attachments (traces, screenshots).
 
 With ``--server`` the files go to a shared Testosterone server instead, so
 every CI job of a team records into one history.
@@ -20,7 +22,8 @@ def ingest(
     reports: list[str] = typer.Argument(
         ...,
         help=(
-            "JUnit XML files or glob patterns (quote globs: 'reports/**/*.xml'), "
+            "JUnit XML or Playwright JSON (.json) files, or glob patterns "
+            "(quote globs: 'reports/**/*.xml'), "
             "relative to --repo or inside it."
         ),
     ),
@@ -69,7 +72,7 @@ def ingest(
         help="The server's API token (default: $TESTO_API_TOKEN).",
     ),
 ) -> None:
-    """Record JUnit XML results from any runner as a run of a cycle."""
+    """Record JUnit XML (any runner) or Playwright JSON results as a run of a cycle."""
     from testo_core.cli.runner import execute_ingest_command
     from testo_core.cli.ui.console import default_console, make_console
 

@@ -2,10 +2,12 @@
 type: spec
 status: current
 created: 2026-10-19
-updated: 2026-10-19
+updated: 2026-10-22
 ---
 
 # Playwright Adapter - 2026-10-19
+
+> Since [Playwright JSON Import - 2026-10-22](Playwright%20JSON%20Import%20-%202026-10-22.md) the adapter uses the `json` reporter instead of `junit` (`--reporter=list,json,html`, `test-results/testo-results.json`), and the JUnit file is only the fallback for a stage with its own `--reporter`. The rest of this note still holds.
 
 ## Context
 

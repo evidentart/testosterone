@@ -9,7 +9,7 @@ updated: 2026-10-22
 
 [Index](../Index.md) · [Command Reference § testo ingest](../CLI%20Commands/Command%20Reference.md#testo-ingest) · [Ingest and Team Server - 2026-10-22](../Specs%20&%20ADRs/Ingest%20and%20Team%20Server%20-%202026-10-22.md)
 
-One Testosterone server that every CI job uploads its test results to, so the whole team sees one history: the dashboard, run details, Compare, trends and flaky tests across every branch and pipeline. CI keeps running its tests the way it does today; one extra step uploads the JUnit XML.
+One Testosterone server that every CI job uploads its test results to, so the whole team sees one history: the dashboard, run details, Compare, trends and flaky tests across every branch and pipeline. CI keeps running its tests the way it does today; one extra step uploads the JUnit XML (or Playwright's JSON report, which keeps retries and flaky tests).
 
 ## Start it
 
