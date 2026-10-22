@@ -192,6 +192,16 @@ ok — version=1 cycles=6 reporters=4 defaults_target=.
 
 **Deprecated:** `testo config-db` → use `testo config db`.
 
+### Editor autocomplete
+
+`schema/testosterone.schema.json` is a JSON Schema for `testosterone.yaml`. Editors with a YAML language server (VS Code with the Red Hat YAML extension, JetBrains IDEs, Neovim) then suggest keys and built-in equipment, and underline typos as you type. `testo config init` and `testo init` add this line at the top of the file; add it yourself to an existing config:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/taltal-beep/testosterone/main/schema/testosterone.schema.json
+```
+
+`testo config validate` is still the final word. The schema describes the `cycles:` layout only, and accepts plugin equipment and reporter names. Why and how it is generated: [Config JSON Schema](../Specs%20&%20ADRs/Config%20JSON%20Schema%20-%202026-10-22.md).
+
 ---
 
 ## `testo diff` / `testo summary`

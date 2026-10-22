@@ -95,6 +95,10 @@ jobs:
       # generated from; fail if a Pydantic model changed without re-exporting.
       - name: OpenAPI schema up to date
         run: python scripts/export_openapi.py --check
+      # schema/testosterone.schema.json is what editors load for config
+      # autocomplete; fail if testo_core/config changed without re-exporting.
+      - name: Config JSON Schema up to date
+        run: python scripts/export_config_schema.py --check
       - name: Upload diagnostics artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v7

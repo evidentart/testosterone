@@ -1,0 +1,354 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/taltal-beep/testosterone/main/schema/testosterone.schema.json",
+  "title": "testosterone.yaml",
+  "description": "Config for Testosterone (testo-core): cycles of test stages and reporters.",
+  "type": "object",
+  "required": [
+    "cycles"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [
+        1
+      ],
+      "default": 1
+    },
+    "defaults": {
+      "type": "object",
+      "description": "Values every stage inherits unless it sets its own.",
+      "properties": {
+        "target_repo": {
+          "type": "string",
+          "default": "."
+        },
+        "artifacts_root": {
+          "type": "string",
+          "default": "artifacts"
+        },
+        "timeout_s": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "default": 600.0,
+          "description": "Kill the stage after this many seconds. null means no limit."
+        },
+        "workers": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 4
+        },
+        "extra_env": {
+          "type": "object",
+          "description": "Extra environment variables for the test process.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "database": {
+      "type": "object",
+      "description": "Where run history is stored. DATABASE_URL overrides it.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "SQLAlchemy URL, e.g. sqlite:////tmp/testo.db or postgresql+psycopg://user:pass@host/db."
+        }
+      },
+      "additionalProperties": false
+    },
+    "reporters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/reporter"
+      }
+    },
+    "quarantine": {
+      "$ref": "#/definitions/quarantine"
+    },
+    "cycles": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "not": {
+          "const": "all"
+        },
+        "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!.*(^|[/\\\\])\\.\\.([/\\\\]|$)).+$"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/cycle"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "stage": {
+      "type": "object",
+      "description": "One step of a cycle: a test runner and its arguments.",
+      "required": [
+        "name"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "equipment"
+          ]
+        },
+        {
+          "required": [
+            "framework"
+          ]
+        }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!.*(^|[/\\\\])\\.\\.([/\\\\]|$)).+$",
+          "description": "Stage name; also its artifacts folder, so it must be a relative path."
+        },
+        "equipment": {
+          "description": "Test runner for this stage. 'command' runs any program given in 'args'. Plugins can add more.",
+          "anyOf": [
+            {
+              "enum": [
+                "behave",
+                "behavex",
+                "command",
+                "junit",
+                "playwright",
+                "pytest"
+              ]
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "framework": {
+          "description": "Legacy name for 'equipment'.",
+          "anyOf": [
+            {
+              "enum": [
+                "behave",
+                "behavex",
+                "command",
+                "junit",
+                "playwright",
+                "pytest"
+              ]
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "target_repo": {
+          "type": "string",
+          "description": "Directory the runner starts in, relative to this file. Defaults to defaults.target_repo."
+        },
+        "args": {
+          "description": "Arguments for the runner, as a list or one shell-style string. For 'command' this is the whole command line.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              }
+            }
+          ]
+        },
+        "workers": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Parallel workers (pytest with xdist, behavex, playwright). Defaults to defaults.workers."
+        },
+        "timeout_s": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "default": 600.0,
+          "description": "Kill the stage after this many seconds. null means no limit."
+        },
+        "if": {
+          "type": "string",
+          "description": "Run the stage only when this expression is true."
+        },
+        "extra_env": {
+          "type": "object",
+          "description": "Extra environment variables for the test process.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        },
+        "tier": {
+          "enum": [
+            "e2e",
+            "integration",
+            "unit"
+          ],
+          "description": "Test-pyramid tier the stage's tests count under. Default by equipment: behave=integration, behavex=e2e, command=unit, junit=unit, playwright=e2e, pytest=unit."
+        },
+        "junit_xml": {
+          "description": "Glob(s), relative to target_repo, of JUnit XML reports the stage writes. They are imported as results after the stage.",
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "cycle": {
+      "type": "object",
+      "description": "A named list of stages, run with `testo run --cycle <name>`.",
+      "required": [
+        "stages"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "stages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/stage"
+          }
+        },
+        "quarantine": {
+          "$ref": "#/definitions/quarantine",
+          "description": "Added to the top-level quarantine list for this cycle."
+        },
+        "trigger": {
+          "type": "object",
+          "description": "Run the cycle only when files matching these globs changed.",
+          "required": [
+            "paths"
+          ],
+          "properties": {
+            "paths": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Globs relative to this file's directory."
+            },
+            "since_ref": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Git ref to diff against, e.g. origin/main."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "quarantine": {
+      "type": "array",
+      "description": "Tests whose failures don't fail their stage. They still run and still show as failed in results.",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "description": "fnmatch glob on the test's name or full name."
+          },
+          {
+            "type": "object",
+            "required": [
+              "test"
+            ],
+            "properties": {
+              "test": {
+                "type": "string",
+                "minLength": 1,
+                "description": "fnmatch glob on the test's name or full name."
+              },
+              "reason": {
+                "type": "string"
+              },
+              "owner": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "reporter": {
+      "type": "object",
+      "description": "A post-run reporter. Keys other than 'type' are its options.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "description": "Reporter type. Plugins can add more.",
+          "anyOf": [
+            {
+              "enum": [
+                "allure",
+                "extent",
+                "reportportal",
+                "slack",
+                "teams",
+                "testbeats"
+              ]
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "output_dir": {
+          "type": "string",
+          "description": "Relative to this file."
+        },
+        "out_dir": {
+          "type": "string",
+          "description": "Relative to this file."
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

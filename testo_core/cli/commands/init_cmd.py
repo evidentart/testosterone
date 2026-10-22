@@ -7,6 +7,7 @@ from pathlib import Path
 
 import typer
 
+from testo_core.config.json_schema import SCHEMA_ID
 from testo_core.engine.exit_codes import EngineExitCode
 
 
@@ -44,7 +45,8 @@ def wizard(
     if str(db_url).strip():
         db_block = f"database:\n  url: {json.dumps(str(db_url).strip())}\n\n"
 
-    yaml_text = f"""version: 1
+    yaml_text = f"""# yaml-language-server: $schema={SCHEMA_ID}
+version: 1
 {db_block}defaults:
   target_repo: {json.dumps(str(Path(target_repo)))}
   artifacts_root: {json.dumps(str(artifacts))}

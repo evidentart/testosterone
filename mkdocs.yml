@@ -119,6 +119,7 @@ nav:
       - Playwright Adapter: Specs & ADRs/Playwright Adapter - 2026-10-19.md
       - Playwright JSON Import: Specs & ADRs/Playwright JSON Import - 2026-10-22.md
       - BehaveX Reports: Specs & ADRs/BehaveX Reports - 2026-10-21.md
+      - Config JSON Schema: Specs & ADRs/Config JSON Schema - 2026-10-22.md
       - Flaky Test Quarantine: Specs & ADRs/Flaky Test Quarantine - 2026-10-22.md
       - Alerts Where Developers Look: Specs & ADRs/Alerts Where Developers Look - 2026-10-22.md
       - Docs Vault and Wiki Sync: Specs & ADRs/Docs Vault and Wiki Sync - 2026-10-07.md

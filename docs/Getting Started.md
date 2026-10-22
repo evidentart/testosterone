@@ -43,6 +43,8 @@ testo config validate    # ok — version=1 cycles=1 ...
 testo doctor             # config, runners on PATH, database
 ```
 
+For autocomplete in VS Code and other editors, put the [`$schema` line](CLI%20Commands/Command%20Reference.md#editor-autocomplete) at the top of the file.
+
 `testo config init` writes a bigger starter file instead, but its `smoke-test` cycle selects `-m smoke` tests, so edit its `args` to match your suite.
 
 ## 3. Run it
