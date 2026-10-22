@@ -77,6 +77,21 @@ def discover_and_load(
     )
 
 
+def load_config_or_defaults(*, config_path: Path | None = None) -> TestosteroneConfig:
+    """The given or discovered config; built-in defaults when none is found.
+
+    For ``testo ingest`` and the ingest endpoint, which need no cycles from the
+    file, only its reporters and paths when there is one. An explicit
+    *config_path* that doesn't exist still raises.
+    """
+    if config_path is not None:
+        return discover_and_load(config_path=config_path)
+    try:
+        return discover_and_load()
+    except ConfigDiscoveryError:
+        return TestosteroneConfig(version=1, defaults=Defaults())
+
+
 def load_config(path: Path) -> TestosteroneConfig:
     """Load and validate one config file."""
     path = path.expanduser().resolve()
@@ -416,6 +431,10 @@ def _parse_stage(*, stage_raw: Mapping[str, Any], defaults: Defaults, config_dir
     if framework == "command" and not args:
         raise ConfigValidationError(
             f"stage {name!r}: framework 'command' needs 'args' (the full command to run)."
+        )
+    if framework == "junit" and not junit_xml:
+        raise ConfigValidationError(
+            f"stage {name!r}: framework 'junit' needs 'junit_xml' (the reports to record)."
         )
 
     return Stage(

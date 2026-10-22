@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-10-19
-updated: 2026-10-20
+updated: 2026-10-22
 ---
 
 # Getting Started
@@ -118,6 +118,17 @@ Add stages to the same cycle; they run in order.
 ```
 
 Every key (timeouts, workers, triggers on changed paths, reporters such as Allure) is in [Command Reference](CLI%20Commands/Command%20Reference.md). A runner or reporter that isn't built in can come from a [plugin](CLI%20Commands/Command%20Reference.md#plugins) package.
+
+## Already have CI? Record its results instead
+
+If your tests already run somewhere and write JUnit XML (Jest, Vitest, `go test`, JUnit5, pytest's `--junitxml`, ...), skip the YAML and add one step after them:
+
+```bash
+pip install testo-core
+testo ingest 'reports/**/*.xml' --cycle web-unit
+```
+
+The run gets the same history, `testo summary`, `testo flaky` and Compare as a `testo run`. For one history across every CI job and teammate, run the [Team Server](Processes%20&%20Guides/Team%20Server.md) and add `--server https://your-server --token "$TESTO_API_TOKEN"`. Details: [Command Reference § testo ingest](CLI%20Commands/Command%20Reference.md#testo-ingest).
 
 ## Next
 

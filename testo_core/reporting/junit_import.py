@@ -15,6 +15,9 @@ Status mapping (JUnit has no "broken" of its own):
     <skipped>            -> skipped
     none of the above    -> passed
 
+A ``junit`` stage (``testo ingest``) runs no command at all: the executor calls
+this without ``not_before`` and derives the stage's returncode from ``failed``.
+
 Only the files a stage's own command wrote are parsed (paths come from the
 stage config and stay inside ``target_repo``); expat does not resolve external
 entities, so no file or network access happens during parsing.
@@ -38,6 +41,11 @@ class JunitImportResult:
     files: tuple[Path, ...]
     tests: int
     errors: tuple[str, ...]
+    # Cases that ended ``failed`` or ``broken``; what a ``junit`` (ingest) stage's
+    # returncode is derived from, since no process exit code exists there.
+    failed: int = 0
+    # Sum of the per-case ``time`` attributes, in seconds.
+    duration_s: float = 0.0
 
 
 def _suite_start_ms(suite: ET.Element, fallback_ms: int) -> int:
@@ -145,6 +153,8 @@ def import_junit_reports(
                 files.append(resolved)
 
     tests = 0
+    failed = 0
+    duration_ms = 0
     errors: list[str] = []
     for path in files:
         try:
@@ -157,5 +167,14 @@ def import_junit_reports(
         for result in results:
             out = results_dir / f"{result['uuid']}-result.json"
             out.write_text(json.dumps(result), encoding="utf-8")
+            if result["status"] in ("failed", "broken"):
+                failed += 1
+            duration_ms += result["stop"] - result["start"]
         tests += len(results)
-    return JunitImportResult(files=tuple(files), tests=tests, errors=tuple(errors))
+    return JunitImportResult(
+        files=tuple(files),
+        tests=tests,
+        errors=tuple(errors),
+        failed=failed,
+        duration_s=duration_ms / 1000,
+    )

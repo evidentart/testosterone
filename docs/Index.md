@@ -2,7 +2,7 @@
 type: index
 status: current
 created: 2026-06-25
-updated: 2026-10-19
+updated: 2026-10-22
 ---
 
 # Testosterone docs
@@ -29,6 +29,7 @@ The notes are plain markdown. They open as an Obsidian vault, and are published 
 
 - [QA Strategies](Testing%20Workflows/QA%20Strategies.md): how runs are defined, triggered, logged, and how the orchestrator tests itself
 - [CI-CD Pipeline Setup](Processes%20&%20Guides/CI-CD%20Pipeline%20Setup.md): GitHub Action, GitLab template, runner image, test tiers
+- [Team Server](Processes%20&%20Guides/Team%20Server.md): one shared history for every CI job, with `testo ingest --server`, the UI and Postgres in Docker
 - [E2E Harness Operations Guide](Processes%20&%20Guides/E2E%20Harness%20Operations%20Guide.md): the external E2E harness
 - [GitLab Pages Demo](Processes%20&%20Guides/GitLab%20Pages%20Demo.md): the GitHub and GitLab Pages demo pipeline
 

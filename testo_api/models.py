@@ -427,3 +427,16 @@ class AiSummaryResponse(ApiModel):
 
 class GenerateAiSummaryRequest(ApiModel):
     force_refresh: bool = False
+
+
+class IngestResponse(ApiModel):
+    """A recorded upload (``POST /api/v1/ingest``, what ``testo ingest --server`` sends)."""
+
+    run_id: str | None = None
+    cycle: str
+    exit_code: int
+    tests: int
+    passed: int
+    failed: int
+    skipped: int
+    run_url: str | None = None

@@ -82,6 +82,7 @@ class DbBackend:
                 health_pct = 100.0 * passed_stages / len(result.stages)
             stage_health_by_name = {h["name"]: h for h in stage_health}
             provenance = detect_ci_provenance(os.environ)
+            extra_metadata = result.extra.get("run_metadata")
 
             record = repo.create_run(
                 status=status,
@@ -120,6 +121,7 @@ class DbBackend:
                     "source": "engine",
                     **failure_metadata(result),
                     **(provenance.to_metadata() if provenance else {}),
+                    **(extra_metadata if isinstance(extra_metadata, dict) else {}),
                 },
             )
             run_id = str(record.id)

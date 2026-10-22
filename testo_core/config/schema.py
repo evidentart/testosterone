@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Supported frameworks. Add new ones in :mod:`testo_core.frameworks` and append here.
 SUPPORTED_FRAMEWORKS: frozenset[str] = frozenset(
-    {"pytest", "behave", "behavex", "command", "playwright"}
+    {"pytest", "behave", "behavex", "command", "junit", "playwright"}
 )
 
 # Frameworks that act on a stage's ``workers``: BehaveX always (``--parallel-processes``),
@@ -33,6 +33,8 @@ DEFAULT_TIER_BY_FRAMEWORK: dict[str, str] = {
     # Any other runner (Jest, Playwright, Maestro, go test, ...): the stage's
     # ``args`` are the whole argv; results come in through ``junit_xml``.
     "command": "unit",
+    # Runs nothing: records the JUnit XML its ``junit_xml`` globs match (``testo ingest``).
+    "junit": "unit",
 }
 
 # Supported post-run reporters. Add new ones in :mod:`testo_core.reporting.reporters` and append here.

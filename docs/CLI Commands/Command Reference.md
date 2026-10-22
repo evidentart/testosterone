@@ -2,7 +2,7 @@
 type: reference
 status: current
 created: 2026-06-25
-updated: 2026-10-20
+updated: 2026-10-22
 ---
 
 # Command Reference
@@ -67,6 +67,34 @@ Run exited with code 1.
 ### Exit codes
 
 See [Architecture Overview § Exit code contract](../Architecture/Architecture%20Overview.md#exit-code-contract). `testo run` returns the engine exit code directly.
+
+---
+
+## `testo ingest`
+
+Record JUnit XML that another step already wrote (any runner, any language) as a run of a cycle. Nothing is executed: the files are parsed into the same run history as `testo run`, so Compare, trends, `testo flaky`, reporters and the PR comment work on them.
+
+```bash
+testo ingest 'reports/**/*.xml' --cycle web-unit          # record locally
+testo ingest junit.xml --cycle api --tier integration --ci
+testo ingest 'reports/*.xml' --cycle web-unit \
+  --server https://testo.example.com --token "$TESTO_API_TOKEN"   # team server
+```
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `REPORTS...` | required | Files or quoted globs, relative to `--repo` (absolute paths must be inside it) |
+| `--cycle` | required | Cycle name the run is recorded under: letters, digits, `.`, `_`, `-`. Reuse it so runs build a history |
+| `--stage` | `junit` | Stage name the tests are grouped under |
+| `--tier` | `unit` | Test-pyramid tier: `unit`, `integration`, `e2e` |
+| `--repo` | `.` | Directory the report paths are relative to |
+| `--config` / `-c` | discovered | `testosterone.yaml` for `reporters:` and paths; not required |
+| `--ci` | off | NDJSON events on stdout, as `testo run --ci` (with `--server`: one `ingest_uploaded` event) |
+| `--no-persist` | off | Parse only, record nothing |
+| `--server` | `$TESTO_SERVER_URL` | Upload to a [team server](../Processes%20&%20Guides/Team%20Server.md) instead of recording locally |
+| `--token` | `$TESTO_API_TOKEN` | The server's API token |
+
+Exit codes follow `testo run`: **0** every test passed or was skipped, **1** a test failed or broke, **2** bad arguments or no file matched, **3** the server could not be reached or refused the upload (wrong token). With `--server`, the job's CI provenance (provider, pipeline, job, commit, branch, repository) is sent with the files. Under the hood this is a one-stage cycle with `equipment: junit` run through `CycleRunService`; see [Ingest and Team Server - 2026-10-22](../Specs%20&%20ADRs/Ingest%20and%20Team%20Server%20-%202026-10-22.md).
 
 ---
 

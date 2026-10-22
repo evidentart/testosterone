@@ -2,7 +2,7 @@
 type: architecture
 status: current
 created: 2026-10-08
-updated: 2026-10-19
+updated: 2026-10-22
 ---
 
 # System Diagram
@@ -57,7 +57,7 @@ Both interfaces start runs the same way: through `CycleRunService` (`testo_core/
 |------|---------|------|
 | Config | `config/` | Finds and validates `testosterone.yaml`, fills defaults and `${env:…}`, resolves a cycle into ordered stages |
 | Engine | `engine/` | `run_plan()` runs stages in order; `run_stage()` runs each as a subprocess with a timeout and a tee'd log; every step is a typed event |
-| Framework adapters | `frameworks/` | Turn a stage into argv for pytest, behave, behavex, Playwright or `command` (any runner with JUnit XML) |
+| Framework adapters | `frameworks/` | Turn a stage into argv for pytest, behave, behavex, Playwright or `command` (any runner with JUnit XML); `junit` records existing JUnit XML without running anything (`testo ingest`) |
 | Reporting | `reporting/` | Collects Allure results and builds Allure, Extent, ReportPortal or TestBeats output; run KPIs and their push |
 | CycleRunService | `services/cycle_run.py` | The one run use case: trigger gate, engine, reporters, metrics push, report archive |
 | Persistence | `persistence/` | Writes `plan_result.json` (JSON backend) and a `RunRecord` row (DB backend) after each run |

@@ -1,8 +1,9 @@
 """Run one cycle end to end: trigger gate, engine, reporters, report archive.
 
 This is the application-layer use case behind ``testo run``,
-``POST /api/v1/cycles/{cycle}/executions`` and ``POST /api/v1/adhoc-executions``
-(a one-stage cycle built by :func:`single_stage_plan`). All of them call
+``POST /api/v1/cycles/{cycle}/executions``, ``POST /api/v1/adhoc-executions``
+(a one-stage cycle built by :func:`single_stage_plan`) and ``testo ingest``
+(a one-stage ``junit`` cycle built by :func:`junit_ingest_plan`). All of them call
 :meth:`CycleRunService.run` and only differ in how they present progress:
 the engine streams events to the *renderer* they pass in, and the few
 non-engine moments (trigger verdict, archive result) go to an optional
@@ -16,6 +17,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import re
 import shutil
 import threading
 from collections.abc import Mapping, Sequence
@@ -60,6 +62,9 @@ class CycleRunOptions:
     artifacts_root: Path | None = None
     parent_env: Mapping[str, str] | None = None
     ci: bool = False
+    # Extra keys for the run record, e.g. CI provenance sent along with an
+    # upload (the server's own environment says nothing about the client's CI).
+    run_metadata: Mapping[str, str | None] | None = None
 
 
 @dataclass(frozen=True)
@@ -141,6 +146,7 @@ class CycleRunService:
             parent_env=opts.parent_env,
             persist=opts.persist,
             fail_fast=opts.fail_fast,
+            run_metadata=opts.run_metadata,
         )
         exit_code = int(result.exit_code)
         raw_run_id = result.extra.get("run_id")
@@ -202,6 +208,8 @@ class CycleRunService:
 
 
 ADHOC_PLAN_NAME = "adhoc"
+INGEST_STAGE_NAME = "junit"
+_SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 
 def single_stage_plan(
@@ -236,6 +244,54 @@ def single_stage_plan(
     if timeout_s is not None:
         stage = dataclasses.replace(stage, timeout_s=timeout_s)
     return Plan(name=ADHOC_PLAN_NAME, description=f"Ad-hoc {framework} run", stages=(stage,))
+
+
+def junit_ingest_plan(
+    *,
+    cycle: str,
+    reports: Sequence[str],
+    target_repo: Path,
+    stage_name: str = INGEST_STAGE_NAME,
+    tier: str = "unit",
+) -> Plan:
+    """Wrap already-written JUnit XML reports in a one-stage ``junit`` cycle (``testo ingest``).
+
+    *reports* are globs relative to *target_repo*. The cycle name is what the
+    run is recorded under, so ingesting into the same name every time gives
+    Compare, trends and flaky detection their history. Raises
+    :class:`ConfigValidationError` for unsafe names or patterns.
+    """
+    from testo_core.config.schema import SUPPORTED_TIERS
+
+    for kind, value in (("cycle", cycle), ("stage", stage_name)):
+        if not _SAFE_NAME.match(value):
+            raise ConfigValidationError(
+                f"{kind} name {value!r} must be letters, digits, '.', '_' or '-' "
+                "(starting with a letter or digit)."
+            )
+    if tier not in SUPPORTED_TIERS:
+        raise ConfigValidationError(
+            f"unsupported tier {tier!r}; expected one of: {sorted(SUPPORTED_TIERS)}"
+        )
+    patterns = tuple(p.strip() for p in reports if p and p.strip())
+    if not patterns:
+        raise ConfigValidationError("no JUnit XML reports given.")
+    for pattern in patterns:
+        if Path(pattern).is_absolute() or ".." in Path(pattern).parts:
+            raise ConfigValidationError(
+                f"report pattern {pattern!r} must be relative to {target_repo} and stay inside it."
+            )
+    repo = Path(target_repo).expanduser().resolve()
+    if not repo.is_dir():
+        raise ConfigValidationError(f"target_repo is not a directory: {repo}")
+    stage = Stage(
+        name=stage_name,
+        framework="junit",
+        target_repo=repo,
+        tier=tier,
+        junit_xml=patterns,
+    )
+    return Plan(name=cycle, description="JUnit results recorded by testo ingest", stages=(stage,))
 
 
 def apply_workers_override(

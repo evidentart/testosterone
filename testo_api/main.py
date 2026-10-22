@@ -17,7 +17,9 @@ from testo_api.routes.cycles import router as cycles_router
 from testo_api.routes.dashboard import router as dashboard_router
 from testo_api.routes.health import router as health_router
 from testo_api.routes.history import router as history_router
+from testo_api.routes.ingest import router as ingest_router
 from testo_api.security import cors_settings, guard_mutating_request, is_loopback_host
+from testo_api.ui import SpaStaticFiles, ui_dir
 from testo_core.paths import STATIC_HISTORY_ROOT
 
 logger = logging.getLogger(__name__)
@@ -62,9 +64,15 @@ def create_app() -> FastAPI:
     app.include_router(analytics_router)
     app.include_router(dashboard_router)
     app.include_router(health_router)
+    app.include_router(ingest_router)
 
     STATIC_HISTORY_ROOT.mkdir(parents=True, exist_ok=True)
     app.mount("/history", StaticFiles(directory=STATIC_HISTORY_ROOT), name="history")
+
+    built_ui = ui_dir()
+    if built_ui is not None:
+        # Last, so every API route and /history wins over the UI's catch-all.
+        app.mount("/", SpaStaticFiles(directory=built_ui, html=True), name="ui")
 
     @app.middleware("http")
     async def attach_request_id(request: Request, call_next):  # type: ignore[no-redef]

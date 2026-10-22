@@ -2,7 +2,7 @@
 type: architecture
 status: current
 created: 2026-06-25
-updated: 2026-10-21
+updated: 2026-10-22
 ---
 
 # Architecture Overview
@@ -90,6 +90,8 @@ Each **equipment** name maps to an adapter implementing `FrameworkAdapter`:
 - `playwright` → `PlaywrightAdapter`: `npx playwright test <args>` in the target repo, which must have `@playwright/test` installed. Adds `--reporter=list,junit,html` and `--workers=N` unless `args` set them; the JUnit file (`test-results/testo-junit.xml`) is imported like a `command` stage's `junit_xml`, and Playwright's HTML report is kept as the run's native report. Default tier `e2e`.
 - `command` → `CommandAdapter`: any other runner (Jest, Maestro, `go test`, ...). `args` is the whole argv. The stage's `junit_xml` globs are converted into Allure results after it exits (`testo_core/reporting/junit_import.py`), so the stage counts in summaries, health % and every reporter. See [Command Adapter and JUnit Import - 2026-09-25](../Specs%20&%20ADRs/Command%20Adapter%20and%20JUnit%20Import%20-%202026-09-25.md).
 
+- `junit` → `JunitAdapter`: runs nothing (`runs_process = False`). The executor records the stage's `junit_xml` reports, whatever their age, and the returncode comes from the results. Used by `testo ingest` and `POST /api/v1/ingest`; see [Ingest and Team Server - 2026-10-22](../Specs%20&%20ADRs/Ingest%20and%20Team%20Server%20-%202026-10-22.md).
+
 Adapters build `argv`, set Allure output under `allure-results/<framework>/`, and run in `stage.target_repo` as cwd.
 
 Any other name is looked up in installed `testo.frameworks` entry points (`testo_core/plugins.py`); built-in names always win. See [Command Reference § Plugins](../CLI%20Commands/Command%20Reference.md#plugins).
@@ -110,13 +112,13 @@ Optional per-cycle **selective execution**: Git diff or filesystem snapshot agai
 
 | Package | Purpose |
 |---------|---------|
-| `testo_api/` | FastAPI `/api/v1` — cycle discovery (`GET /cycles`, `GET /cycles/{cycle}`), cycle and ad-hoc executions with SSE, runs, analytics, AI summaries, health probes |
+| `testo_api/` | FastAPI `/api/v1` — cycle discovery (`GET /cycles`, `GET /cycles/{cycle}`), cycle and ad-hoc executions with SSE, JUnit uploads (`POST /ingest`), runs, analytics, AI summaries, health probes. With `TESTO_UI_DIR` it also serves the built UI at `/` ([Team Server](../Processes%20&%20Guides/Team%20Server.md)) |
 | `frontend/` | React UI — cycles-first navigation plus Quick Run, see [Phase 5 UI Redesign - Cycles-First Navigation](../Specs%20&%20ADRs/Phase%205%20UI%20Redesign%20-%20Cycles-First%20Navigation.md) |
 | `testo_core/services/` | `cycle_run.py` (the run use case shared by CLI and API), dashboard, delta, AI failure analysis, report archive diff |
 
 Until v1.1 a second, Docker-based execution stack (`HeadlessEngineService` → `runners.py`) and a Streamlit UI shipped beside these; see [Deep Dive - Execution Logic § Removed: the UQO headless / Docker path](Deep%20Dive%20-%20Execution%20Logic.md#removed-the-uqo-headless--docker-path).
 
-**`testo run`** does not require Docker. `docker-compose.yml` only provides Postgres for team setups; run artifacts and reports stay on local disk.
+**`testo run`** does not require Docker. `docker-compose.yml` only provides Postgres for local development. For a shared history, `deploy/server/docker-compose.yml` runs the [Team Server](../Processes%20&%20Guides/Team%20Server.md) (API + UI image and Postgres) that CI jobs upload to with `testo ingest --server`.
 
 ### Official documentation
 

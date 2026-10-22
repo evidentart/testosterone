@@ -9,7 +9,9 @@ The API starts test runs, i.e. it runs commands on the host by design. It binds
   API. Defaults to the Vite dev and preview servers. A mutating request that
   carries any other ``Origin`` is refused even without a token, because CORS
   alone does not stop a "simple" cross-site POST (or a DNS-rebinding page)
-  from reaching a localhost server.
+  from reaching a localhost server. With a token set, the UI served by this
+  process (same origin, see :mod:`testo_api.ui`) may write too; the token
+  still has to be sent.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from __future__ import annotations
 import hmac
 import ipaddress
 import os
+from urllib.parse import urlsplit
 
 from fastapi import HTTPException, Request
 
@@ -48,12 +51,17 @@ def guard_mutating_request(request: Request) -> None:
         return
     origin = request.headers.get("Origin")
     allowed_origins, _ = cors_settings()
-    if origin is not None and "*" not in allowed_origins and origin not in allowed_origins:
+    expected = os.getenv("TESTO_API_TOKEN", "").strip()
+    if (
+        origin is not None
+        and "*" not in allowed_origins
+        and origin not in allowed_origins
+        and not (expected and _is_same_origin(request, origin))
+    ):
         raise HTTPException(
             status_code=403,
             detail=f"Origin {origin!r} is not allowed (set TESTO_CORS_ORIGINS).",
         )
-    expected = os.getenv("TESTO_API_TOKEN", "").strip()
     if not expected:
         return
     scheme, _, supplied = request.headers.get("Authorization", "").partition(" ")
@@ -65,6 +73,16 @@ def guard_mutating_request(request: Request) -> None:
             detail="Missing or invalid API token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+def _is_same_origin(request: Request, origin: str) -> bool:
+    """The UI served by this process (``TESTO_UI_DIR``) posting back to it.
+
+    Only trusted together with a token: a DNS-rebinding page is "same origin"
+    too, so without ``TESTO_API_TOKEN`` the Origin allow-list stays the only guard.
+    """
+    host = request.headers.get("Host", "")
+    return bool(host) and urlsplit(origin).netloc.lower() == host.lower()
 
 
 def is_loopback_host(host: str) -> bool:

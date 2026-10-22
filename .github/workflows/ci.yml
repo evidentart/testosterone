@@ -17,6 +17,9 @@ name: ci
 #                        way docs/Getting Started.md tells a new user to
 #   github_action        runs this checkout's code through the GitHub Action and, on
 #                        pull requests, posts its run summary as a PR comment
+#   team_server          builds the team server image, starts it with Postgres
+#                        (deploy/server/docker-compose.yml) and uploads JUnit XML to it
+#                        with `testo ingest --server` (scripts/team_server_smoke.sh)
 #   package              builds the sdist and wheel, `twine check --strict`, then installs
 #                        the wheel with no extras and runs a cycle (scripts/package_smoke.sh)
 #   deploy               builds the distributable wheel on a published release
@@ -253,6 +256,18 @@ jobs:
           comment-on-pr: "true"
       - name: Check the action's outputs
         run: test "${{ steps.testo.outputs.status }}" = success
+
+  team_server:
+    name: team server (image + compose + testo ingest --server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install .
+      - run: bash scripts/team_server_smoke.sh
 
   package:
     name: package (build + clean install)

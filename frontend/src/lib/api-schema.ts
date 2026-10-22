@@ -283,6 +283,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ingest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ingest Reports
+         * @description Record JUnit XML files as one run of *cycle*. Nothing in the upload is executed.
+         *
+         *     ``exit_code`` follows ``testo run``: 0 when every test passed or was skipped,
+         *     1 when one failed. Needs ``Authorization: Bearer <TESTO_API_TOKEN>`` when the
+         *     server has a token set, like every other write.
+         */
+        post: operations["ingest_reports_api_v1_ingest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/runs": {
         parameters: {
             query?: never;
@@ -539,6 +563,35 @@ export interface components {
             status: "available" | "no_summary_generated";
             /** Summary Text */
             summary_text: string | null;
+        };
+        /** Body_ingest_reports_api_v1_ingest_post */
+        Body_ingest_reports_api_v1_ingest_post: {
+            /** Ci Commit Sha */
+            ci_commit_sha?: string | null;
+            /** Ci Job Id */
+            ci_job_id?: string | null;
+            /** Ci Pipeline Id */
+            ci_pipeline_id?: string | null;
+            /** Ci Provider */
+            ci_provider?: string | null;
+            /** Ci Ref Name */
+            ci_ref_name?: string | null;
+            /** Cycle */
+            cycle: string;
+            /** Files */
+            files: string[];
+            /** Repository */
+            repository?: string | null;
+            /**
+             * Stage
+             * @default junit
+             */
+            stage?: string;
+            /**
+             * Tier
+             * @default unit
+             */
+            tier?: string;
         };
         /** CycleDetailResponse */
         CycleDetailResponse: {
@@ -969,6 +1022,28 @@ export interface components {
              * @enum {string}
              */
             status: "ready" | "degraded";
+        };
+        /**
+         * IngestResponse
+         * @description A recorded upload (``POST /api/v1/ingest``, what ``testo ingest --server`` sends).
+         */
+        IngestResponse: {
+            /** Cycle */
+            cycle: string;
+            /** Exit Code */
+            exit_code: number;
+            /** Failed */
+            failed: number;
+            /** Passed */
+            passed: number;
+            /** Run Id */
+            run_id: string | null;
+            /** Run Url */
+            run_url: string | null;
+            /** Skipped */
+            skipped: number;
+            /** Tests */
+            tests: number;
         };
         /** ReadinessCheck */
         ReadinessCheck: {
@@ -1597,6 +1672,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthReadyResponse"];
+                };
+            };
+        };
+    };
+    ingest_reports_api_v1_ingest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_ingest_reports_api_v1_ingest_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

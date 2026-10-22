@@ -48,6 +48,7 @@ def run_plan(
     parent_env: Mapping[str, str] | None = None,
     persist: bool = True,
     fail_fast: bool = False,
+    run_metadata: Mapping[str, str | None] | None = None,
 ) -> PlanResult:
     """Execute every stage in ``plan`` sequentially.
 
@@ -59,6 +60,9 @@ def run_plan(
     aborts the remaining stages: a ``plan_aborted`` NDJSON event is written
     (see ``docs/CLI Commands/Troubleshooting and Error Codes.md``) before the
     terminal ``plan_finished`` event.
+
+    *run_metadata* is carried on ``PlanResult.extra["run_metadata"]`` and merged
+    into the run record by the DB backend.
     """
     artifacts_root = (artifacts_root or Path("artifacts")).expanduser().resolve()
     plan_artifacts = plan_artifacts_dir(artifacts_root, plan.name)
@@ -145,11 +149,15 @@ def run_plan(
             plan_name=plan.name,
             started_at=started_at,
             finished_at=finished_at,
-            duration_s=finished_at - started_at,
+            # Stages run one after another, so their sum never exceeds the wall clock,
+            # except for ``junit`` stages, whose duration is the test time in the
+            # reports they record rather than the milliseconds the import took.
+            duration_s=max(finished_at - started_at, sum(s.duration_s for s in stage_results)),
             stages=tuple(stage_results),
             aggregate_returncode=max(rcs, default=0),
             exit_code=exit_code,
             target_repo=target_repo,
+            extra={"run_metadata": dict(run_metadata)} if run_metadata else {},
         )
 
         recorder.write(

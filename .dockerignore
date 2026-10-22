@@ -17,3 +17,5 @@ docs/
 ci/
 integrations/
 docker-compose.yml
+frontend/node_modules/
+frontend/dist/
