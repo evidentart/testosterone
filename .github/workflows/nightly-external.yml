@@ -41,9 +41,9 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.gate.outputs.enabled == 'true'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: steps.gate.outputs.enabled == 'true'
         with:
           python-version: "3.11"
@@ -60,7 +60,7 @@ jobs:
         run: python -m pytest -q -m "tier_external and cleanup_required" --maxfail=1 --durations=50 --no-cov
       - name: Upload diagnostics artifacts
         if: always() && steps.gate.outputs.enabled == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nightly-external-artifacts
           path: |

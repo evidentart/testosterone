@@ -19,8 +19,8 @@ jobs:
       TESTO_E2E_GITLAB_GROUP_ID: ${{ secrets.TESTO_E2E_GITLAB_GROUP_ID }}
       TESTO_E2E_GITLAB_BASE_URL: ${{ secrets.TESTO_E2E_GITLAB_BASE_URL }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: Install dependencies
@@ -32,7 +32,7 @@ jobs:
         run: python -m pytest -q -m "tier_external and cleanup_required" --maxfail=1 --durations=50 --no-cov
       - name: Upload diagnostics artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-gate-artifacts
           path: |
