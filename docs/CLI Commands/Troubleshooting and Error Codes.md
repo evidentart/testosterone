@@ -286,7 +286,7 @@ cat artifacts/<cycle>/<stage>/run.log
 
 **Fix**
 
-- Install framework in active venv: `pip install pytest` / `behave` / `behavex`
+- Install framework in active venv: `pip install pytest`; for `behave` / `behavex` stages, `pip install 'testo-core[bdd]'` (since 1.2 a plain `pip install testo-core` leaves them out, and the stage error says so)
 - Ensure CI image activates the same venv before `testo run`
 
 ---

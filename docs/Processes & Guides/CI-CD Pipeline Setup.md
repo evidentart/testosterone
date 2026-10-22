@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-05-02
-updated: 2026-10-19
+updated: 2026-10-22
 ---
 
 # CI Integrations
@@ -46,7 +46,7 @@ steps:
       comment-on-pr: "true"
 ```
 
-After a persisted run the action renders it with `testo report markdown` and writes it to the job summary (`job-summary`, default on). With `comment-on-pr: "true"` on `pull_request` events it keeps one comment per cycle on the pull request, found by its hidden marker and edited on later pushes. Both are best-effort: an error, such as a fork's read-only token, is a workflow warning and never changes the exit code. `package` is what gets pip-installed (`testo-core` by default; this repository's own CI passes `.`). Design: [GitHub Action PR Comment - 2026-10-19](../Specs%20&%20ADRs/GitHub%20Action%20PR%20Comment%20-%202026-10-19.md).
+After a persisted run the action renders it with `testo report markdown` and writes it to the job summary (`job-summary`, default on). With `comment-on-pr: "true"` on `pull_request` events it keeps one comment per cycle on the pull request, found by its hidden marker and edited on later pushes. Both are best-effort: an error, such as a fork's read-only token, is a workflow warning and never changes the exit code. `package` is what gets pip-installed (`testo-core` by default; `testo-core[bdd]` for cycles with `behave` or `behavex` stages; this repository's own CI passes `.`). The GitLab template's `TESTO_PACKAGE` variable does the same. Design: [GitHub Action PR Comment - 2026-10-19](../Specs%20&%20ADRs/GitHub%20Action%20PR%20Comment%20-%202026-10-19.md).
 
 ## GitLab include template
 

@@ -42,4 +42,9 @@ if [ -e "$site/static" ] || [ -e "$site/static_reports" ]; then
   echo "run data was written under $site" >&2
   exit 1
 fi
+# The plain install stays lean: Behave and BehaveX come only with the [bdd] extra.
+if python -c "import behave" 2>/dev/null || python -c "import behavex" 2>/dev/null; then
+  echo "behave/behavex installed without the [bdd] extra" >&2
+  exit 1
+fi
 echo "package smoke passed: $(basename "$wheel")"

@@ -17,6 +17,8 @@ testo --help
 
 Help is grouped into panels: **Run and report**, **Config**, **Diagnostics**, **Maintenance**, **About**.
 
+Extras: `pip install testo-core` is the CLI with pytest, Playwright, `command` and `junit` stages. Add `[bdd]` for `behave` and `behavex` stages (Behave, BehaveX and Allure-Behave), `[api]` for the REST API and UI backend, `[db]` for Postgres or MySQL, `[metrics]` for InfluxDB. A `behave` stage without the extra fails with exit `3` and `executable not found: behave (... pip install 'testo-core[bdd]')`.
+
 ---
 
 ## `testo run`

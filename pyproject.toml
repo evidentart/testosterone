@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "testo-core"
 version = "1.1.1"
-description = "Run your whole test cycle (pytest, Behave, BehaveX or any JUnit-writing command) from one YAML file, then see what changed since the last run."
+description = "See what broke, what's flaky and what got slower on every run: test history, run-to-run diffs and flaky detection for pytest, Playwright, Jest or any JUnit-writing runner."
 dynamic = ["readme"]
 requires-python = ">=3.11"
 license = "MIT"
@@ -13,6 +13,9 @@ license-files = ["LICENSE"]
 authors = [{ name = "Taltal", email = "ttlgptinc@gmail.com" }]
 keywords = [
     "testing",
+    "flaky-tests",
+    "test-history",
+    "test-analytics",
     "test-orchestration",
     "pytest",
     "behave",
@@ -44,10 +47,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "sqlmodel>=0.0.24",
     "requests>=2.32.0",
-    "behave>=1.3.0,<2",
-    "behavex>=4.6.0",
     "allure-pytest>=2.15.0",
-    "allure-behave>=2.15.0",
     "allure-python-commons>=2.15.0",
     "PyYAML>=6.0.0",
     "typer>=0.12.0",
@@ -61,6 +61,13 @@ testo = "testo_core.cli.app:main"
 testo-api = "testo_api.main:run"
 
 [project.optional-dependencies]
+# Behave and BehaveX stages (`equipment: behave` / `behavex`) and their Allure formatter.
+# Optional since 1.2: pytest, Playwright, `command` and `testo ingest` don't need them.
+bdd = [
+    "behave>=1.3.0,<2",
+    "behavex>=4.6.0",
+    "allure-behave>=2.15.0",
+]
 api = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
@@ -92,7 +99,7 @@ dev = [
     "pre-commit>=4.0.0",
     # The dev profile installs every extra so the test suite covers the full
     # surface area without needing per-test installs.
-    "testo-core[api,db,metrics]",
+    "testo-core[api,bdd,db,metrics]",
 ]
 
 [project.urls]

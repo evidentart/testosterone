@@ -110,12 +110,14 @@ Add stages to the same cycle; they run in order.
         args: [-q, tests]
       - name: flows
         equipment: behave
-        args: [features/smoke.feature]     # always name the feature files
+        args: [features/smoke.feature]     # always name the feature files; needs testo-core[bdd]
       - name: web
         equipment: command                 # any runner that writes JUnit XML
         args: [npx, jest, --ci]
         junit_xml: ["reports/junit/*.xml"]
 ```
+
+`behave` and `behavex` stages need the `bdd` extra: `pip install 'testo-core[bdd]'` (in the GitHub Action, `package: "testo-core[bdd]"`).
 
 Every key (timeouts, workers, triggers on changed paths, reporters such as Allure) is in [Command Reference](CLI%20Commands/Command%20Reference.md). A runner or reporter that isn't built in can come from a [plugin](CLI%20Commands/Command%20Reference.md#plugins) package.
 

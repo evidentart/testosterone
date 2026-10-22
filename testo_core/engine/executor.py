@@ -36,6 +36,8 @@ from testo_core.frameworks.base import FrameworkAdapter, get_adapter
 from testo_core.reporting.paths import plan_artifacts_dir, safe_child_path
 
 _TERMINATE_GRACE_S: float = 5.0
+# Installed by the ``bdd`` extra, not by a plain ``pip install testo-core``.
+_BDD_EXECUTABLES: frozenset[str] = frozenset({"behave", "behavex"})
 _DEFAULT_TAIL_LINES: int = 200
 
 logger = logging.getLogger(__name__)
@@ -231,6 +233,8 @@ def _run_resolved_stage(
             )
         except FileNotFoundError as exc:
             error = f"executable not found: {exc.filename or argv[0]}"
+            if argv and argv[0] in _BDD_EXECUTABLES:
+                error += " (Behave and BehaveX are optional: pip install 'testo-core[bdd]')"
             finished_at = time.time()
             return _failure_result(
                 stage=stage,

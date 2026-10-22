@@ -5,13 +5,14 @@ variables:
   TESTO_CONFIG_PATH: ""
   TESTO_CYCLE: ""
   TESTO_PERSIST: "true"
+  TESTO_PACKAGE: "testo-core"  # e.g. "testo-core[bdd]" for Behave stages, "testo-core==1.2.0"
 
 testo_run:
   stage: quality
   image: python:3.11-slim
   script:
     - python -m pip install --upgrade pip
-    - python -m pip install testo-core
+    - python -m pip install "$TESTO_PACKAGE"
     - |
       TESTO_ARGS=(run --ci)
       if [ -n "$TESTO_CONFIG_PATH" ]; then

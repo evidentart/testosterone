@@ -15,7 +15,7 @@ Related: [Architecture Overview](../Architecture/Architecture%20Overview.md), [C
 
 ## Mental model
 
-A **cycle** (plan) is an ordered list of **stages**. Each stage names an **equipment** framework (`pytest`, `behave`, `behavex`), a **target_repo**, and CLI **args**. The engine runs stages **one after another** on the host unless a trigger skips the whole cycle.
+A **cycle** (plan) is an ordered list of **stages**. Each stage names an **equipment** framework (`pytest`, `behave`, `behavex`, `playwright`, `command`, `junit`; `behave` and `behavex` come with the `bdd` extra), a **target_repo**, and CLI **args**. The engine runs stages **one after another** on the host unless a trigger skips the whole cycle.
 
 ```mermaid
 flowchart LR

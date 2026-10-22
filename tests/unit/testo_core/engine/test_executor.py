@@ -266,3 +266,21 @@ def test_command_records_full_argv(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     )
     assert result.command[-2:] == ("--text", "argv-check")
     assert "echo.py" in result.command[1]
+
+
+class _MissingBehaveAdapter(MissingBinaryAdapter):
+    def build_argv(self, **_: object) -> list[str]:
+        return ["behave", "features/smoke.feature"]
+
+
+def test_missing_behave_names_the_bdd_extra(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A plain ``pip install testo-core`` has no Behave; the error says how to get it.
+    monkeypatch.setenv("PATH", str(tmp_path / "empty-bin"))
+    use_adapter(monkeypatch, _MissingBehaveAdapter())
+
+    result = run_stage(_stage(name="flows"), plan_name="demo", artifacts_root=tmp_path)
+
+    assert result.returncode == 127
+    assert result.error is not None and "testo-core[bdd]" in result.error

@@ -21,6 +21,8 @@ A review of what keeps Testosterone niche (2026-10-22) found that the tools team
 5. **The API serves the UI** when `TESTO_UI_DIR` points at a build (`testo_api/ui.py`, SPA fallback after all API routes). Same-origin writes are allowed only when `TESTO_API_TOKEN` is set, because a DNS-rebinding page is also "same origin".
 6. **`Dockerfile.testo-server`** (UI build + API with `[api,db]`) and **`deploy/server/docker-compose.yml`** (plus Postgres, token required). `docker-publish.yml` publishes `testo-server` next to `testo-runner`; the `team_server` CI job runs the compose file end to end.
 
+7. **Lighter install** (the third item of the same review). Behave, BehaveX and Allure-Behave move from the core dependencies to a `bdd` extra, so `pip install testo-core` for `testo ingest` or pytest/Playwright cycles pulls 35 packages instead of 47. The `dev` extra and the `testo-runner` image include `bdd`. A `behave`/`behavex` stage without it fails with rc 127 (exit 3), and the stage error, now shown in the CLI stage panel, names the extra. `scripts/package_smoke.sh` checks that a plain install has neither. The GitHub Action's `package` input and a new `TESTO_PACKAGE` variable in the GitLab template select the extra. The README and PyPI description now lead with what a run answers (what broke, what's flaky, what got slower) and with `testo ingest`.
+
 ## Options considered
 
 - **A separate ingest pipeline that writes run records directly.** Rejected: a second path into history is what the [Architecture Consolidation](Architecture%20Consolidation%20-%202026-10-06.md) removed. Going through `CycleRunService` gives ingested runs reporters, snapshots, the report archive and metrics push for free.

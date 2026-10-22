@@ -1,6 +1,6 @@
 # Testosterone
 
-**One YAML file to run your whole test cycle (pytest, Behave, BehaveX, Playwright or any JUnit-writing command), then see what changed since the last run.**
+**See what broke, what's flaky and what got slower on every run.** Test history, run-to-run diffs and flaky detection for pytest, Playwright, Jest, `go test` or any runner that writes JUnit XML: on your laptop, in CI, or on one shared server for the whole team.
 
 [![CI](https://github.com/taltal-beep/testosterone/actions/workflows/ci.yml/badge.svg)](https://github.com/taltal-beep/testosterone/actions/workflows/ci.yml)
 [![Pages demo](https://github.com/taltal-beep/testosterone/actions/workflows/pages-demo.yml/badge.svg)](https://github.com/taltal-beep/testosterone/actions/workflows/pages-demo.yml)
@@ -33,6 +33,15 @@ read-only static site.
 
 Added since v1.1.1:
 
+- **`testo ingest`: bring any runner.** Keep your CI as it is and add one step after the tests:
+  `testo ingest 'reports/**/*.xml' --cycle web`. JUnit XML from Jest, Vitest, `go test`, JUnit5
+  or anything else becomes a recorded run with history, Compare, `testo flaky` and the PR
+  comment. No `testosterone.yaml` needed.
+- **Team server.** `docker compose up` in [deploy/server/](deploy/server/) starts the API, the
+  web UI and Postgres in one place; CI jobs upload with `testo ingest --server URL --token ...`
+  so the whole team shares one history. Guide: [Team Server](docs/Processes%20&%20Guides/Team%20Server.md).
+- **Lighter install.** `pip install testo-core` no longer pulls in Behave, BehaveX and Allure-Behave.
+  Behave users add the extra: `pip install 'testo-core[bdd]'`.
 - **Flaky test detection.** `testo flaky --cycle <name>` lists tests that keep flipping between
   pass and fail across a cycle's recent runs (`--fail-on-flaky` to gate CI), and the cycle page
   in the UI shows them too.
@@ -61,16 +70,22 @@ Full list in [CHANGELOG.md](CHANGELOG.md).
 
 ## Why
 
-Most projects run several test frameworks, each with its own command, report format and CI
-glue. Testosterone puts them in one `testosterone.yaml` as a **cycle** of stages, runs it, records
-every run, and answers the question you actually have after a red build: *what changed?* You get
-run-to-run deltas, a test pyramid, and an optional AI summary of the failures. The same engine
-runs the cycle whether you start it from the CLI, from CI, or from the web UI.
+After a red build the question is never just "what failed?". It's *what changed since the last
+green run, is this test flaky, and did anything get slower?* CI logs and one-off HTML reports
+can't answer that, because they forget every run as soon as it ends. Testosterone records every
+run and answers it: per-test regressions and fixes between runs, flaky tests, durations over
+time, a test pyramid and an optional AI summary of the failures.
 
-**How it compares.** Allure and ReportPortal display the results of a run someone else
-started. Testosterone starts the run: it orchestrates the stages, keeps the history and diffs
-runs against each other, then hands results to Allure, ReportPortal, Extent or TestBeats as
-reporters. It sits upstream of those tools rather than replacing them.
+There are two ways in. **`testo ingest`** records JUnit XML that your existing CI already writes,
+so adoption is one extra step. **`testo run`** goes further: it runs several frameworks as one
+**cycle** of stages from a `testosterone.yaml` (pytest, Playwright, Behave, any command), the
+same way from the CLI, CI or the web UI. Point either at a shared
+[team server](docs/Processes%20&%20Guides/Team%20Server.md) and every CI job lands in one history.
+
+**How it compares.** Allure renders one run; ReportPortal is a large server to operate.
+Testosterone is a `pip install` that keeps the history and diffs runs against each other, works
+with whatever runner you have, and can still hand results to Allure, ReportPortal, Extent or
+TestBeats as reporters.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/testosterone-architecture-detailed-dark.png">
@@ -86,8 +101,20 @@ backend (`testo_api`, `/api/v1`, live runs over server-sent events), a React fro
 
 Install the CLI from PyPI and point it at your own tests:
 
+Already have tests that write JUnit XML? Record them, no config needed:
+
 ```bash
-pip install testo-core            # the `testo` CLI; add [api] for the REST API, [db] for Postgres
+pip install testo-core
+npx jest --ci --reporters=default --reporters=jest-junit   # or pytest --junitxml, go test, ...
+testo ingest 'junit*.xml' --cycle web                      # recorded; run again to see the diff
+testo summary --cycle web
+```
+
+Or let Testosterone run the tests as a cycle:
+
+```bash
+pip install testo-core            # the `testo` CLI; add [api] for the REST API, [db] for Postgres,
+                                  # [bdd] for Behave and BehaveX
 testo config init                 # writes a starter testosterone.yaml; edit its stages
 testo run --cycle smoke-test      # run a cycle from it
 ```
@@ -165,8 +192,9 @@ cycles:
         junit_xml: ["reports/junit/*.xml"]
 ```
 
-Built-in `equipment`: `pytest`, `behave`, `behavex`, `playwright` and `command`. A package can
-add more (see [Plugins](#optional-integrations)).
+Built-in `equipment`: `pytest`, `behave`, `behavex`, `playwright`, `command` and `junit` (records
+JUnit XML another step wrote; what `testo ingest` uses). `behave` and `behavex` need
+`pip install 'testo-core[bdd]'`. A package can add more (see [Plugins](#optional-integrations)).
 
 `testo config validate` checks the file; `testo init` writes one interactively. The full
 schema and every flag are in [Command Reference](docs/CLI%20Commands/Command%20Reference.md).
@@ -176,6 +204,7 @@ schema and every flag are in [Command Reference](docs/CLI%20Commands/Command%20R
 | Command | What it does |
 |---------|--------------|
 | `testo run --cycle <name>` | Run a cycle (`--ci` NDJSON, `--stream` live output, `--force` ignore triggers, `--no-persist`) |
+| `testo ingest <files> --cycle <name>` | Record JUnit XML from any runner as a run (`--server`/`--token` upload to a team server) |
 | `testo report …` | Generate, list, open and export reports (`testo diff` compares two archived runs) |
 | `testo report markdown --cycle <name>` | The latest run as Markdown: results, failing tests, changes since the previous run (job summary or PR comment) |
 | `testo summary` | Rich diff of the two most recent runs (`--cycle` to pick one) |
@@ -195,6 +224,7 @@ Details: [Troubleshooting and Error Codes](docs/CLI%20Commands/Troubleshooting%2
 |------|-----------------------|
 | Cycles | `GET /cycles`, `GET /cycles/{cycle}` |
 | Executions | `POST /cycles/{cycle}/executions`, `POST /adhoc-executions`, `GET /cycle-executions/{id}`, `GET /cycle-executions/{id}/events` (SSE) |
+| Ingest | `POST /ingest` (JUnit XML upload from `testo ingest --server`) |
 | Runs | `GET /runs`, `GET /runs/{id}`, `GET /runs/{id}/reports`, `GET /runs/{id}/pyramid` |
 | Analytics | `GET /analytics/delta`, `GET /analytics/delta/cases`, `GET /analytics/flaky`, `GET /dashboard/overview`, `GET /dashboard/runs/recent` |
 | AI (bring your own key) | `GET /ai/config/status`, `PUT /ai/config`, `GET /runs/{id}/ai-summary`, `POST /runs/{id}/ai-summary:generate` |

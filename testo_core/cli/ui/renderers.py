@@ -175,4 +175,5 @@ def _panel_from_result(result) -> StagePanelData:  # type: ignore[no-untyped-def
         output_tail=result.output_tail,
         results_dir=results_dir,
         command=" ".join(result.command),
+        error=getattr(result, "error", None),
     )

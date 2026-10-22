@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-10-19
-updated: 2026-10-20
+updated: 2026-10-22
 ---
 
 # Setup Prompts
@@ -28,8 +28,9 @@ development environment.
 - Install it from PyPI into a virtualenv (create .venv with Python 3.11+ if the
   project has none):
     pip install testo-core
-  Add the extras I need in brackets after testo-core: [api] for the web UI backend,
-  [db] for Postgres/MySQL run history, [metrics] for InfluxDB.
+  Add the extras I need in brackets after testo-core: [bdd] if the project has
+  Behave or BehaveX tests, [api] for the web UI backend, [db] for Postgres/MySQL
+  run history, [metrics] for InfluxDB.
 - Pin it the same way the project pins other dev dependencies (requirements-dev.txt,
   pyproject optional deps, etc.). Don't add it to runtime dependencies.
 - Verify with `testo --version` and `testo doctor`, and show me the doctor table.
@@ -98,6 +99,7 @@ branch.
   the same way our existing workflows do. Reuse their dependency install steps.
 - Install Testosterone from PyPI:
     pip install testo-core
+  (use "testo-core[bdd]" if a stage is behave or behavex)
 - Run: `set -o pipefail; testo run --ci --cycle smoke | tee testo-output.ndjson`.
   --ci prints one JSON event per line; the job's exit code is testo's (0 pass,
   1 tests failed, 2 bad config, 3 infrastructure, 4 internal error).
@@ -118,7 +120,7 @@ https://github.com/taltal-beep/testosterone/blob/main/ci/gitlab/testo.gitlab-ci.
 but adapted to this project.
 
 - Use an image with Python 3.11+ plus whatever the stages need.
-- Install it with `pip install testo-core`.
+- Install it with `pip install testo-core` (`"testo-core[bdd]"` if a stage is behave or behavex).
 - Run `set -o pipefail; testo run --ci --cycle smoke | tee testo-output.ndjson`,
   write the last plan_finished line to testo-summary.json in after_script, and keep
   testo-output.ndjson, testo-summary.json and artifacts/ as artifacts with

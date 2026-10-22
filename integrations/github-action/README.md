@@ -14,7 +14,8 @@ job log, and exposes the final `plan_finished` event as step outputs.
 - `ci-mode` (optional, default `true`): NDJSON on stdout
 - `persist` (optional, default `true`): write `plan_result.json` and the run history record
 - `python-version` (optional, default `3.11`)
-- `package` (optional, default `testo-core`): what to pip install, e.g. `testo-core==1.2.0`
+- `package` (optional, default `testo-core`): what to pip install, e.g. `testo-core==1.2.0`, or
+  `testo-core[bdd]` when the cycle has `behave` or `behavex` stages
 - `job-summary` (optional, default `true`): write the run to the job summary
 - `comment-on-pr` (optional, default `false`): on `pull_request` events, keep one comment per
   cycle on the pull request with the same summary (edited on later pushes, not re-posted).

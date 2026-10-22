@@ -28,6 +28,7 @@ class StagePanelData:
     output_tail: str
     results_dir: str | None = None
     command: str | None = None
+    error: str | None = None
 
 
 def render_stage_panel(console: Console, data: StagePanelData, *, tail_max_lines: int = 80) -> None:
@@ -43,6 +44,8 @@ def render_stage_panel(console: Console, data: StagePanelData, *, tail_max_lines
     if data.command:
         rows.append(Text.from_markup(f"[muted]command:[/]  {data.command}"))
     rows.append(Text.from_markup(f"[muted]log:[/]      {data.log_path or '<buffered>'}"))
+    if data.error:
+        rows.append(Text.from_markup("[fail]error:[/]    ").append(data.error))
 
     tail = data.output_tail.rstrip("\n")
     if tail:
