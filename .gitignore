@@ -39,6 +39,9 @@ artifacts/uqo_run_history.sqlite
 artifacts/testo_sandbox.db
 artifacts/history/
 
+# AI settings saved by the API (never contains the key)
+artifacts/ai_settings.json
+
 # Local/generated artifacts
 .coverage
 coverage.xml

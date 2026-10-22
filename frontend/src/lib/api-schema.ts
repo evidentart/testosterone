@@ -460,6 +460,8 @@ export interface components {
              * @enum {string}
              */
             api_key_source: "env" | "runtime_input";
+            /** Base Url */
+            base_url: string | null;
             /** Configured */
             configured: boolean;
             /** Enabled */
@@ -476,7 +478,7 @@ export interface components {
              * Provider
              * @enum {string}
              */
-            provider: "openai" | "anthropic";
+            provider: "openai" | "anthropic" | "openai_compatible";
             /** Retry Count */
             retry_count: number;
             /** Timeout S */
@@ -494,6 +496,8 @@ export interface components {
              * @enum {string}
              */
             api_key_source?: "env" | "runtime_input";
+            /** Base Url */
+            base_url?: string | null;
             /**
              * Enabled
              * @default false
@@ -519,7 +523,7 @@ export interface components {
              * @default openai
              * @enum {string}
              */
-            provider?: "openai" | "anthropic";
+            provider?: "openai" | "anthropic" | "openai_compatible";
             /**
              * Retry Count
              * @default 1

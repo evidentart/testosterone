@@ -113,6 +113,8 @@ class Exporter:
     def __init__(self, *, out_dir: Path, site_url: str, run_limit: int, delta_pairs: int) -> None:
         from fastapi.testclient import TestClient
 
+        # The export switches AI on for its own run; keep that out of the local settings file.
+        os.environ["TESTO_AI_SETTINGS_PATH"] = ""
         from testo_api.main import create_app
 
         self.out_dir = out_dir

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
-AiProviderName = Literal["openai", "anthropic"]
+AiProviderName = Literal["openai", "anthropic", "openai_compatible"]
 
 
 @dataclass(frozen=True)

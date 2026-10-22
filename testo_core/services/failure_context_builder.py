@@ -45,6 +45,20 @@ def _redacted_context_text(value: Any) -> str:
         return redact_text(str(redacted))
 
 
+# The Run Details card shows the reply as plain text and bolds these three labels, so the
+# reply has to be short, unformatted and in this exact shape.
+_INSTRUCTIONS = """\
+You explain a failed test run to the engineer who has to fix it.
+Reply in plain text, in exactly this shape and nothing else:
+
+What failed: one or two sentences naming the failing tests and the observed error, with the numbers from the evidence.
+Likely cause: one sentence with the most probable cause. If the evidence does not show it, write "Not clear from the evidence" and name what is missing.
+Next steps:
+- up to three short, concrete actions, the most useful first
+
+Rules: under 120 words in total. No Markdown: no asterisks, backticks, headings or numbered lists. Use only the evidence below; do not invent tests, endpoints or causes. No introduction, no extra sections."""
+
+
 def build_failure_context(
     *,
     run: CompletedRunView,
@@ -75,9 +89,7 @@ def build_failure_context(
     )
 
     prompt = (
-        "You are an assistant that explains CI/test failures in concise operational language.\n"
-        "Provide: 1) short summary, 2) likely root cause, 3) next actions.\n"
-        "State limitations when evidence is incomplete.\n\n"
+        f"{_INSTRUCTIONS}\n\n"
         f"[Run]\n{summary_block}\n"
         f"[FailureLog]\n{log_section}\n\n"
         f"[Trace]\n{trace_section}\n\n"

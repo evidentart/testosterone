@@ -270,7 +270,7 @@ job, commit and branch. Inputs and outputs: [integrations/github-action/README.m
   `testo.reporters` entry point groups, with no change to Testosterone; `testo plugins` lists and
   checks them. [examples/plugin/](examples/plugin/) adds a `unittest` runner and a
   `json-summary` reporter.
-- **AI failure summaries:** opt in on the AI settings page with an OpenAI or Anthropic key.
+- **AI failure summaries:** opt in on the AI settings page with an OpenAI or Anthropic key, or point it at any OpenAI-compatible endpoint (a free tier such as Groq or Gemini, or a local Ollama).
   Failed runs store their failing cases, first traceback and log tail (redacted), which is
   what the summary is built from.
 

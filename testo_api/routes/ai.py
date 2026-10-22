@@ -22,9 +22,18 @@ def _config_status_payload(store: InMemoryAiSettingsStore) -> dict[str, object]:
     settings = store.get()
     status = settings.to_public_status()
     if settings.api_key_source == "env":
-        env_name = settings.to_provider_config().resolved_api_key_env_var()
-        status["configured"] = bool(os.getenv(env_name, ""))
-        status["key_present"] = status["configured"]
+        try:
+            env_name = settings.to_provider_config().resolved_api_key_env_var()
+            status["key_present"] = bool(os.getenv(env_name, ""))
+        except ProviderMisconfiguredError:
+            status["key_present"] = False
+    else:
+        status["key_present"] = bool(status.get("key_present"))
+    # An OpenAI-compatible server may need no key (a local Ollama); it needs a base URL.
+    if status.get("provider") == "openai_compatible":
+        status["configured"] = bool(status.get("base_url"))
+    else:
+        status["configured"] = status["key_present"]
     return status
 
 
@@ -40,6 +49,7 @@ def update_ai_config(
     payload: AiConfigUpdateRequest,
     store: InMemoryAiSettingsStore = Depends(get_ai_settings_store),
 ) -> AiConfigStatusResponse:
+    base_url = (payload.base_url or "").strip().rstrip("/") or None
     try:
         AiProviderConfig(
             enabled=payload.enabled,
@@ -51,11 +61,12 @@ def update_ai_config(
             retry_count=payload.retry_count,
             max_input_chars=payload.max_input_chars,
             max_output_tokens=payload.max_output_tokens,
+            base_url=base_url,
         ).validate()
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    settings = store.update(
+    store.update(
         enabled=payload.enabled,
         provider=payload.provider,
         model=payload.model,
@@ -65,21 +76,10 @@ def update_ai_config(
         retry_count=payload.retry_count,
         max_input_chars=payload.max_input_chars,
         max_output_tokens=payload.max_output_tokens,
+        base_url=base_url,
         runtime_api_key=payload.api_key_input or store.get().runtime_api_key,
     )
-    status = settings.to_public_status()
-    if payload.api_key_source == "env":
-        try:
-            env_name = settings.to_provider_config().resolved_api_key_env_var()
-            status["configured"] = bool(os.getenv(env_name, ""))
-            status["key_present"] = status["configured"]
-        except ProviderMisconfiguredError:
-            status["configured"] = False
-            status["key_present"] = False
-    else:
-        status["configured"] = bool(settings.runtime_api_key)
-        status["key_present"] = bool(settings.runtime_api_key)
-    return AiConfigStatusResponse.model_validate(status)
+    return AiConfigStatusResponse.model_validate(_config_status_payload(store))
 
 
 @router.get("/runs/{run_id}/ai-summary", response_model=AiSummaryResponse)
